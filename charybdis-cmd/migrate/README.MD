@@ -1,3 +1,6 @@
+⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from
+rust 1.75.0 beta release*
+
 ## Automatic migration with `charybdis_cmd/migrate`:
 <a name="automatic-migration"></a>
 Smart migration tool that enables automatic migration to database without need to write migrations by hand.
