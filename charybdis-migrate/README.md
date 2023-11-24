@@ -4,8 +4,9 @@ rust 1.75.0 beta release*
 
 ## Automatic migration Tool:
 <a name="automatic-migration"></a>
-Smart migration tool that enables automatic migration to database without need to write migrations by hand.
-It expects `src/models` files and generates migrations based on differences between model definitions and database.
+`charybdis-migrate` tool that enables automatic migration to database without need to write 
+migrations by hand. It expects `src/models` files and generates migrations based on differences 
+between model definitions and database.
 
 ### Installation
 ```bash

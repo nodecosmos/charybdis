@@ -52,6 +52,9 @@ rust 1.75.0 beta release*
 Declare model as a struct within `src/models` dir:
 ```rust
 // src/modles/user.rs
+use charybdis_macros::charybdis_model;
+use charybdis::types::{Text, Timestamp, Uuid};
+
 #[charybdis_model(
     table_name = users,
     partition_keys = [id],
@@ -74,6 +77,9 @@ pub struct User {
 Declare udt model as a struct within `src/models/udts` dir:
 ```rust
 // src/models/udts/address.rs
+use charybdis_macros::charybdis_udt_model;
+use charybdis::types::Text;
+
 #[charybdis_udt_model(type_name = address)]
 pub struct Address {
     pub street: Text,
@@ -87,7 +93,9 @@ pub struct Address {
 Declare view model as a struct within `src/models/materialized_views` dir:
 
 ```rust
-use charybdis::*;
+// src/models/materialized_views/users_by_username.rs
+use charybdis_macros::charybdis_view_model;
+use charybdis::types::{Text, Timestamp, Uuid};
 
 #[charybdis_view_model(
     table_name=users_by_username,
@@ -115,9 +123,9 @@ PRIMARY KEY (email, id)
 
 📝 Primary key fields should not be wrapped in Option<> as they are mandatory.
  
-## Automatic migration with `charybdis-migrate`:
+## Automatic migration
 <a name="automatic-migration"></a>
-Smart migration tool that enables automatic migration to database without need to write migrations by hand.
+`charybdis-migrate` tool that enables automatic migration to database without need to write migrations by hand.
 It expects `src/models` files and generates migrations based on differences between model definitions and database.
 
 It supports following operations:
@@ -142,7 +150,7 @@ It supports following operations:
         ";
     )]
     #[derive(Serialize, Deserialize, Default)]
-    pub struct Commit {
+    pub struct Commit {...}
     ```
     ⚠️ If table exists, table options will result in alter table query that without
     `CLUSTERING ORDER` and `COMPACT STORAGE` options.
@@ -162,7 +170,7 @@ If structure is matched, it will not run any migrations. As mentioned above,
 in case there is no model definition for table, it will **not** drop it. In future, 
 we will add `modelize` command that will generate `src/models` files from existing data source.
 
-#### Global secondary indexes
+### Global secondary indexes
 They are simply defined as array of strings:
 ```rust
 #[charybdis_model(
@@ -172,7 +180,7 @@ They are simply defined as array of strings:
     global_secondary_indexes = ["username"]
 )]
 ```
-#### Local secondary Indexes
+### Local secondary Indexes
 
 They are defined as array of tuples
 - first element is array of partition keys
@@ -265,10 +273,8 @@ Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream
 Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
 Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
 ```
-We have macro generated  functions for up to 3 fields from primary key.
-
-🟢 Note that if **complete** primary key is provided, we get single typed result. So for our user
-model we get `find_by_id` function that returns `Result<User, CharybdisError>`.
+We have macro generated  functions for up to 3 fields from primary key. Note that if **complete** 
+primary key is provided, we get single typed result.
 
 
 ### Custom filtering:
@@ -290,7 +296,7 @@ Following will return stream of `Post` models, and query will be constructed at 
 
 ```rust
 // automatically generated macro rule
-let res = find_post!(
+let posts = find_post!(
     session,
     "category_id in ? AND date > ?",
     (categor_vec, date])

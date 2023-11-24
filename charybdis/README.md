@@ -1,6 +1,6 @@
 # High-Performance ORM for ScyllaDB in Rust
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from 
+⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from
 rust 1.75.0 beta release*
 
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
@@ -52,6 +52,9 @@ rust 1.75.0 beta release*
 Declare model as a struct within `src/models` dir:
 ```rust
 // src/modles/user.rs
+use charybdis_macros::charybdis_model;
+use charybdis::types::{Text, Timestamp, Uuid};
+
 #[charybdis_model(
     table_name = users,
     partition_keys = [id],
@@ -74,6 +77,9 @@ pub struct User {
 Declare udt model as a struct within `src/models/udts` dir:
 ```rust
 // src/models/udts/address.rs
+use charybdis_macros::charybdis_udt_model;
+use charybdis::types::Text;
+
 #[charybdis_udt_model(type_name = address)]
 pub struct Address {
     pub street: Text,
@@ -87,7 +93,9 @@ pub struct Address {
 Declare view model as a struct within `src/models/materialized_views` dir:
 
 ```rust
-use charybdis::*;
+// src/models/materialized_views/users_by_username.rs
+use charybdis_macros::charybdis_view_model;
+use charybdis::types::{Text, Timestamp, Uuid};
 
 #[charybdis_view_model(
     table_name=users_by_username,
@@ -114,10 +122,10 @@ PRIMARY KEY (email, id)
   ```
 
 📝 Primary key fields should not be wrapped in Option<> as they are mandatory.
- 
-## Automatic migration with `charybdis-migrate`:
+
+## Automatic migration
 <a name="automatic-migration"></a>
-Smart migration tool that enables automatic migration to database without need to write migrations by hand.
+`charybdis-migrate` tool that enables automatic migration to database without need to write migrations by hand.
 It expects `src/models` files and generates migrations based on differences between model definitions and database.
 
 It supports following operations:
@@ -142,12 +150,12 @@ It supports following operations:
         ";
     )]
     #[derive(Serialize, Deserialize, Default)]
-    pub struct Commit {
+    pub struct Commit {...}
     ```
-    ⚠️ If table exists, table options will result in alter table query that without
-    `CLUSTERING ORDER` and `COMPACT STORAGE` options.
+  ⚠️ If table exists, table options will result in alter table query that without
+  `CLUSTERING ORDER` and `COMPACT STORAGE` options.
 
-🟢 Tables, Types and UDT dropping is not added. If you don't define model within `src/model` dir 
+🟢 Tables, Types and UDT dropping is not added. If you don't define model within `src/model` dir
 it will leave db structure as it is.
 ```bash
 cargo install charybdis-migrate
@@ -155,11 +163,11 @@ cargo install charybdis-migrate
 migrate --hosts <host> --keyspace <your_keyspace>
 ```
 
-⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model** 
-definitions structure matches the database in respect to table names, column names, column types, partition keys, 
+⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model**
+definitions structure matches the database in respect to table names, column names, column types, partition keys,
 clustering keys and secondary indexes so you don't alter structure accidentally.
-If structure is matched, it will not run any migrations. As mentioned above, 
-in case there is no model definition for table, it will **not** drop it. In future, 
+If structure is matched, it will not run any migrations. As mentioned above,
+in case there is no model definition for table, it will **not** drop it. In future,
 we will add `modelize` command that will generate `src/models` files from existing data source.
 
 #### Global secondary indexes
@@ -367,11 +375,11 @@ let user = user.as_native().find_by_primary_key(&session).await?;
 
 2) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
 
-3) `partial_<model>` struct implements same field attributes as original model, 
-    so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+3) `partial_<model>` struct implements same field attributes as original model,
+   so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
 
-Recommended naming convention is `Purpose` + `Original Struct Name`. E.g: 
-`UpdateAdresssUser`, `UpdateDescriptionPost`. 
+Recommended naming convention is `Purpose` + `Original Struct Name`. E.g:
+`UpdateAdresssUser`, `UpdateDescriptionPost`.
 
 ## Callbacks
 We can define callbacks that will be executed before and after certain operations.
@@ -419,7 +427,7 @@ Possible callbacks:
 - `before_delete`
 - `after_delete`
 
-⚠️ In order to trigger callback, instead of calling `insert` method on model, we can call 
+⚠️ In order to trigger callback, instead of calling `insert` method on model, we can call
 `insert_cb`. This enables us to have clear distinction between insert and insert with callbacks.
 ```rust
 let post = Post::from_json(json);
@@ -438,7 +446,7 @@ match res {
 ## ExtensionCallbacks
 We can also define callbacks that will be given custom extension if needed.
 
-Let's say we define custom extension that will be used to 
+Let's say we define custom extension that will be used to
 update elastic document on every post update:
 ```rust
 pub struct CustomExtension {
@@ -563,5 +571,5 @@ It can be used to hold data that is not persisted in database.
 ## Roadmap:
 - [ ] Add tests
 - [ ] Write `modelize` command to generate `src/models/*` structs from existing database
-- [ ] Add --drop flag to migrate command to drop tables, types and UDTs if they are not defined in 
+- [ ] Add --drop flag to migrate command to drop tables, types and UDTs if they are not defined in
   `src/models`
