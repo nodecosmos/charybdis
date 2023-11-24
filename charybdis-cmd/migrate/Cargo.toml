@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-charybdis = { path = "../../charybdis" }
-charybdis_parser = { path = "../../charybdis-parser" }
+charybdis_parser = { version = "0.1.0", path = "../../charybdis-parser" }
 dotenv = "0.15.0"
 scylla = "0.10.0"
 tokio = { version = "1.27.0", features = ["full"] }

@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-charybdis_macros = { path = "../charybdis-macros" }
+charybdis_macros = { version = '0.1.0', path = "../charybdis-macros" }
 bigdecimal = "0.4.1"
 chrono = { version = "0.4.24", features = ["serde"] }
 dotenv = "0.15.0"

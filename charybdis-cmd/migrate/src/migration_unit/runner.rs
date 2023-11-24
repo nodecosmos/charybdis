@@ -27,7 +27,7 @@ impl<'a> MigrationUnitRunner<'a> {
 
         match res {
             Ok(_) => println!("{}\n", "CQL executed successfully! ✅".bright_green(),),
-            Err(e) => println!("{} {}\n", "CQL execution failed! ❌".bright_red(), e),
+            Err(e) => panic!("{} {}\n", "CQL execution failed! ❌".bright_red(), e),
         }
     }
 
