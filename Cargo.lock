@@ -198,7 +198,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bigdecimal 0.4.2",
  "charybdis_macros",
@@ -221,8 +221,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "charybdis-migrate"
+version = "0.2.1"
+dependencies = [
+ "charybdis_parser",
+ "clap",
+ "colored",
+ "dotenv",
+ "futures",
+ "quote",
+ "regex",
+ "scylla",
+ "serde",
+ "serde_json",
+ "strip-ansi-escapes",
+ "syn 2.0.39",
+ "tokio",
+]
+
+[[package]]
 name = "charybdis_macros"
-version = "0.1.0"
+version = "0.2.1"
 dependencies = [
  "charybdis_parser",
  "colored",
@@ -233,7 +252,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "colored",
  "proc-macro2",
@@ -625,25 +644,6 @@ name = "memchr"
 version = "2.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f665ee40bc4a3c5590afb1e9677db74a508659dfd71e126420da8274909a0167"
-
-[[package]]
-name = "migrate"
-version = "0.1.0"
-dependencies = [
- "charybdis_parser",
- "clap",
- "colored",
- "dotenv",
- "futures",
- "quote",
- "regex",
- "scylla",
- "serde",
- "serde_json",
- "strip-ansi-escapes",
- "syn 2.0.39",
- "tokio",
-]
 
 [[package]]
 name = "miniz_oxide"

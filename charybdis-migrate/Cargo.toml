@@ -1,14 +1,13 @@
 [package]
-name = "migrate"
-version = "0.1.0"
+name = "charybdis-migrate"
+version = "0.2.3"
 edition = "2021"
 description = "Automatic Migration Tool for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"
 license = "MIT"
 
-
 [dependencies]
-charybdis_parser = { version = "0.1.0", path = "../../charybdis-parser" }
+charybdis_parser = { version = "0.2.0", path = "../charybdis_parser" }
 dotenv = "0.15.0"
 scylla = "0.10.0"
 tokio = { version = "1.27.0", features = ["full"] }

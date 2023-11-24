@@ -1,12 +1,23 @@
 ⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from
 rust 1.75.0 beta release*
 
+
 ## Automatic migration with `charybdis_cmd/migrate`:
 <a name="automatic-migration"></a>
 Smart migration tool that enables automatic migration to database without need to write migrations by hand.
 It expects `src/models` files and generates migrations based on differences between model definitions and database.
 
-It supports following operations:
+### Installation
+```bash
+  cargo install charybdis-migrate
+```
+
+### Usage
+```bash
+  charybdis-migrate --hosts <host> --keyspace <your_keyspace>
+```
+
+### It supports following operations:
 - Create new tables
 - Create new columns
 - Drop columns
@@ -35,11 +46,6 @@ It supports following operations:
 
 🟢 Tables, Types and UDT dropping is not added. If you don't define model within `src/model` dir
 it will leave db structure as it is.
-```bash
-cargo install charybdis_cmd/migrate
-
-migrate --hosts <host> --keyspace <your_keyspace>
-```
 
 ⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model**
 definitions structure matches the database in respect to table names, column names, column types, partition keys,

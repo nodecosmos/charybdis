@@ -1,6 +1,6 @@
 [package]
 name = "charybdis_parser"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Parser crate for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"

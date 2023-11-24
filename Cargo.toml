@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "charybdis-cmd/migrate",
+    "charybdis-migrate",
     "charybdis",
-    "charybdis-macros",
-    "charybdis-parser",
+    "charybdis_macros",
+    "charybdis_parser",
 ]

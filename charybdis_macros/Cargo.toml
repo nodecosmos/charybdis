@@ -1,6 +1,6 @@
 [package]
 name = "charybdis_macros"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
 description = "Proc macro crate for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"
@@ -10,7 +10,7 @@ license = "MIT"
 proc-macro = true
 
 [dependencies]
-charybdis_parser = { version = "0.1.0", path = "../charybdis-parser" }
+charybdis_parser = { version = "0.2.0", path = "../charybdis_parser" }
 proc-macro2 = "1.0.64"
 syn = { version = "2.0.10", features = ["full"] }
 quote = "1.0.26"
