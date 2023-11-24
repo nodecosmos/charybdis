@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+    "charybdis-cmd/migrate",
+    "charybdis-cmd/modelize",
+    "charybdis",
+    "charybdis-macros",
+    "charybdis-parser",
+]
