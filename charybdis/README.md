@@ -27,7 +27,7 @@ rust 1.75.0 beta release*
   - [Define Tables](#define-tables)
   - [Define UDTs](#Define-UDT)
   - [Define Materialized Views](#Define-Materialized-Views)
-- [Automatic migration with `charybdis_cmd/migrate`](#automatic-migration-with-charybdiscmdmigrate)
+- [Automatic migration with `charybdis-migrate`](#automatic-migration-with-charybdiscmdmigrate)
 - [Basic Operations](#basic-operations)
   - [Create](#create)
   - [Find](#find)
@@ -115,7 +115,7 @@ PRIMARY KEY (email, id)
 
 📝 Primary key fields should not be wrapped in Option<> as they are mandatory.
  
-## Automatic migration with `charybdis_cmd/migrate`:
+## Automatic migration with `charybdis-migrate`:
 <a name="automatic-migration"></a>
 Smart migration tool that enables automatic migration to database without need to write migrations by hand.
 It expects `src/models` files and generates migrations based on differences between model definitions and database.
@@ -150,7 +150,7 @@ It supports following operations:
 🟢 Tables, Types and UDT dropping is not added. If you don't define model within `src/model` dir 
 it will leave db structure as it is.
 ```bash
-cargo install charybdis_cmd/migrate
+cargo install charybdis-migrate
 
 migrate --hosts <host> --keyspace <your_keyspace>
 ```
