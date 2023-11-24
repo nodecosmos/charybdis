@@ -1,6 +1,7 @@
 # High-Performance ORM for ScyllaDB in Rust
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from rust beta release*
+⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from 
+rust 1.75.0 beta release*
 
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
 
@@ -264,11 +265,9 @@ Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream
 Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
 Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
 ```
-We generate functions for up to 3 fields. 
+We have macro generated  functions for up to 3 fields from primary key.
 
-🟢 Note that if **complete** primary key is provided, we get single typed result.
-
-So for our user
+🟢 Note that if **complete** primary key is provided, we get single typed result. So for our user
 model we get `find_by_id` function that returns `Result<User, CharybdisError>`.
 
 
