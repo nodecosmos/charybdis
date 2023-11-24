@@ -2,6 +2,9 @@
 name = "charybdis_parser"
 version = "0.1.0"
 edition = "2021"
+description = "Parser crate for Charybdis ORM"
+repository = "https://github.com/nodecosmos/charybdis"
+license = "MIT"
 
 [dependencies]
 proc-macro2 = "1.0.64"

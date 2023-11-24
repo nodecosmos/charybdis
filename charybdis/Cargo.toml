@@ -2,6 +2,9 @@
 name = "charybdis"
 version = "0.1.0"
 edition = "2021"
+description = "High-Performance ORM for ScyllaDB in Rust"
+repository = "https://github.com/nodecosmos/charybdis"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

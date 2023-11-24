@@ -2,6 +2,10 @@
 name = "migrate"
 version = "0.1.0"
 edition = "2021"
+description = "Automatic Migration Tool for Charybdis ORM"
+repository = "https://github.com/nodecosmos/charybdis"
+license = "MIT"
+
 
 [dependencies]
 charybdis_parser = { version = "0.1.0", path = "../../charybdis-parser" }

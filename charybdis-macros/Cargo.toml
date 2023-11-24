@@ -2,6 +2,9 @@
 name = "charybdis_macros"
 version = "0.1.0"
 edition = "2021"
+description = "Proc macro crate for Charybdis ORM"
+repository = "https://github.com/nodecosmos/charybdis"
+license = "MIT"
 
 [lib]
 proc-macro = true
