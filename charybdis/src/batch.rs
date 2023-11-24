@@ -7,8 +7,6 @@ use scylla::{CachingSession, QueryResult};
 pub struct CharybdisModelBatch {
     batch: scylla::batch::Batch,
     values: Vec<SerializedValues>,
-    with_unique_timestamp: bool,
-    current_timestamp: i64,
 }
 
 impl CharybdisModelBatch {
@@ -16,8 +14,6 @@ impl CharybdisModelBatch {
         Self {
             batch: scylla::batch::Batch::default(),
             values: Vec::new(),
-            with_unique_timestamp: false,
-            current_timestamp: chrono::Utc::now().timestamp_micros(),
         }
     }
 
@@ -25,8 +21,6 @@ impl CharybdisModelBatch {
         Self {
             batch: scylla::batch::Batch::new(scylla::batch::BatchType::Unlogged),
             values: Vec::new(),
-            with_unique_timestamp: false,
-            current_timestamp: chrono::Utc::now().timestamp_micros(),
         }
     }
 
@@ -104,44 +98,8 @@ impl CharybdisModelBatch {
         Ok(())
     }
 
-    pub fn with_unique_timestamp(mut self) -> Self {
-        self.with_unique_timestamp = true;
-        self
-    }
-
-    fn inject_timestamp(&mut self, statement: &str) -> String {
-        return if statement.contains("SET") {
-            // insert timestamp before SET
-            let mut parts = statement.split("SET");
-            let first_part = parts.next().unwrap_or_default();
-            let second_part = parts.next().unwrap_or_default();
-            format!(
-                "{} USING TIMESTAMP {} SET{}",
-                first_part, self.current_timestamp, second_part
-            )
-        } else if statement.contains("DELETE") {
-            // insert timestamp before WHERE
-            let mut parts = statement.split("WHERE");
-            let first_part = parts.next().unwrap_or_default();
-            let second_part = parts.next().unwrap_or_default();
-
-            format!(
-                "{} USING TIMESTAMP {} WHERE{}",
-                first_part, self.current_timestamp, second_part
-            )
-        } else {
-            // append timestamp to the end
-            format!("{} USING TIMESTAMP {}", statement, self.current_timestamp)
-        };
-    }
-
     fn append_statement_to_batch(&mut self, statement: &str) {
-        let mut query = statement.to_string();
-
-        if self.with_unique_timestamp {
-            query = self.inject_timestamp(statement);
-            self.current_timestamp += 1;
-        }
+        let query = statement.to_string();
 
         self.batch.append_statement(query.as_str());
     }
