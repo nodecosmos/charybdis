@@ -14,7 +14,7 @@ It expects `src/models` files and generates migrations based on differences betw
 
 ### Usage
 ```bash
-  charybdis-migrate --hosts <host> --keyspace <your_keyspace>
+  migrate --keyspace <your_keyspace> --host <host:port>
 ```
 
 ### It supports following operations:
