@@ -34,7 +34,7 @@ impl CodeSchema {
             for entry in WalkDir::new(&models_base_dir) {
                 let entry: DirEntry = entry.unwrap();
                 if entry.path().is_file() {
-                    if entry.path().to_str().unwrap().contains("mod.rs") {
+                    if entry.path().to_str().unwrap().contains("model") {
                         continue;
                     }
 

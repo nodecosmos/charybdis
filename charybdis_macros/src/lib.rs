@@ -1,17 +1,17 @@
 extern crate proc_macro;
-mod char_model_impls;
+mod model;
 mod macro_rules;
 mod native;
-mod scylla_impls;
+mod scylla;
 mod utils;
 
-use crate::char_model_impls::*;
+use crate::model::*;
 use crate::macro_rules::*;
 use crate::native::{
     delete_by_primary_key_functions, find_by_primary_keys_functions, pull_from_collection_fields_query_consts,
     pull_from_collection_funs, push_to_collection_fields_query_consts, push_to_collection_funs,
 };
-use crate::scylla_impls::{from_row, serialized};
+use crate::scylla::{from_row, serialized};
 use charybdis_parser::fields::{strip_charybdis_attributes, CharybdisFields};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro::TokenStream;
