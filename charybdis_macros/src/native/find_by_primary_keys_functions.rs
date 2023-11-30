@@ -66,8 +66,6 @@ pub(crate) fn find_by_primary_keys_functions(
             );
         }
 
-        primary_key_stack.pop();
-
         generated.extend(generated_func);
     }
 
