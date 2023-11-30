@@ -1,6 +1,6 @@
 [package]
 name = "charybdis"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 description = "High-Performance ORM for ScyllaDB"
 repository = "https://github.com/nodecosmos/charybdis"
@@ -9,7 +9,7 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-charybdis_macros = { version = "0.2.2", path = "../charybdis_macros" }
+charybdis_macros = { version = "0.2.3", path = "../charybdis_macros" }
 bigdecimal = "0.4.1"
 chrono = { version = "0.4.24", features = ["serde"] }
 dotenv = "0.15.0"
