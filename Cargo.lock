@@ -241,7 +241,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "charybdis_parser",
  "colored",
