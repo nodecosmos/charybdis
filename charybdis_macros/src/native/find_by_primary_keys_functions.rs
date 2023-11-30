@@ -15,7 +15,7 @@ pub(crate) fn find_by_primary_keys_functions(
     let table_name = ch_args.table_name.clone().unwrap();
     let comma_sep_cols = comma_sep_cols(fields);
 
-    let mut primary_key_stack = ch_args.primary_key();
+    let primary_key_stack = ch_args.primary_key();
     let mut generated = quote! {};
 
     for i in 0..primary_key_stack.len() {
@@ -24,6 +24,7 @@ pub(crate) fn find_by_primary_keys_functions(
         }
 
         let current_keys = primary_key_stack.iter().take(i + 1).map(|key| key.to_string()).collect::<Vec<String>>();
+
         let is_complete_pk = current_keys.len() == primary_key_stack.len();
         let primary_key_where_clause: String = current_keys.join(" = ? AND ");
         let query_str = format!(
@@ -56,6 +57,7 @@ pub(crate) fn find_by_primary_keys_functions(
                 query_str,
             );
         } else {
+            // for partial pk we get a stream
             generated_func = find_many_generated_fn(
                 &find_by_fun_name,
                 &arguments,
