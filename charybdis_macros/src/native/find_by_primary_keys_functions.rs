@@ -16,20 +16,15 @@ pub(crate) fn find_by_primary_keys_functions(
     let comma_sep_cols = comma_sep_cols(fields);
 
     let mut primary_key_stack = ch_args.primary_key();
-    let primary_key_len = primary_key_stack.len();
     let mut generated = quote! {};
 
-    let mut i = 0;
-
-    while !primary_key_stack.is_empty() {
-        if i > MAX_FIND_BY_FUNCTIONS {
+    for i in 0..primary_key_stack.len() {
+        if i == MAX_FIND_BY_FUNCTIONS {
             break;
         }
 
-        i += 1;
-
-        let is_complete_pk = primary_key_stack.len() == primary_key_len;
-        let current_keys = primary_key_stack.clone();
+        let current_keys = primary_key_stack.iter().take(i + 1).map(|key| key.to_string()).collect::<Vec<String>>();
+        let is_complete_pk = current_keys.len() == primary_key_stack.len();
         let primary_key_where_clause: String = current_keys.join(" = ? AND ");
         let query_str = format!(
             "SELECT {} FROM {} WHERE {} = ?",

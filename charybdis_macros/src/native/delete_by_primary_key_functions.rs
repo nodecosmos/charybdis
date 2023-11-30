@@ -30,32 +30,28 @@ pub(crate) fn delete_by_primary_key_functions(
     let mut primary_key_stack = ch_args.primary_key();
     let mut generated = quote! {};
 
-    let mut i = 0;
+    for i in 0..primary_key_stack.len() {
+       if i == MAX_DELETE_BY_FUNCTIONS {
+           break;
+       }
 
-    while !primary_key_stack.is_empty() {
-        if i > MAX_DELETE_BY_FUNCTIONS {
-            break;
-        }
+       let current_keys = primary_key_stack.iter().take(i + 1).map(|key| key.to_string()).collect::<Vec<String>>();
+       let primary_key_where_clause: String = current_keys.join(" = ? AND ");
+       let query_str = format!("DELETE FROM {} WHERE {} = ?", table_name, primary_key_where_clause);
+       let find_by_fun_name_str = format!(
+           "delete_by_{}",
+           current_keys
+               .iter()
+               .map(|key| key.to_string())
+               .collect::<Vec<String>>()
+               .join("_and_")
+       );
+       let delete_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
+       let arguments = struct_fields_to_fn_args(struct_name.to_string(), fields.clone(), current_keys.clone());
+       let capacity = current_keys.len();
+       let serialized_adder = serialized_value_adder(current_keys);
 
-        i += 1;
-
-        let current_keys = primary_key_stack.clone();
-        let primary_key_where_clause: String = current_keys.join(" = ? AND ");
-        let query_str = format!("DELETE FROM {} WHERE {} = ?", table_name, primary_key_where_clause);
-        let find_by_fun_name_str = format!(
-            "delete_by_{}",
-            current_keys
-                .iter()
-                .map(|key| key.to_string())
-                .collect::<Vec<String>>()
-                .join("_and_")
-        );
-        let delete_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
-        let arguments = struct_fields_to_fn_args(struct_name.to_string(), fields.clone(), current_keys.clone());
-        let capacity = current_keys.len();
-        let serialized_adder = serialized_value_adder(current_keys.clone());
-
-        let generated_func = quote! {
+       let generated_func = quote! {
             pub async fn #delete_by_fun_name(
                 session: &charybdis::CachingSession,
                 #(#arguments),*
@@ -72,9 +68,8 @@ pub(crate) fn delete_by_primary_key_functions(
             }
         };
 
-        primary_key_stack.pop();
 
-        generated.extend(generated_func);
+       generated.extend(generated_func);
     }
 
     generated

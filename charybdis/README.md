@@ -250,7 +250,7 @@ based on primary key definition.
   let users =  User {id, ..Default::default()}.find_by_partition_key(&session).await;
 ```
 
-#### Macro generated find helpers
+### Macro generated find helpers
 Lets say we have model:
 ```rust
 #[charybdis_model(
@@ -267,13 +267,13 @@ pub struct Post {
     ...
 }
 ```
+We have macro generated  functions for up to 3 fields from primary key.
 
 ```rust
 Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
 Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
 Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
 ```
-We have macro generated  functions for up to 3 fields from primary key.
 
 🟢 Note that if **complete** primary key is provided, we get single typed result. So for our user
 model we get `find_by_id` function that returns `Result<User, CharybdisError>`.
@@ -338,6 +338,30 @@ user.update(&session).await;
   user.delete(&session).await;
 ```
 
+### Macro generated delete helpers
+Lets say we have model:
+```rust
+#[charybdis_model(
+    table_name = posts,
+    partition_keys = [date],
+    clustering_keys = [categogry_id, title],
+    global_secondary_indexes = [])
+]
+pub struct Post {
+    date: Date,
+    category_id: Uuid,
+    title: String,
+    id: Uuid,
+    ...
+}
+```
+We have macro generated  functions for up to 3 fields from primary key.
+
+```rust
+Post::delete_by_date(session: &Session, date: Date);
+Post::delete_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid);
+Post::delete_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String);
+```
 
 ## Partial Model Operations:
 Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.
