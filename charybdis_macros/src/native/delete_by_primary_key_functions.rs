@@ -27,7 +27,7 @@ pub(crate) fn delete_by_primary_key_functions(
 ) -> TokenStream {
     let table_name = ch_args.table_name.clone().unwrap();
 
-    let mut primary_key_stack = ch_args.primary_key();
+    let primary_key_stack = ch_args.primary_key();
     let mut generated = quote! {};
 
     for i in 0..primary_key_stack.len() {
