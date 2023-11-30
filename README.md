@@ -155,7 +155,7 @@ It supports following operations:
     ⚠️ If table exists, table options will result in alter table query that without
     `CLUSTERING ORDER` and `COMPACT STORAGE` options.
 
-🟢 Tables, Types and UDT dropping is not added. If you don't define model within `src/model` dir 
+🟢 Tables, Types and UDT droppin``g is not added. If you don't define model within `src/model` dir 
 it will leave db structure as it is.
 ```bash
 cargo install charybdis-migrate
@@ -334,6 +334,31 @@ user.update(&session).await;
   let user = User::from_json(json);
 
   user.delete(&session).await;
+```
+
+### Macro generated delete helpers
+Lets say we have model:
+```rust
+#[charybdis_model(
+    table_name = posts,
+    partition_keys = [date],
+    clustering_keys = [categogry_id, title],
+    global_secondary_indexes = [])
+]
+pub struct Post {
+    date: Date,
+    category_id: Uuid,
+    title: String,
+    id: Uuid,
+    ...
+}
+```
+We have macro generated  functions for up to 3 fields from primary key.
+
+```rust
+Post::delete_by_date(session: &Session, date: Date);
+Post::delete_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid);
+Post::delete_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String);
 ```
 
 
