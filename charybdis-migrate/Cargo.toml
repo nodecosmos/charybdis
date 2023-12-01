@@ -1,5 +1,6 @@
 [package]
 name = "charybdis-migrate"
+rust-version = "1.75.0"
 version = "0.2.5"
 edition = "2021"
 description = "Automatic Migration Tool for Charybdis ORM"

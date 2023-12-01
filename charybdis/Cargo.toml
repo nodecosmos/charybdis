@@ -1,5 +1,6 @@
 [package]
 name = "charybdis"
+rust-version = "1.75.0"
 version = "0.2.6"
 edition = "2021"
 description = "High-Performance ORM for ScyllaDB"
