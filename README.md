@@ -75,7 +75,7 @@ pub struct User {
 (Note we use `src/models` as automatic migration tool expects that dir)
 
 ### Define UDT
-Declare udt model as a struct within `src/models/udts` dir:
+`src/models/udts`
 ```rust
 // src/models/udts/address.rs
 use charybdis_macros::charybdis_udt_model;
@@ -91,7 +91,7 @@ pub struct Address {
 }
 ```
 ### Define Materialized Views
-Declare view model as a struct within `src/models/materialized_views` dir:
+`src/models/materialized_views`
 
 ```rust
 // src/models/materialized_views/users_by_username.rs
@@ -172,13 +172,12 @@ in case there is no model definition for table, it will **not** drop it. In futu
 we will add `modelize` command that will generate `src/models` files from existing data source.
 
 ### Global secondary indexes
-They are simply defined as array of strings:
 ```rust
 #[charybdis_model(
     table_name = users,
     partition_keys = [id],
     clustering_keys = [],
-    global_secondary_indexes = ["username"]
+    global_secondary_indexes = [username]
 )]
 ```
 ### Local secondary Indexes

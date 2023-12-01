@@ -1,6 +1,7 @@
-# High-Performance ORM for ScyllaDB in Rust
+# Rust ORM for ScyllaDB
 ### Use monstrous tandem of scylla and charybdis for your next project
 ⚠️ *WIP*: This project is currently in an experimental stage. It depends on Rust: 1.75.0 which is currently Beta and it's scheduled for stable release on [Dec 28](https://forge.rust-lang.org/)
+
 
 
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
@@ -74,7 +75,7 @@ pub struct User {
 (Note we use `src/models` as automatic migration tool expects that dir)
 
 ### Define UDT
-Declare udt model as a struct within `src/models/udts` dir:
+`src/models/udts`
 ```rust
 // src/models/udts/address.rs
 use charybdis_macros::charybdis_udt_model;
@@ -90,7 +91,7 @@ pub struct Address {
 }
 ```
 ### Define Materialized Views
-Declare view model as a struct within `src/models/materialized_views` dir:
+`src/models/materialized_views`
 
 ```rust
 // src/models/materialized_views/users_by_username.rs
@@ -155,7 +156,7 @@ It supports following operations:
   ⚠️ If table exists, table options will result in alter table query that without
   `CLUSTERING ORDER` and `COMPACT STORAGE` options.
 
-🟢 Tables, Types and UDT dropping is not added. If you don't define model within `src/model` dir
+🟢 Tables, Types and UDT droppin``g is not added. If you don't define model within `src/model` dir
 it will leave db structure as it is.
 ```bash
 cargo install charybdis-migrate
@@ -170,17 +171,16 @@ If structure is matched, it will not run any migrations. As mentioned above,
 in case there is no model definition for table, it will **not** drop it. In future,
 we will add `modelize` command that will generate `src/models` files from existing data source.
 
-#### Global secondary indexes
-They are simply defined as array of strings:
+### Global secondary indexes
 ```rust
 #[charybdis_model(
     table_name = users,
     partition_keys = [id],
     clustering_keys = [],
-    global_secondary_indexes = ["username"]
+    global_secondary_indexes = [username]
 )]
 ```
-#### Local secondary Indexes
+### Local secondary Indexes
 
 They are defined as array of tuples
 - first element is array of partition keys
@@ -250,7 +250,7 @@ based on primary key definition.
   let users =  User {id, ..Default::default()}.find_by_partition_key(&session).await;
 ```
 
-### Macro generated find helpers
+#### Macro generated find helpers
 Lets say we have model:
 ```rust
 #[charybdis_model(
@@ -267,16 +267,14 @@ pub struct Post {
     ...
 }
 ```
-We have macro generated  functions for up to 3 fields from primary key.
 
 ```rust
 Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
 Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
 Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
 ```
-
-🟢 Note that if **complete** primary key is provided, we get single typed result. So for our user
-model we get `find_by_id` function that returns `Result<User, CharybdisError>`.
+We have macro generated  functions for up to 3 fields from primary key. Note that if **complete**
+primary key is provided, we get single typed result.
 
 
 ### Custom filtering:
@@ -298,7 +296,7 @@ Following will return stream of `Post` models, and query will be constructed at 
 
 ```rust
 // automatically generated macro rule
-let res = find_post!(
+let posts = find_post!(
     session,
     "category_id in ? AND date > ?",
     (categor_vec, date])
@@ -362,6 +360,7 @@ Post::delete_by_date(session: &Session, date: Date);
 Post::delete_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid);
 Post::delete_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String);
 ```
+
 
 ## Partial Model Operations:
 Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.
