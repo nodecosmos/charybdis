@@ -1,4 +1,4 @@
-# High-Performance ORM for ScyllaDB in Rust
+# Rust ORM for ScyllaDB
 ### Use monstrous tandem of scylla and charybdis for your next project
 ⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from 
 rust 1.75.0 beta release*
