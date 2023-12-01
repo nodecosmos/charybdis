@@ -198,7 +198,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "bigdecimal 0.4.2",
  "charybdis_macros",
@@ -222,7 +222,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "charybdis_parser",
  "clap",
@@ -241,7 +241,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "charybdis_parser",
  "colored",
@@ -252,7 +252,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "colored",
  "proc-macro2",
