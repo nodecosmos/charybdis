@@ -114,15 +114,14 @@ pub struct UsersByUsername {
 
 ```
 Resulting auto-generated migration query will be:
-```cassandraql
+```sql
 CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_email
 AS SELECT created_at, updated_at, username, email, id
 FROM users
 WHERE email IS NOT NULL AND id IS NOT NULL
 PRIMARY KEY (email, id)
-  ```
+```
 
-📝 Primary key fields should not be wrapped in Option<> as they are mandatory.
 
 ## Automatic migration
 <a name="automatic-migration"></a>
@@ -156,7 +155,7 @@ It supports following operations:
   ⚠️ If table exists, table options will result in alter table query that without
   `CLUSTERING ORDER` and `COMPACT STORAGE` options.
 
-🟢 Tables, Types and UDT droppin``g is not added. If you don't define model within `src/model` dir
+Model dropping is not added. If you don't define model within `src/model` dir
 it will leave db structure as it is.
 ```bash
 cargo install charybdis-migrate
@@ -209,7 +208,7 @@ use charybdis::{CachingSession, Insert};
 
 #[tokio::main]
 async fn main() {
-  let session: &CachingSession; // init session
+  let session: &CachingSession; // init sylla session
   
   // init user
   let user: User = User {
@@ -236,48 +235,45 @@ async fn main() {
 
 ## Find
 
-#### Find by primary key
-This is preferred way to query data rather then
-find_by_primary_key_val `associated fun`, as it will automatically provide correct order
-based on primary key definition.
-```rust
-  let user = User {id, ..Default::default()};
-  let user = user.find_by_primary_key(&session).await?;
-```
-#### Find by partition key
+* #### Find by primary key
 
-```rust
-  let users =  User {id, ..Default::default()}.find_by_partition_key(&session).await;
-```
+  ```rust
+    let user = User {id, ..Default::default()};
+    let user = user.find_by_primary_key(&session).await?;
+  ```
+* #### Find by partition key
 
-#### Macro generated find helpers
-Lets say we have model:
-```rust
-#[charybdis_model(
-    table_name = posts,
-    partition_keys = [date],
-    clustering_keys = [categogry_id, title],
-    global_secondary_indexes = [])
-]
-pub struct Post {
-    date: Date,
-    category_id: Uuid,
-    title: String,
-    id: Uuid,
-    ...
-}
-```
+  ```rust
+    let users =  User {id, ..Default::default()}.find_by_partition_key(&session).await;
+  ```
+* ### Macro generated find helpers
+  Lets say we have model:
+  ```rust
+  #[charybdis_model(
+      table_name = posts,
+      partition_keys = [date],
+      clustering_keys = [categogry_id, title],
+      global_secondary_indexes = [])
+  ]
+  pub struct Post {
+      date: Date,
+      category_id: Uuid,
+      title: String,
+      id: Uuid,
+      ...
+  }
+  ```
 
-```rust
-Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
-Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
-Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
-```
-We have macro generated  functions for up to 3 fields from primary key. Note that if **complete**
-primary key is provided, we get single typed result.
+  ```rust
+  Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
+  ```
+  We have macro generated  functions for up to 3 fields from primary key. Note that if **complete**
+  primary key is provided, we get single typed result.
 
 
-### Custom filtering:
+## Custom filtering:
 Let's say we have a model:
 ```rust 
 #[charybdis_model(
@@ -337,7 +333,6 @@ user.update(&session).await;
 ```
 
 ### Macro generated delete helpers
-Lets say we have model:
 ```rust
 #[charybdis_model(
     table_name = posts,
