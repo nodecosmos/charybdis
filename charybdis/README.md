@@ -37,7 +37,6 @@
   - [Delete](#delete)
 - [Partial Model Operations](#partial-model-operations)
   - [Considerations](#partial-model-considerations)
-- [View Operations](#view-operations)
 - [Callbacks](#callbacks)
 - [Batch Operations](#batch-operations)
 - [As Native](#as-native)

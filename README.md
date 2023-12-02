@@ -37,7 +37,6 @@
   - [Delete](#delete)
 - [Partial Model Operations](#partial-model-operations)
   - [Considerations](#partial-model-considerations)
-- [View Operations](#view-operations)
 - [Callbacks](#callbacks)
 - [Batch Operations](#batch-operations)
 - [As Native](#as-native)
@@ -122,7 +121,7 @@ WHERE email IS NOT NULL AND id IS NOT NULL
 PRIMARY KEY (email, id)
 ```
 
- 
+
 ## Automatic migration
 <a name="automatic-migration"></a>
 `charybdis-migrate` tool that enables automatic migration to database without need to write migrations by hand.
@@ -152,10 +151,10 @@ It supports following operations:
     #[derive(Serialize, Deserialize, Default)]
     pub struct Commit {...}
     ```
-    ⚠️ If table exists, table options will result in alter table query that without
-    `CLUSTERING ORDER` and `COMPACT STORAGE` options.
+  ⚠️ If table exists, table options will result in alter table query that without
+  `CLUSTERING ORDER` and `COMPACT STORAGE` options.
 
-Model dropping is not added. If you don't define model within `src/model` dir 
+Model dropping is not added. If you don't define model within `src/model` dir
 it will leave db structure as it is.
 ```bash
 cargo install charybdis-migrate
@@ -163,11 +162,11 @@ cargo install charybdis-migrate
 migrate --hosts <host> --keyspace <your_keyspace>
 ```
 
-⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model** 
-definitions structure matches the database in respect to table names, column names, column types, partition keys, 
+⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model**
+definitions structure matches the database in respect to table names, column names, column types, partition keys,
 clustering keys and secondary indexes so you don't alter structure accidentally.
-If structure is matched, it will not run any migrations. As mentioned above, 
-in case there is no model definition for table, it will **not** drop it. In future, 
+If structure is matched, it will not run any migrations. As mentioned above,
+in case there is no model definition for table, it will **not** drop it. In future,
 we will add `modelize` command that will generate `src/models` files from existing data source.
 
 ### Global secondary indexes
@@ -263,15 +262,15 @@ async fn main() {
       ...
   }
   ```
-  
+
   ```rust
   Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
   Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
   Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
   ```
-  We have macro generated  functions for up to 3 fields from primary key. Note that if **complete** 
+  We have macro generated  functions for up to 3 fields from primary key. Note that if **complete**
   primary key is provided, we get single typed result.
-  
+
 
 ## Custom filtering:
 Let's say we have a model:
@@ -393,11 +392,11 @@ let user = user.as_native().find_by_primary_key(&session).await?;
 
 2) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
 
-3) `partial_<model>` struct implements same field attributes as original model, 
-    so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+3) `partial_<model>` struct implements same field attributes as original model,
+   so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
 
-Recommended naming convention is `Purpose` + `Original Struct Name`. E.g: 
-`UpdateAdresssUser`, `UpdateDescriptionPost`. 
+Recommended naming convention is `Purpose` + `Original Struct Name`. E.g:
+`UpdateAdresssUser`, `UpdateDescriptionPost`.
 
 ## Callbacks
 We can define callbacks that will be executed before and after certain operations.
@@ -445,7 +444,7 @@ Possible callbacks:
 - `before_delete`
 - `after_delete`
 
-⚠️ In order to trigger callback, instead of calling `insert` method on model, we can call 
+⚠️ In order to trigger callback, instead of calling `insert` method on model, we can call
 `insert_cb`. This enables us to have clear distinction between insert and insert with callbacks.
 ```rust
 let post = Post::from_json(json);
@@ -464,7 +463,7 @@ match res {
 ## ExtensionCallbacks
 We can also define callbacks that will be given custom extension if needed.
 
-Let's say we define custom extension that will be used to 
+Let's say we define custom extension that will be used to
 update elastic document on every post update:
 ```rust
 pub struct CustomExtension {
@@ -589,5 +588,5 @@ It can be used to hold data that is not persisted in database.
 ## Roadmap:
 - [ ] Add tests
 - [ ] Write `modelize` command to generate `src/models/*` structs from existing database
-- [ ] Add --drop flag to migrate command to drop tables, types and UDTs if they are not defined in 
+- [ ] Add --drop flag to migrate command to drop tables, types and UDTs if they are not defined in
   `src/models`
