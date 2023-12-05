@@ -198,7 +198,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "bigdecimal 0.4.2",
  "charybdis_macros",

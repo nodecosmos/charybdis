@@ -28,7 +28,7 @@
   - [Define Tables](#define-tables)
   - [Define UDTs](#Define-UDT)
   - [Define Materialized Views](#Define-Materialized-Views)
-- [Automatic migration with `charybdis-migrate`](#automatic-migration-with-charybdiscmdmigrate)
+- [Automatic migration with `charybdis-migrate`](#automatic-migration)
 - [Basic Operations](#basic-operations)
   - [Create](#create)
   - [Find](#find)
