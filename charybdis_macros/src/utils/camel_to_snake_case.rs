@@ -1,23 +1,17 @@
 pub(crate) fn camel_to_snake_case(s: &str) -> String {
     let mut result = String::new();
-    let mut chars = s.chars().peekable();
+    let mut prev_char_is_uppercase = false;
 
-    while let Some(c) = chars.next() {
+    for (i, c) in s.chars().enumerate() {
         if c.is_uppercase() {
-            if let Some(next) = chars.peek() {
-                if next.is_lowercase() {
-                    if !result.is_empty() {
-                        result.push('_');
-                    }
-                    result.push(c.to_ascii_lowercase());
-                } else {
-                    result.push(c.to_ascii_lowercase());
-                }
-            } else {
-                result.push(c.to_ascii_lowercase());
+            if i != 0 && !prev_char_is_uppercase {
+                result.push('_');
             }
+            result.push(c.to_ascii_lowercase());
+            prev_char_is_uppercase = true;
         } else {
             result.push(c);
+            prev_char_is_uppercase = false;
         }
     }
 
