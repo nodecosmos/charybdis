@@ -6,7 +6,7 @@ use scylla::frame::value::Value;
 pub use scylla::macros::{FromRow, FromUserType, IntoUserType, ValueList};
 use scylla::BufMut;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
 
 pub type Ascii = String;
@@ -32,7 +32,7 @@ pub type Varint = BigInt;
 // collections
 pub type Map<K, V> = HashMap<K, V>;
 pub type List<T> = Vec<T>;
-pub type Set<T> = Vec<T>;
+pub type Set<T> = HashSet<T>;
 pub type Tuple = Vec<Option<CqlValue>>;
 
 pub type Frozen<T> = T;
