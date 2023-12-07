@@ -7,18 +7,23 @@ pub trait Callbacks {
     async fn before_insert(&mut self, _session: &CachingSession) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn after_insert(&mut self, _session: &CachingSession) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn before_update(&mut self, _session: &CachingSession) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn after_update(&mut self, _session: &CachingSession) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn before_delete(&mut self, _session: &CachingSession) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn after_delete(&mut self, _session: &CachingSession) -> Result<(), Self::Error> {
         Ok(())
     }
@@ -35,6 +40,7 @@ pub trait ExtCallbacks {
     ) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn after_insert(
         &mut self,
         _session: &CachingSession,
@@ -42,6 +48,7 @@ pub trait ExtCallbacks {
     ) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn before_update(
         &mut self,
         _session: &CachingSession,
@@ -49,6 +56,7 @@ pub trait ExtCallbacks {
     ) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn after_update(
         &mut self,
         _session: &CachingSession,
@@ -56,6 +64,7 @@ pub trait ExtCallbacks {
     ) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn before_delete(
         &mut self,
         _session: &CachingSession,
@@ -63,6 +72,7 @@ pub trait ExtCallbacks {
     ) -> Result<(), Self::Error> {
         Ok(())
     }
+
     async fn after_delete(
         &mut self,
         _session: &CachingSession,
