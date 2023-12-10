@@ -19,10 +19,8 @@ pub enum CharybdisError {
     MaybeFirstRowTypedError(MaybeFirstRowTypedError, String),
     FromRowError(FromRowError, String),
     NextRowError(NextRowError),
-    SchemaError(String),
     // charybdis
     NotFoundError(String),
-    // serde
     JsonError(serde_json::Error),
 }
 
@@ -55,11 +53,7 @@ impl fmt::Display for CharybdisError {
 
             // charybdis
             CharybdisError::NotFoundError(e) => write!(f, "Records not found for query: {}", e),
-
-            // serde
             CharybdisError::JsonError(e) => write!(f, "JsonError: {}", e),
-
-            CharybdisError::SchemaError(e) => write!(f, "SchemaError: {}", e),
         }
     }
 }
@@ -77,7 +71,6 @@ impl Error for CharybdisError {
             CharybdisError::NextRowError(e) => Some(e),
             CharybdisError::SerializeValuesError(e, _) => Some(e),
             CharybdisError::JsonError(e) => Some(e),
-            CharybdisError::SchemaError(_) => None,
         }
     }
 }
