@@ -37,7 +37,7 @@ pub fn push_to_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>
                     &self,
                     session: &charybdis::CachingSession,
                     value: &impl charybdis::Value
-                ) -> Result<(), charybdis::errors::CharybdisError> {
+                ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
                     let mut serialized = charybdis::SerializedValues::with_capacity(#values_capacity);
 
                     serialized.add_value(value)?;
@@ -45,9 +45,9 @@ pub fn push_to_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>
                     #serialized_field_value_adder
 
 
-                    charybdis::operations::execute(session, #push_to_query, serialized).await?;
+                    let res = charybdis::operations::execute(session, #push_to_query, serialized).await?;
 
-                    Ok(())
+                    Ok(res)
                 }
             };
 
@@ -93,7 +93,7 @@ pub fn pull_from_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Fiel
                     &self,
                     session: &charybdis::CachingSession,
                     value: &impl charybdis::Value
-                ) -> Result<(), charybdis::errors::CharybdisError> {
+                ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
                     let mut serialized = charybdis::SerializedValues::with_capacity(#values_capacity);
 
                     serialized.add_value(value)?;
@@ -101,9 +101,9 @@ pub fn pull_from_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Fiel
                     #serialized_field_value_adder
 
 
-                    charybdis::operations::execute(session, #pull_from_query, serialized).await?;
+                    let res = charybdis::operations::execute(session, #pull_from_query, serialized).await?;
 
-                    Ok(())
+                    Ok(res)
                 }
             };
 
