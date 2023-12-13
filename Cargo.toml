@@ -6,3 +6,6 @@ members = [
     "charybdis_macros",
     "charybdis_parser",
 ]
+exclude = [
+    "examples"
+]

@@ -23,7 +23,11 @@ pub(crate) fn find_by_primary_keys_functions(
             break;
         }
 
-        let current_keys = primary_key_stack.iter().take(i + 1).map(|key| key.to_string()).collect::<Vec<String>>();
+        let current_keys = primary_key_stack
+            .iter()
+            .take(i + 1)
+            .map(|key| key.to_string())
+            .collect::<Vec<String>>();
 
         let is_complete_pk = current_keys.len() == primary_key_stack.len();
         let primary_key_where_clause: String = current_keys.join(" = ? AND ");
@@ -112,8 +116,6 @@ fn find_many_generated_fn(
             session: &charybdis::CachingSession,
             #(#arguments),*
         ) -> Result<charybdis::stream::CharybdisModelStream<#struct_name>, charybdis::errors::CharybdisError> {
-            use futures::TryStreamExt;
-
             let mut serialized = charybdis::SerializedValues::with_capacity(#capacity);
 
             #serialized_adder
