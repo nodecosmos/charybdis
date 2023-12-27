@@ -6,12 +6,20 @@ use scylla::{CachingSession, QueryResult};
 
 pub trait Insert: Model + ValueList {
     async fn insert(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
+    async fn insert_if_not_exists(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
 }
 
 impl<T: Model + ValueList> Insert for T {
     async fn insert(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
         session
             .execute(T::INSERT_QUERY, self)
+            .await
+            .map_err(CharybdisError::from)
+    }
+
+    async fn insert_if_not_exists(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
+        session
+            .execute(T::INSERT_IF_NOT_EXIST_QUERY, self)
             .await
             .map_err(CharybdisError::from)
     }

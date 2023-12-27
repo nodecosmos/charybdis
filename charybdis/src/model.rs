@@ -55,6 +55,7 @@ pub trait BaseModel: FromRow + Sized {
 ///
 pub trait Model: BaseModel {
     const INSERT_QUERY: &'static str;
+    const INSERT_IF_NOT_EXIST_QUERY: &'static str;
     const UPDATE_QUERY: &'static str;
     const DELETE_QUERY: &'static str;
     const DELETE_BY_PARTITION_KEY_QUERY: &'static str;

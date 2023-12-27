@@ -1,12 +1,12 @@
 extern crate proc_macro;
-mod model;
 mod macro_rules;
+mod model;
 mod native;
 mod scylla;
 mod utils;
 
-use crate::model::*;
 use crate::macro_rules::*;
+use crate::model::*;
 use crate::native::{
     delete_by_primary_key_functions, find_by_primary_keys_functions, pull_from_collection_fields_query_consts,
     pull_from_collection_funs, push_to_collection_fields_query_consts, push_to_collection_funs,
@@ -41,6 +41,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &db_fields);
     let find_by_partition_key_query_const = find_by_partition_key_query_const(&args, &db_fields);
     let insert_query_const = insert_query_const(&args, &db_fields);
+    let insert_if_not_exists_query_const = insert_if_not_exists_query_const(&args, &db_fields);
     let update_query_const = update_query_const(&args, &db_fields);
     let delete_query_const = delete_query_const(&args);
     let delete_by_partition_key_query_const = delete_by_partition_key_query_const(&args);
@@ -108,6 +109,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
         impl charybdis::model::Model for #struct_name {
             // operation consts
             #insert_query_const
+            #insert_if_not_exists_query_const
             #update_query_const
             #delete_query_const
             #delete_by_partition_key_query_const
