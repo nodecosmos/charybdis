@@ -20,7 +20,6 @@
 - By using `find_<model>!` macro we can run complex queries that are generated at compile time as `&'static str`
 - Although it has expressive API it's thin layer on top of scylla_rust_driver, and it does not introduce any significant overhead
 
-
 ## Table of Contents
 - [Charybdis Models](#charybdis-models)
   - [Define Tables](#define-tables)
@@ -43,7 +42,6 @@
 - [Roadmap](#Roadmap)
 
 ## Charybdis Models
-
 
 ### Define Tables
 

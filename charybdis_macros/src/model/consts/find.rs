@@ -24,7 +24,7 @@ pub(crate) fn find_by_partition_key_query_const(ch_args: &CharybdisMacroArgs, fi
         "SELECT {} FROM {} WHERE {}",
         comma_sep_cols(fields),
         ch_args.table_name(),
-        where_placeholders(&ch_args.primary_key())
+        where_placeholders(&ch_args.partition_keys())
     );
 
     let generated = quote! {
