@@ -70,7 +70,6 @@ pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) ->
                     schema_object.table_name = args.table_name.unwrap_or("".to_string());
                     schema_object.type_name = args.type_name.unwrap_or("".to_string());
                     schema_object.base_table = args.base_table.unwrap_or("".to_string());
-
                     schema_object.partition_keys = args.partition_keys.unwrap_or(vec![]);
                     schema_object.clustering_keys = args.clustering_keys.unwrap_or(vec![]);
 

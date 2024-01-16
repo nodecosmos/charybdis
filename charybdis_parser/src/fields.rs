@@ -93,7 +93,16 @@ impl CharybdisFields {
         let mut db_fields = vec![];
         let mut all_fields = vec![];
 
-        for key in args.partition_keys() {
+        let partition_keys = args.partition_keys.clone().unwrap_or(vec![]);
+        let clustering_keys = args.clustering_keys.clone().unwrap_or(vec![]);
+        let primary_keys = partition_keys
+            .clone()
+            .iter()
+            .chain(clustering_keys.clone().iter())
+            .cloned()
+            .collect::<Vec<String>>();
+
+        for key in partition_keys {
             let field = named_fields
                 .named
                 .iter()
@@ -108,7 +117,7 @@ impl CharybdisFields {
             db_fields.push(char_field.clone());
         }
 
-        for key in args.clustering_keys() {
+        for key in clustering_keys {
             let field = named_fields
                 .named
                 .iter()
@@ -125,7 +134,7 @@ impl CharybdisFields {
 
         for field in &named_fields.named {
             let field_name = field.ident.clone().unwrap().to_string();
-            if !args.primary_key().contains(&field_name) {
+            if !primary_keys.contains(&field_name) {
                 let char_field = Field::from_field(field, false, false);
 
                 all_fields.push(char_field.clone());
