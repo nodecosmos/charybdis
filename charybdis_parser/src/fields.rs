@@ -23,41 +23,37 @@ pub struct Field {
 }
 
 impl Field {
+    pub fn from_field(field: &syn::Field) -> Self {
+        FieldAttributes::from_attributes(&field.attrs)
+            .map(|char_attrs| {
+                let ident = field.ident.clone().unwrap();
+                return Field {
+                    ident: ident.clone(),
+                    ty: field.ty.clone(),
+                    ty_path: match &field.ty {
+                        syn::Type::Path(type_path) => type_path.clone(),
+                        _ => panic!("Only type path is supported!"),
+                    },
+                    char_attrs,
+                    attrs: field.attrs.clone(),
+                    span: field.span(),
+                    is_partition_key: true,
+                    is_clustering_key: false,
+                };
+            })
+            .unwrap()
+    }
+
     pub fn is_primary_key(&self) -> bool {
         self.is_partition_key || self.is_clustering_key
     }
 }
 
-pub trait CharFieldsExt<T> {
-    fn primary_key_fields(&self) -> Vec<&T>;
-    fn partition_key_fields(&self) -> Vec<&T>;
-    fn clustering_key_fields(&self) -> Vec<&T>;
-    fn non_primary_key_fields(&self) -> Vec<&T>;
-}
-
-impl CharFieldsExt<Field> for Vec<Field> {
-    fn primary_key_fields(&self) -> Vec<&Field> {
-        self.iter().filter(|field| field.is_primary_key()).collect()
-    }
-
-    fn partition_key_fields(&self) -> Vec<&Field> {
-        self.iter().filter(|field| field.is_partition_key).collect()
-    }
-
-    fn clustering_key_fields(&self) -> Vec<&Field> {
-        self.iter().filter(|field| field.is_clustering_key).collect()
-    }
-
-    fn non_primary_key_fields(&self) -> Vec<&Field> {
-        self.iter().filter(|field| !field.is_primary_key()).collect()
-    }
-}
-
-pub trait TypesExt {
+pub trait FieldsTypes {
     fn types(&self) -> Vec<syn::Type>;
 }
 
-impl TypesExt for Vec<&Field> {
+impl FieldsTypes for &Vec<Field> {
     fn types(&self) -> Vec<syn::Type> {
         self.iter().map(|field| field.ty.clone()).collect()
     }
@@ -65,42 +61,92 @@ impl TypesExt for Vec<&Field> {
 
 pub struct CharybdisFields {
     pub all_fields: Vec<Field>,
+    pub partition_key_fields: Vec<Field>,
+    pub clustering_key_fields: Vec<Field>,
     pub db_fields: Vec<Field>,
 }
 
 impl CharybdisFields {
-    pub fn new(named_fields: &FieldsNamed, args: &CharybdisMacroArgs) -> Self {
-        let all_fields: Vec<Field> = named_fields
-            .named
+    pub fn primary_key_fields(&self) -> Vec<Field> {
+        self.partition_key_fields
             .iter()
-            .map(|f| {
-                FieldAttributes::from_attributes(&f.attrs).map(|char_attrs| {
-                    let ident = f.ident.clone().unwrap();
-                    return Field {
-                        ident: ident.clone(),
-                        ty: f.ty.clone(),
-                        ty_path: match &f.ty {
-                            syn::Type::Path(type_path) => type_path.clone(),
-                            _ => panic!("Only type path is supported!"),
-                        },
-                        char_attrs,
-                        attrs: f.attrs.clone(),
-                        span: f.span(),
-                        is_partition_key: args.partition_keys().contains(&ident.to_string()),
-                        is_clustering_key: args.clustering_keys().contains(&ident.to_string()),
-                    };
-                })
-            })
-            .collect::<Result<_, _>>()
-            .unwrap();
-
-        let db_fields = all_fields
-            .iter()
-            .filter(|field| !field.char_attrs.ignore.unwrap_or(false))
+            .chain(self.clustering_key_fields.iter())
             .cloned()
-            .collect();
+            .collect()
+    }
 
-        Self { all_fields, db_fields }
+    pub fn non_primary_key_fields(&self) -> Vec<Field> {
+        self.all_fields
+            .iter()
+            .filter(|field| !field.is_primary_key())
+            .cloned()
+            .collect()
+    }
+
+    pub fn non_db_fields(&self) -> Vec<Field> {
+        self.all_fields
+            .iter()
+            .filter(|field| field.char_attrs.ignore.unwrap_or(false))
+            .cloned()
+            .collect()
+    }
+}
+
+impl CharybdisFields {
+    pub fn new(named_fields: &FieldsNamed, args: &CharybdisMacroArgs) -> Self {
+        let mut partition_key_fields = vec![];
+        let mut clustering_key_fields = vec![];
+        let mut db_fields = vec![];
+        let mut all_fields = vec![];
+
+        for key in args.partition_keys() {
+            let field = named_fields
+                .named
+                .iter()
+                .find(|f| f.ident.clone().unwrap().to_string() == key)
+                .expect(&format!("Partition key {} not found in struct fields", key));
+
+            let char_field = Field::from_field(field);
+
+            partition_key_fields.push(char_field.clone());
+            all_fields.push(char_field.clone());
+            db_fields.push(char_field.clone());
+        }
+
+        for key in args.clustering_keys() {
+            let field = named_fields
+                .named
+                .iter()
+                .find(|f| f.ident.clone().unwrap().to_string() == key)
+                .expect(&format!("Clustering key {} not found in struct fields", key));
+
+            let char_field = Field::from_field(field);
+
+            clustering_key_fields.push(char_field.clone());
+            all_fields.push(char_field.clone());
+            db_fields.push(char_field.clone());
+        }
+
+        for field in &named_fields.named {
+            let char_field = Field::from_field(field);
+
+            if !args.partition_keys().contains(&char_field.ident.to_string())
+                && !args.clustering_keys().contains(&char_field.ident.to_string())
+            {
+                all_fields.push(char_field.clone());
+
+                if !char_field.char_attrs.ignore.unwrap_or(false) {
+                    db_fields.push(char_field.clone());
+                }
+            }
+        }
+
+        Self {
+            partition_key_fields,
+            clustering_key_fields,
+            all_fields,
+            db_fields,
+        }
     }
 
     pub fn from_input(input: &DeriveInput, args: &CharybdisMacroArgs) -> Self {

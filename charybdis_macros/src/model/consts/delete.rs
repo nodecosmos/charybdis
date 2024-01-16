@@ -1,13 +1,14 @@
 use crate::utils::where_placeholders;
+use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use quote::quote;
 use syn::ImplItem;
 
-pub(crate) fn delete_query_const(ch_args: &CharybdisMacroArgs) -> ImplItem {
+pub(crate) fn delete_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str: String = format!(
         "DELETE FROM {} WHERE {}",
         ch_args.table_name(),
-        where_placeholders(&ch_args.primary_key()),
+        where_placeholders(&fields.primary_key_fields()),
     );
 
     let generated = quote! {
@@ -17,11 +18,11 @@ pub(crate) fn delete_query_const(ch_args: &CharybdisMacroArgs) -> ImplItem {
     syn::parse_quote!(#generated)
 }
 
-pub(crate) fn delete_by_partition_key_query_const(ch_args: &CharybdisMacroArgs) -> ImplItem {
+pub(crate) fn delete_by_partition_key_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str: String = format!(
         "DELETE FROM {} WHERE {}",
         ch_args.table_name(),
-        where_placeholders(&ch_args.partition_keys()),
+        where_placeholders(&fields.partition_key_fields),
     );
 
     let generated = quote! {

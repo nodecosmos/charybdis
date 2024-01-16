@@ -34,9 +34,9 @@
   - [Delete](#delete)
 - [Partial Model Operations](#partial-model-operations)
   - [Considerations](#partial-model-considerations)
+  - [As Native](#as-native)
 - [Callbacks](#callbacks)
 - [Batch Operations](#batch-operations)
-- [As Native](#as-native)
 - [Collection queries](#collection-queries)
 - [Ignored fields](#ignored-fields)
 - [Roadmap](#Roadmap)
@@ -384,12 +384,31 @@ let user = user.as_native().find_by_primary_key(&session).await?;
 
 
 ### Partial Model Considerations:
-1) `partial_<model>` require complete primary key in definition
-
-2) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
-
-3) `partial_<model>` struct implements same field attributes as original model,
+1) `partial_<model>` requires `#[derive(Default)]` on original model
+2) `partial_<model>` require complete primary key in definition
+3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
+4) `partial_<model>` struct implements same field attributes as original model,
    so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+
+
+### As Native
+In case we need to run operations on native model, we can use `as_native` method:
+```rust
+partial_user!(UpdateUser, id, username);
+
+let mut update_user_username = UpdateUser {
+    id,
+    username: "updated_username".to_string(),
+};
+
+let native_user: User = update_user_username.as_native().find_by_primary_key(&session).await?;
+
+// action that requires native model
+authorize_user(&native_user);
+```
+`as_native` works by returning new instance of native model with fields from partial model.
+For other fields it uses default values.
+
 
 Recommended naming convention is `Purpose` + `Original Struct Name`. E.g:
 `UpdateAdresssUser`, `UpdateDescriptionPost`.
@@ -521,24 +540,6 @@ It also supports chunked batch operations
 chunk_size = 100;
 CharybdisModelBatch::chunked_inserts(&session, users, chunk_size).await?;
 ```
-
-## As Native
-In case we need to run operations on native model, we can use `as_native` method:
-```rust
-partial_user!(UpdateUser, id, username);
-
-let mut update_user_username = UpdateUser {
-    id,
-    username: "updated_username".to_string(),
-};
-
-let native_user: User = update_user_username.as_native().find_by_primary_key(&session).await?;
-
-// action that requires native model
-authorize_user(&native_user);
-```
-`as_native` works by returning new instance of native model with fields from partial model.
-For other fields it uses default values.
 
 ## Collections
 For every field that is defined with `List<T> `type or `Set<T>`, we get following:

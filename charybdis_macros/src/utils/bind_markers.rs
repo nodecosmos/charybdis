@@ -1,14 +1,14 @@
 use charybdis_parser::fields::Field;
 
-pub fn where_placeholders(fields: &Vec<String>) -> String {
+pub fn where_placeholders(fields: &Vec<Field>) -> String {
     fields
         .iter()
-        .map(|field| format!("{} = ?", field))
+        .map(|field| format!("{} = ?", field.ident))
         .collect::<Vec<String>>()
         .join(" AND ")
 }
 
-pub fn where_bind_markers(fields: Vec<&Field>) -> String {
+pub fn where_bind_markers(fields: Vec<Field>) -> String {
     fields
         .iter()
         .map(|field| format!("{} = :{}", field.ident, field.ident))
@@ -26,7 +26,7 @@ pub fn insert_bind_markers(fields: &Vec<Field>) -> String {
     return str_vec;
 }
 
-pub fn set_bind_markers(fields: Vec<&Field>) -> String {
+pub fn set_bind_markers(fields: Vec<Field>) -> String {
     fields
         .iter()
         .map(|field| format!("{} = :{}", field.ident, field.ident))

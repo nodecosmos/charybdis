@@ -25,9 +25,7 @@ use syn::{parse_macro_input, Data, Fields};
 pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
     let mut input: DeriveInput = parse_macro_input!(input);
-    let char_fields = CharybdisFields::from_input(&input, &args);
-    let db_fields = char_fields.db_fields;
-    let all_fields = char_fields.all_fields;
+    let fields = CharybdisFields::from_input(&input, &args);
 
     CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
     CharybdisFields::strip_charybdis_attributes(&mut input);
@@ -35,45 +33,45 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let struct_name = &input.ident;
 
     // Charybdis::BaseModel types
-    let primary_key_type = primary_key_type(&db_fields);
-    let partition_key_type = partition_key_type(&db_fields);
+    let primary_key_type = primary_key_type(&fields);
+    let partition_key_type = partition_key_type(&fields);
 
     // Charybdis::BaseModel consts
     let db_model_name_const = db_model_name_const(&args);
-    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &db_fields);
-    let find_by_partition_key_query_const = find_by_partition_key_query_const(&args, &db_fields);
-    let insert_query_const = insert_query_const(&args, &db_fields);
+    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &fields);
+    let find_by_partition_key_query_const = find_by_partition_key_query_const(&args, &fields);
+    let insert_query_const = insert_query_const(&args, &fields);
 
     // Charybdis::Model consts
-    let insert_if_not_exists_query_const = insert_if_not_exists_query_const(&args, &db_fields);
-    let update_query_const = update_query_const(&args, &db_fields);
-    let delete_query_const = delete_query_const(&args);
-    let delete_by_partition_key_query_const = delete_by_partition_key_query_const(&args);
+    let insert_if_not_exists_query_const = insert_if_not_exists_query_const(&args, &fields);
+    let update_query_const = update_query_const(&args, &fields);
+    let delete_query_const = delete_query_const(&args, &fields);
+    let delete_by_partition_key_query_const = delete_by_partition_key_query_const(&args, &fields);
 
     // Charybdis::BaseModel methods
-    let primary_key_values_method = primary_key_values_method(&db_fields);
-    let partition_key_values_method = partition_key_values_method(&db_fields);
+    let primary_key_values_method = primary_key_values_method(&fields);
+    let partition_key_values_method = partition_key_values_method(&fields);
 
     // Collection consts
-    let push_to_collection_fields_query_consts = push_to_collection_fields_query_consts(&args, &db_fields);
-    let pull_from_collection_fields_query_consts = pull_from_collection_fields_query_consts(&args, &db_fields);
+    let push_to_collection_fields_query_consts = push_to_collection_fields_query_consts(&args, &fields);
+    let pull_from_collection_fields_query_consts = pull_from_collection_fields_query_consts(&args, &fields);
 
     // Collection methods
-    let push_to_collection_funs = push_to_collection_funs(&db_fields);
-    let pull_from_collection_funs = pull_from_collection_funs(&db_fields);
+    let push_to_collection_funs = push_to_collection_funs(&fields);
+    let pull_from_collection_funs = pull_from_collection_funs(&fields);
 
     // FromRow trait
-    let from_row = from_row(struct_name, &db_fields, &all_fields);
+    let from_row = from_row(struct_name, &fields);
 
     // Current model rules
-    let find_model_query_rule = find_model_query_rule(&args, &db_fields, struct_name);
-    let find_model_rule = find_model_rule(&args, &db_fields, struct_name);
-    let find_first_model_rule = find_first_model_rule(&args, &db_fields, struct_name);
-    let update_model_query_rule = update_model_query_rule(&args, struct_name);
+    let find_model_query_rule = find_model_query_rule(struct_name, &args, &fields);
+    let find_model_rule = find_model_rule(struct_name, &args, &fields);
+    let find_first_model_rule = find_first_model_rule(struct_name, &args, &fields);
+    let update_model_query_rule = update_model_query_rule(struct_name, &args, &fields);
 
     // Associated functions for finding by primary key
-    let find_by_key_funs = find_by_primary_keys_functions(&args, &db_fields, struct_name);
-    let delete_by_cks_funs = delete_by_primary_key_functions(&args, &db_fields, struct_name);
+    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
+    let delete_by_cks_funs = delete_by_primary_key_functions(struct_name, &args, &fields);
 
     let partial_model_generator = partial_model_macro_generator(args, &input);
 
@@ -137,30 +135,30 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
     let mut input: DeriveInput = parse_macro_input!(input);
-    let db_fields = CharybdisFields::from_input(&input, &args).db_fields;
+    let fields = CharybdisFields::from_input(&input, &args);
 
     CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let struct_name = &input.ident;
 
     // Charybdis::BaseModel types
-    let primary_key_type = primary_key_type(&db_fields);
-    let partition_key_type = partition_key_type(&db_fields);
+    let primary_key_type = primary_key_type(&fields);
+    let partition_key_type = partition_key_type(&fields);
 
     // Charybdis::MaterializedView consts
     let db_model_name_const = db_model_name_const(&args);
-    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &db_fields);
-    let find_by_partition_key_query_const = find_by_partition_key_query_const(&args, &db_fields);
+    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &fields);
+    let find_by_partition_key_query_const = find_by_partition_key_query_const(&args, &fields);
 
     // Charybdis::BaseModel methods
-    let primary_key_values_method = primary_key_values_method(&db_fields);
-    let partition_key_values_method = partition_key_values_method(&db_fields);
+    let primary_key_values_method = primary_key_values_method(&fields);
+    let partition_key_values_method = partition_key_values_method(&fields);
 
     // Current model rules
-    let find_model_query_rule = find_model_query_rule(&args, &db_fields, struct_name);
+    let find_model_query_rule = find_model_query_rule(struct_name, &args, &fields);
 
     // Associated functions for finding by  primary key
-    let find_by_key_funs = find_by_primary_keys_functions(&args, &db_fields, struct_name);
+    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
 
     let expanded = quote! {
         #[derive(charybdis::FromRow)]

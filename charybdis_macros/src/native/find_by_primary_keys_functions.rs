@@ -1,5 +1,5 @@
 use crate::utils::{args_to_pass, comma_sep_cols, struct_fields_to_fn_args, where_placeholders};
-use charybdis_parser::fields::Field;
+use charybdis_parser::fields::{CharybdisFields, Field};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -8,14 +8,14 @@ const MAX_FIND_BY_FUNCTIONS: usize = 3;
 
 /// for up to 3 primary keys, generate find_by_primary_key functions
 pub(crate) fn find_by_primary_keys_functions(
-    ch_args: &CharybdisMacroArgs,
-    fields: &Vec<Field>,
     struct_name: &syn::Ident,
+    ch_args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
 ) -> TokenStream {
     let table_name = ch_args.table_name();
-    let comma_sep_cols = comma_sep_cols(fields);
+    let comma_sep_cols = comma_sep_cols(&fields.db_fields);
 
-    let primary_key_stack = ch_args.primary_key();
+    let primary_key_stack = fields.primary_key_fields();
     let mut generated = quote! {};
 
     for i in 0..primary_key_stack.len() {
@@ -23,31 +23,28 @@ pub(crate) fn find_by_primary_keys_functions(
             break;
         }
 
-        let current_keys = primary_key_stack
+        let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<Field>>();
+        let current_field_names = current_fields
             .iter()
-            .take(i + 1)
-            .map(|key| key.to_string())
+            .map(|field| field.ident.to_string())
             .collect::<Vec<String>>();
 
         let query_str = format!(
             "SELECT {} FROM {} WHERE {}",
             comma_sep_cols,
             table_name,
-            where_placeholders(&current_keys)
+            where_placeholders(&current_fields)
         );
-        let find_by_fun_name_str = format!(
-            "find_by_{}",
-            current_keys
-                .iter()
-                .map(|key| key.to_string())
-                .collect::<Vec<String>>()
-                .join("_and_")
-        );
+        let find_by_fun_name_str = format!("find_by_{}", current_field_names.join("_and_"));
 
         let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
-        let is_complete_pk = current_keys.len() == primary_key_stack.len();
-        let arguments = struct_fields_to_fn_args(struct_name.to_string(), fields.clone(), current_keys.clone());
-        let args_to_pass = args_to_pass(current_keys.clone());
+        let is_complete_pk = current_fields.len() == primary_key_stack.len();
+        let arguments = struct_fields_to_fn_args(
+            struct_name.to_string(),
+            fields.db_fields.clone(),
+            current_field_names.clone(),
+        );
+        let args_to_pass = args_to_pass(current_field_names);
         let generated_func;
 
         if is_complete_pk {

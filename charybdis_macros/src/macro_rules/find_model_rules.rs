@@ -1,15 +1,19 @@
 use crate::utils::{camel_to_snake_case, comma_sep_cols};
-use charybdis_parser::fields::Field;
+use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::parse_str;
 
-pub fn find_model_query_rule(args: &CharybdisMacroArgs, fields: &Vec<Field>, struct_name: &Ident) -> TokenStream {
+pub fn find_model_query_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
     let macro_name_str: String = format!("find_{}_query", camel_to_snake_case(&struct_name.to_string()));
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
-    let query_str = format!("SELECT {} FROM {} WHERE ", comma_sep_cols(fields), args.table_name());
+    let query_str = format!(
+        "SELECT {} FROM {} WHERE ",
+        comma_sep_cols(&fields.db_fields),
+        args.table_name()
+    );
 
     let expanded = quote! {
         #[allow(unused_macros)]
@@ -25,13 +29,13 @@ pub fn find_model_query_rule(args: &CharybdisMacroArgs, fields: &Vec<Field>, str
     expanded
 }
 
-pub fn find_model_rule(args: &CharybdisMacroArgs, fields: &Vec<Field>, struct_name: &Ident) -> TokenStream {
+pub fn find_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
     let macro_name_str: String = format!("find_{}", camel_to_snake_case(&struct_name.to_string()));
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
     let query_str = format!(
         "SELECT {} FROM {} WHERE ",
-        crate::utils::comma_sep_cols(fields),
+        crate::utils::comma_sep_cols(&fields.db_fields),
         args.table_name()
     );
 
@@ -49,11 +53,15 @@ pub fn find_model_rule(args: &CharybdisMacroArgs, fields: &Vec<Field>, struct_na
     expanded
 }
 
-pub fn find_first_model_rule(args: &CharybdisMacroArgs, fields: &Vec<Field>, struct_name: &Ident) -> TokenStream {
+pub fn find_first_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
     let macro_name_str: String = format!("find_first_{}", camel_to_snake_case(&struct_name.to_string()));
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
-    let query_str = format!("SELECT {} FROM {} WHERE ", comma_sep_cols(fields), args.table_name());
+    let query_str = format!(
+        "SELECT {} FROM {} WHERE ",
+        comma_sep_cols(&fields.db_fields),
+        args.table_name()
+    );
 
     let expanded = quote! {
         #[allow(unused_macros)]

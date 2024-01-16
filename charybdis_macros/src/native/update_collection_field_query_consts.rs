@@ -1,12 +1,16 @@
 use crate::utils::where_placeholders;
-use charybdis_parser::fields::Field;
+use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse_str;
 
-pub(crate) fn push_to_collection_fields_query_consts(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>) -> TokenStream {
+pub(crate) fn push_to_collection_fields_query_consts(
+    ch_args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
+) -> TokenStream {
     let queries: Vec<TokenStream> = fields
+        .db_fields
         .iter()
         .filter_map(|field| {
             let field_name = field.ident.to_string();
@@ -24,7 +28,7 @@ pub(crate) fn push_to_collection_fields_query_consts(ch_args: &CharybdisMacroArg
                 ch_args.table_name(),
                 field_name,
                 field_name,
-                where_placeholders(&ch_args.primary_key()),
+                where_placeholders(&fields.primary_key_fields()),
             );
 
             let field_name_upper = field_name.to_uppercase();
@@ -48,9 +52,10 @@ pub(crate) fn push_to_collection_fields_query_consts(ch_args: &CharybdisMacroArg
 
 pub(crate) fn pull_from_collection_fields_query_consts(
     ch_args: &CharybdisMacroArgs,
-    fields: &Vec<Field>,
+    fields: &CharybdisFields,
 ) -> TokenStream {
     let queries: Vec<TokenStream> = fields
+        .db_fields
         .iter()
         .filter_map(|field| {
             let field_name = field.ident.to_string();
@@ -68,7 +73,7 @@ pub(crate) fn pull_from_collection_fields_query_consts(
                 ch_args.table_name(),
                 field_name,
                 field_name,
-                where_placeholders(&ch_args.primary_key()),
+                where_placeholders(&fields.primary_key_fields()),
             );
 
             let field_name_upper = field_name.to_uppercase();

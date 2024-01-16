@@ -1,12 +1,13 @@
-use charybdis_parser::fields::Field;
+use charybdis_parser::fields::CharybdisFields;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse_str;
 
 // Here we utilize PUSH_{}_QUERY and PULL_{}_QUERY consts to generate Model functions
 // for updating collection fields.
-pub fn push_to_collection_funs(fields: &Vec<Field>) -> TokenStream {
+pub fn push_to_collection_funs(fields: &CharybdisFields) -> TokenStream {
     let push_to_collection_rules: Vec<TokenStream> = fields
+        .db_fields
         .iter()
         .filter_map(|field| {
             let field_name = field.ident.to_string();
@@ -50,8 +51,9 @@ pub fn push_to_collection_funs(fields: &Vec<Field>) -> TokenStream {
     expanded
 }
 
-pub fn pull_from_collection_funs(fields: &Vec<Field>) -> TokenStream {
+pub fn pull_from_collection_funs(fields: &CharybdisFields) -> TokenStream {
     let pull_from_collection_rules: Vec<TokenStream> = fields
+        .db_fields
         .iter()
         .filter_map(|field| {
             let field_name = field.ident.to_string();
