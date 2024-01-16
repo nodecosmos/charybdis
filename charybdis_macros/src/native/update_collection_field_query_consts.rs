@@ -1,22 +1,15 @@
+use crate::utils::where_placeholders;
+use charybdis_parser::fields::Field;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse_str, Field};
+use syn::parse_str;
 
 pub(crate) fn push_to_collection_fields_query_consts(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>) -> TokenStream {
-    let table_name = ch_args.table_name.as_ref().unwrap();
-
-    let mut primary_key = ch_args.partition_keys.clone().unwrap();
-    let mut clustering_keys = ch_args.clustering_keys.clone().unwrap();
-
-    primary_key.append(clustering_keys.as_mut());
-
-    let primary_key_where_clause: String = primary_key.join(" = ? AND ");
-
     let queries: Vec<TokenStream> = fields
         .iter()
         .filter_map(|field| {
-            let field_name = field.ident.as_ref().unwrap().to_string();
+            let field_name = field.ident.to_string();
             let field_type = field.ty.to_token_stream().to_string();
 
             let is_list = field_type.contains("List");
@@ -27,11 +20,11 @@ pub(crate) fn push_to_collection_fields_query_consts(ch_args: &CharybdisMacroArg
             }
 
             let query_str = format!(
-                "UPDATE {} SET {} = {} + ? WHERE {} = ?",
-                table_name.to_string(),
+                "UPDATE {} SET {} = {} + ? WHERE {}",
+                ch_args.table_name(),
                 field_name,
                 field_name,
-                primary_key_where_clause,
+                where_placeholders(&ch_args.primary_key()),
             );
 
             let field_name_upper = field_name.to_uppercase();
@@ -57,19 +50,10 @@ pub(crate) fn pull_from_collection_fields_query_consts(
     ch_args: &CharybdisMacroArgs,
     fields: &Vec<Field>,
 ) -> TokenStream {
-    let table_name = ch_args.table_name.as_ref().unwrap();
-
-    let mut primary_key = ch_args.partition_keys.clone().unwrap();
-    let mut clustering_keys = ch_args.clustering_keys.clone().unwrap();
-
-    primary_key.append(clustering_keys.as_mut());
-
-    let primary_key_where_clause: String = primary_key.join(" = ? AND ");
-
     let queries: Vec<TokenStream> = fields
         .iter()
         .filter_map(|field| {
-            let field_name = field.ident.as_ref().unwrap().to_string();
+            let field_name = field.ident.to_string();
             let field_type = field.ty.to_token_stream().to_string();
 
             let is_list = field_type.contains("List");
@@ -80,11 +64,11 @@ pub(crate) fn pull_from_collection_fields_query_consts(
             }
 
             let query_str = format!(
-                "UPDATE {} SET {} = {} - ? WHERE {} = ?",
-                table_name.to_string(),
+                "UPDATE {} SET {} = {} - ? WHERE {}",
+                ch_args.table_name(),
                 field_name,
                 field_name,
-                primary_key_where_clause,
+                where_placeholders(&ch_args.primary_key()),
             );
 
             let field_name_upper = field_name.to_uppercase();

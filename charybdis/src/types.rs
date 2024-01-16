@@ -1,10 +1,9 @@
-use crate::FromCqlVal;
+use crate::{FromCqlVal, SerializeCql};
 use chrono::{NaiveDate, Utc};
-use scylla::_macro_internal::{FromCqlValError, ValueTooBig};
+use scylla::_macro_internal::{CellWriter, ColumnType, FromCqlValError, SerializationError, WrittenCellProof};
 use scylla::frame::response::result::CqlValue;
-use scylla::frame::value::Value;
 pub use scylla::macros::{FromRow, FromUserType, IntoUserType, ValueList};
-use scylla::BufMut;
+use scylla::serialize::value::{BuiltinTypeCheckError, BuiltinTypeCheckErrorKind};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
@@ -47,10 +46,24 @@ impl FromCqlVal<CqlValue> for Counter {
     }
 }
 
-impl Value for Counter {
-    fn serialize(&self, buf: &mut Vec<u8>) -> Result<(), ValueTooBig> {
-        buf.put_i32(8);
-        buf.put_i64(self.0);
-        Ok(())
+impl SerializeCql for Counter {
+    fn serialize<'b>(
+        &self,
+        typ: &ColumnType,
+        writer: CellWriter<'b>,
+    ) -> Result<WrittenCellProof<'b>, SerializationError> {
+        if typ != &ColumnType::Counter {
+            return Err(SerializationError::new(BuiltinTypeCheckError {
+                rust_name: std::any::type_name::<Counter>(),
+                got: typ.clone(),
+                kind: BuiltinTypeCheckErrorKind::MismatchedType {
+                    expected: &[ColumnType::Counter],
+                },
+            }));
+        }
+
+        let proof = writer.set_value(self.0.to_be_bytes().as_slice()).unwrap();
+
+        Ok(proof)
     }
 }

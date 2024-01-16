@@ -5,7 +5,7 @@ use colored::Colorize;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use syn::{Field, Fields, GenericArgument, Item, PathArguments};
+use syn::{Fields, GenericArgument, Item, PathArguments};
 use walkdir::WalkDir;
 
 // returns models dir if nested in src/models
@@ -52,19 +52,13 @@ pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) ->
             }
 
             if let Fields::Named(fields_named) = item_struct.fields {
-                let fields = CharybdisFields::new(&fields_named);
-                for field in fields.db_fields() {
-                    if let Field {
-                        ident: Some(ident),
-                        ty: syn::Type::Path(type_path),
-                        ..
-                    } = field
-                    {
-                        let field_name = ident.to_string();
-                        let field_type = type_with_arguments(&type_path);
+                // we don't need charybdis macro attributes here
+                let fields = CharybdisFields::new(&fields_named, &CharybdisMacroArgs::default());
+                for field in fields.db_fields {
+                    let field_name = field.ident.to_string();
+                    let field_type = type_with_arguments(&field.ty_path);
 
-                        schema_object.fields.insert(field_name, field_type);
-                    }
+                    schema_object.fields.insert(field_name, field_type);
                 }
             }
 

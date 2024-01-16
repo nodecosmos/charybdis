@@ -1,5 +1,5 @@
 mod consts;
-mod methods;
+mod values;
 
 pub(crate) use consts::*;
-pub(crate) use methods::*;
+pub(crate) use values::*;

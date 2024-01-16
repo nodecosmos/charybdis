@@ -1,20 +1,15 @@
-use crate::utils::serialized_field_value_adder;
-use charybdis_parser::macro_args::CharybdisMacroArgs;
+use charybdis_parser::fields::Field;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse_str, Field};
+use syn::parse_str;
 
 // Here we utilize PUSH_{}_QUERY and PULL_{}_QUERY consts to generate Model functions
 // for updating collection fields.
-pub fn push_to_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>) -> TokenStream {
-    let primary_key = ch_args.primary_key();
-    let values_capacity: usize = primary_key.len() + 1; // +1 for the value to be pushed
-    let serialized_field_value_adder: TokenStream = serialized_field_value_adder(primary_key);
-
+pub fn push_to_collection_funs(fields: &Vec<Field>) -> TokenStream {
     let push_to_collection_rules: Vec<TokenStream> = fields
         .iter()
         .filter_map(|field| {
-            let field_name = field.ident.as_ref().unwrap().to_string();
+            let field_name = field.ident.to_string();
             let field_type = field.ty.to_token_stream().to_string();
 
             let is_list = field_type.contains("List");
@@ -36,16 +31,9 @@ pub fn push_to_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>
                 pub async fn #fun_name(
                     &self,
                     session: &charybdis::CachingSession,
-                    value: &impl charybdis::Value
+                    value: &impl charybdis::SerializeRow
                 ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
-                    let mut serialized = charybdis::SerializedValues::with_capacity(#values_capacity);
-
-                    serialized.add_value(value)?;
-
-                    #serialized_field_value_adder
-
-
-                    let res = charybdis::operations::execute(session, #push_to_query, serialized).await?;
+                    let res = charybdis::operations::execute(session, #push_to_query, value).await?;
 
                     Ok(res)
                 }
@@ -62,15 +50,11 @@ pub fn push_to_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>
     expanded
 }
 
-pub fn pull_from_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Field>) -> TokenStream {
-    let primary_key = ch_args.primary_key();
-    let values_capacity: usize = primary_key.len() + 1; // +1 for the value to be pushed
-    let serialized_field_value_adder: TokenStream = serialized_field_value_adder(primary_key);
-
+pub fn pull_from_collection_funs(fields: &Vec<Field>) -> TokenStream {
     let pull_from_collection_rules: Vec<TokenStream> = fields
         .iter()
         .filter_map(|field| {
-            let field_name = field.ident.as_ref().unwrap().to_string();
+            let field_name = field.ident.to_string();
             let field_type = field.ty.to_token_stream().to_string();
 
             let is_list = field_type.contains("List");
@@ -92,16 +76,10 @@ pub fn pull_from_collection_funs(ch_args: &CharybdisMacroArgs, fields: &Vec<Fiel
                 pub async fn #fun_name(
                     &self,
                     session: &charybdis::CachingSession,
-                    value: &impl charybdis::Value
+                    value: &impl charybdis::SerializeRow
                 ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
-                    let mut serialized = charybdis::SerializedValues::with_capacity(#values_capacity);
 
-                    serialized.add_value(value)?;
-
-                    #serialized_field_value_adder
-
-
-                    let res = charybdis::operations::execute(session, #pull_from_query, serialized).await?;
+                    let res = charybdis::operations::execute(session, #pull_from_query, value).await?;
 
                     Ok(res)
                 }

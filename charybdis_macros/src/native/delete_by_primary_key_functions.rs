@@ -1,8 +1,8 @@
-use crate::utils::{serialized_value_adder, struct_fields_to_fn_args};
+use crate::utils::{args_to_pass, struct_fields_to_fn_args, where_placeholders};
+use charybdis_parser::fields::Field;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::Field;
 
 const MAX_DELETE_BY_FUNCTIONS: usize = 3;
 
@@ -25,7 +25,7 @@ pub(crate) fn delete_by_primary_key_functions(
     fields: &Vec<Field>,
     struct_name: &syn::Ident,
 ) -> TokenStream {
-    let table_name = ch_args.table_name.clone().unwrap();
+    let table_name = ch_args.table_name();
 
     let primary_key_stack = ch_args.primary_key();
     let mut generated = quote! {};
@@ -40,8 +40,7 @@ pub(crate) fn delete_by_primary_key_functions(
             .take(i + 1)
             .map(|key| key.to_string())
             .collect::<Vec<String>>();
-        let primary_key_where_clause: String = current_keys.join(" = ? AND ");
-        let query_str = format!("DELETE FROM {} WHERE {} = ?", table_name, primary_key_where_clause);
+        let query_str = format!("DELETE FROM {} WHERE {}", table_name, where_placeholders(&current_keys));
         let find_by_fun_name_str = format!(
             "delete_by_{}",
             current_keys
@@ -52,19 +51,14 @@ pub(crate) fn delete_by_primary_key_functions(
         );
         let delete_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
         let arguments = struct_fields_to_fn_args(struct_name.to_string(), fields.clone(), current_keys.clone());
-        let capacity = current_keys.len();
-        let serialized_adder = serialized_value_adder(current_keys);
+        let args_to_pass = args_to_pass(current_keys.clone());
 
         let generated_func = quote! {
             pub async fn #delete_by_fun_name(
                 session: &charybdis::CachingSession,
                 #(#arguments),*
             ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
-                let mut serialized = charybdis::SerializedValues::with_capacity(#capacity);
-
-                #serialized_adder
-
-                let query_result = session.execute(#query_str, serialized).await?;
+                let query_result = session.execute(#query_str, (#(#args_to_pass),*,)).await?;
 
                 Ok(query_result)
             }

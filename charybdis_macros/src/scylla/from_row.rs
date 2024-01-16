@@ -1,6 +1,6 @@
+use charybdis_parser::fields::Field;
 use quote::{quote, quote_spanned};
-use syn::spanned::Spanned;
-use syn::{Field, ImplItem};
+use syn::ImplItem;
 
 pub(crate) fn from_row(struct_name: &syn::Ident, db_fields: &Vec<Field>, all_fields: &Vec<Field>) -> ImplItem {
     let fields_count: usize = db_fields.len();
@@ -9,7 +9,7 @@ pub(crate) fn from_row(struct_name: &syn::Ident, db_fields: &Vec<Field>, all_fie
         let field_name = &field.ident;
         let field_type = &field.ty;
 
-        quote_spanned! {field.span() =>
+        quote_spanned! {field.span =>
             #field_name: {
                 let (col_ix, col_value) = vals_iter
                     .next()
@@ -25,13 +25,15 @@ pub(crate) fn from_row(struct_name: &syn::Ident, db_fields: &Vec<Field>, all_fie
         }
     });
 
+    let mut db_fields_names = db_fields.iter().map(|field| &field.ident);
+
     let set_other_fields = all_fields
         .iter()
-        .filter(|field| !db_fields.contains(field))
+        .filter(|field| !db_fields_names.any(|db_field_name| db_field_name == &field.ident))
         .map(|field| {
             let field_name = &field.ident;
 
-            quote_spanned! {field.span() =>
+            quote_spanned! {field.span =>
                 #field_name: Default::default(),
             }
         });

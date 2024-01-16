@@ -9,7 +9,7 @@ license = "MIT"
 
 [dependencies]
 charybdis_parser = { version = "0.2.2", path = "../charybdis_parser" }
-scylla = "0.10.0"
+scylla = "0.11.1"
 tokio = { version = "1.27.0", features = ["full"] }
 serde_json = "1.0.95"
 serde = { version = "1.0.159", features = ["derive"] }

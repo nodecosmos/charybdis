@@ -1,15 +1,14 @@
 use crate::callbacks::{Callbacks, ExtCallbacks};
 use crate::errors::CharybdisError;
 use crate::model::Model;
-use scylla::frame::value::ValueList;
 use scylla::{CachingSession, QueryResult};
 
-pub trait Insert: Model + ValueList {
+pub trait Insert: Model {
     async fn insert(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
     async fn insert_if_not_exists(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
 }
 
-impl<T: Model + ValueList> Insert for T {
+impl<T: Model> Insert for T {
     async fn insert(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
         session
             .execute(T::INSERT_QUERY, self)

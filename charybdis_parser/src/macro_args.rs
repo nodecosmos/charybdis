@@ -26,12 +26,23 @@ pub struct CharybdisMacroArgs {
 }
 
 impl CharybdisMacroArgs {
-    pub fn primary_key(&self) -> Vec<String> {
-        let mut primary_key: Vec<String> = self.partition_keys.clone().unwrap();
-        let clustering_keys: Vec<String> = self.clustering_keys.clone().unwrap();
+    pub fn partition_keys(&self) -> Vec<String> {
+        self.partition_keys.clone().expect("partition_keys is required")
+    }
 
-        primary_key.extend(clustering_keys);
+    pub fn clustering_keys(&self) -> Vec<String> {
+        self.clustering_keys.clone().expect("clustering_keys is required")
+    }
+
+    pub fn primary_key(&self) -> Vec<String> {
+        let mut primary_key = self.partition_keys();
+        primary_key.extend(self.clustering_keys());
+
         primary_key
+    }
+
+    pub fn table_name(&self) -> String {
+        self.table_name.clone().expect("table_name is required")
     }
 }
 
