@@ -23,7 +23,7 @@ pub struct Field {
 }
 
 impl Field {
-    pub fn from_field(field: &syn::Field) -> Self {
+    pub fn from_field(field: &syn::Field, is_partition_key: bool, is_clustering_key: bool) -> Self {
         FieldAttributes::from_attributes(&field.attrs)
             .map(|char_attrs| {
                 let ident = field.ident.clone().unwrap();
@@ -37,8 +37,8 @@ impl Field {
                     char_attrs,
                     attrs: field.attrs.clone(),
                     span: field.span(),
-                    is_partition_key: true,
-                    is_clustering_key: false,
+                    is_partition_key,
+                    is_clustering_key,
                 };
             })
             .unwrap()
@@ -63,20 +63,13 @@ pub struct CharybdisFields {
     pub all_fields: Vec<Field>,
     pub partition_key_fields: Vec<Field>,
     pub clustering_key_fields: Vec<Field>,
+    pub primary_key_fields: Vec<Field>,
     pub db_fields: Vec<Field>,
 }
 
 impl CharybdisFields {
-    pub fn primary_key_fields(&self) -> Vec<Field> {
-        self.partition_key_fields
-            .iter()
-            .chain(self.clustering_key_fields.iter())
-            .cloned()
-            .collect()
-    }
-
-    pub fn non_primary_key_fields(&self) -> Vec<Field> {
-        self.all_fields
+    pub fn non_primary_key_db_fields(&self) -> Vec<Field> {
+        self.db_fields
             .iter()
             .filter(|field| !field.is_primary_key())
             .cloned()
@@ -96,6 +89,7 @@ impl CharybdisFields {
     pub fn new(named_fields: &FieldsNamed, args: &CharybdisMacroArgs) -> Self {
         let mut partition_key_fields = vec![];
         let mut clustering_key_fields = vec![];
+        let mut primary_key_fields = vec![];
         let mut db_fields = vec![];
         let mut all_fields = vec![];
 
@@ -106,9 +100,10 @@ impl CharybdisFields {
                 .find(|f| f.ident.clone().unwrap().to_string() == key)
                 .expect(&format!("Partition key {} not found in struct fields", key));
 
-            let char_field = Field::from_field(field);
+            let char_field = Field::from_field(field, true, false);
 
             partition_key_fields.push(char_field.clone());
+            primary_key_fields.push(char_field.clone());
             all_fields.push(char_field.clone());
             db_fields.push(char_field.clone());
         }
@@ -120,19 +115,19 @@ impl CharybdisFields {
                 .find(|f| f.ident.clone().unwrap().to_string() == key)
                 .expect(&format!("Clustering key {} not found in struct fields", key));
 
-            let char_field = Field::from_field(field);
+            let char_field = Field::from_field(field, false, true);
 
             clustering_key_fields.push(char_field.clone());
+            primary_key_fields.push(char_field.clone());
             all_fields.push(char_field.clone());
             db_fields.push(char_field.clone());
         }
 
         for field in &named_fields.named {
-            let char_field = Field::from_field(field);
+            let field_name = field.ident.clone().unwrap().to_string();
+            if !args.primary_key().contains(&field_name) {
+                let char_field = Field::from_field(field, false, false);
 
-            if !args.partition_keys().contains(&char_field.ident.to_string())
-                && !args.clustering_keys().contains(&char_field.ident.to_string())
-            {
                 all_fields.push(char_field.clone());
 
                 if !char_field.char_attrs.ignore.unwrap_or(false) {
@@ -144,6 +139,7 @@ impl CharybdisFields {
         Self {
             partition_key_fields,
             clustering_key_fields,
+            primary_key_fields,
             all_fields,
             db_fields,
         }

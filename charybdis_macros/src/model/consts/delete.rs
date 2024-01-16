@@ -8,7 +8,7 @@ pub(crate) fn delete_query_const(ch_args: &CharybdisMacroArgs, fields: &Charybdi
     let query_str: String = format!(
         "DELETE FROM {} WHERE {}",
         ch_args.table_name(),
-        where_placeholders(&fields.primary_key_fields()),
+        where_placeholders(&fields.primary_key_fields),
     );
 
     let generated = quote! {

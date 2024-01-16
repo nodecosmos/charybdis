@@ -8,7 +8,7 @@ pub fn where_placeholders(fields: &Vec<Field>) -> String {
         .join(" AND ")
 }
 
-pub fn where_bind_markers(fields: Vec<Field>) -> String {
+pub fn where_bind_markers(fields: &Vec<Field>) -> String {
     fields
         .iter()
         .map(|field| format!("{} = :{}", field.ident, field.ident))

@@ -28,7 +28,7 @@ pub(crate) fn push_to_collection_fields_query_consts(
                 ch_args.table_name(),
                 field_name,
                 field_name,
-                where_placeholders(&fields.primary_key_fields()),
+                where_placeholders(&fields.primary_key_fields),
             );
 
             let field_name_upper = field_name.to_uppercase();
@@ -73,7 +73,7 @@ pub(crate) fn pull_from_collection_fields_query_consts(
                 ch_args.table_name(),
                 field_name,
                 field_name,
-                where_placeholders(&fields.primary_key_fields()),
+                where_placeholders(&fields.primary_key_fields),
             );
 
             let field_name_upper = field_name.to_uppercase();

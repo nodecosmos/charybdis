@@ -15,7 +15,7 @@ pub(crate) fn find_by_primary_keys_functions(
     let table_name = ch_args.table_name();
     let comma_sep_cols = comma_sep_cols(&fields.db_fields);
 
-    let primary_key_stack = fields.primary_key_fields();
+    let primary_key_stack = &fields.primary_key_fields;
     let mut generated = quote! {};
 
     for i in 0..primary_key_stack.len() {

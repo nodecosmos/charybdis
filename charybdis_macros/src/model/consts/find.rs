@@ -9,7 +9,7 @@ pub(crate) fn find_by_primary_key_query_const(ch_args: &CharybdisMacroArgs, fiel
         "SELECT {} FROM {} WHERE {}",
         comma_sep_cols(&fields.db_fields),
         ch_args.table_name(),
-        where_placeholders(&fields.primary_key_fields()),
+        where_placeholders(&fields.primary_key_fields),
     );
 
     let generated = quote! {

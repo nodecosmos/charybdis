@@ -5,7 +5,7 @@ use syn::ImplItem;
 
 /// returns tuple of primary key types
 pub(crate) fn primary_key_type(fields: &CharybdisFields) -> ImplItem {
-    let types_tuple = types_tuple(&fields.primary_key_fields());
+    let types_tuple = types_tuple(&fields.primary_key_fields);
 
     let primary_key_type = quote! {
         type PrimaryKey = #types_tuple;
@@ -27,7 +27,7 @@ pub(crate) fn partition_key_type(fields: &CharybdisFields) -> ImplItem {
 /// returns tuple of self values
 /// e.g. (self.id, self.name)
 pub(crate) fn primary_key_values_method(fields: &CharybdisFields) -> ImplItem {
-    let values_tuple = values_tuple(&fields.primary_key_fields());
+    let values_tuple = values_tuple(&fields.primary_key_fields);
 
     let primary_key_values_method = quote! {
         fn primary_key_values(&self) -> Self::PrimaryKey {

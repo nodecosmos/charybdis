@@ -15,7 +15,7 @@ pub fn update_model_query_rule(
     let macro_name = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
     let update = format!("UPDATE {} SET ", args.table_name());
-    let query_str = format!(" WHERE {}", where_placeholders(&fields.primary_key_fields()));
+    let query_str = format!(" WHERE {}", where_placeholders(&fields.primary_key_fields));
 
     let expanded = quote! {
         #[allow(unused_macros)]

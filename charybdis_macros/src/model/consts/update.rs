@@ -8,8 +8,8 @@ pub(crate) fn update_query_const(ch_args: &CharybdisMacroArgs, fields: &Charybdi
     let query_str: String = format!(
         "UPDATE {} SET {} WHERE {}",
         ch_args.table_name(),
-        set_bind_markers(fields.non_primary_key_fields()),
-        where_bind_markers(fields.primary_key_fields()),
+        set_bind_markers(fields.non_primary_key_db_fields()),
+        where_bind_markers(&fields.primary_key_fields),
     );
 
     let generated = quote! {
