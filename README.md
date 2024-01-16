@@ -1,8 +1,6 @@
 # Rust ORM for ScyllaDB
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP*: This project is currently in an experimental stage. It depends on Rust: 1.75.0 which is currently Beta and it's scheduled for stable release on [Dec 28](https://forge.rust-lang.org/)
-
-
+⚠️ *WIP*: This project is currently in an experimental stage. It's not recommended to use it in production yet.
 
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
 
