@@ -1,7 +1,7 @@
-mod find_model_rules;
-mod partial_model_rule;
-mod update_model_rules;
+mod find;
+mod partial;
+mod update;
 
-pub(crate) use find_model_rules::*;
-pub(crate) use partial_model_rule::*;
-pub(crate) use update_model_rules::*;
+pub(crate) use find::*;
+pub(crate) use partial::*;
+pub(crate) use update::*;

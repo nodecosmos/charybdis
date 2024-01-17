@@ -9,8 +9,8 @@ mod utils;
 use crate::macro_rules::*;
 use crate::model::*;
 use crate::native::{
-    delete_by_primary_key_functions, find_by_primary_keys_functions, pull_from_collection_fields_query_consts,
-    pull_from_collection_funs, push_to_collection_fields_query_consts, push_to_collection_funs,
+    delete_by_primary_key_functions, find_by_primary_keys_functions, pull_from_collection_consts,
+    pull_from_collection_funs, push_to_collection_consts, push_to_collection_funs,
 };
 use crate::scylla::from_row;
 use charybdis_parser::fields::CharybdisFields;
@@ -53,8 +53,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let partition_key_values_method = partition_key_values_method(&fields);
 
     // Collection consts
-    let push_to_collection_fields_query_consts = push_to_collection_fields_query_consts(&args, &fields);
-    let pull_from_collection_fields_query_consts = pull_from_collection_fields_query_consts(&args, &fields);
+    let push_to_collection_consts = push_to_collection_consts(&args, &fields);
+    let pull_from_collection_consts = pull_from_collection_consts(&args, &fields);
 
     // Collection methods
     let push_to_collection_funs = push_to_collection_funs(&fields);
@@ -83,8 +83,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
             #find_by_key_funs
             #delete_by_cks_funs
 
-            #push_to_collection_fields_query_consts
-            #pull_from_collection_fields_query_consts
+            #push_to_collection_consts
+            #pull_from_collection_consts
 
             // methods
             #push_to_collection_funs
