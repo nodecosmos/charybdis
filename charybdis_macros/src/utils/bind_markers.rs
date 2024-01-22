@@ -3,7 +3,7 @@ use charybdis_parser::fields::Field;
 pub(crate) fn where_placeholders(fields: &Vec<Field>) -> String {
     fields
         .iter()
-        .map(|field| format!("{} = ?", field.ident))
+        .map(|field| format!("{} = ?", field.name))
         .collect::<Vec<String>>()
         .join(" AND ")
 }
@@ -11,7 +11,7 @@ pub(crate) fn where_placeholders(fields: &Vec<Field>) -> String {
 pub(crate) fn where_bind_markers(fields: &Vec<Field>) -> String {
     fields
         .iter()
-        .map(|field| format!("{} = :{}", field.ident, field.ident))
+        .map(|field| format!("{} = :{}", field.name, field.name))
         .collect::<Vec<String>>()
         .join(" AND ")
 }
@@ -19,7 +19,7 @@ pub(crate) fn where_bind_markers(fields: &Vec<Field>) -> String {
 pub(crate) fn insert_bind_markers(fields: &Vec<Field>) -> String {
     let str_vec = fields
         .iter()
-        .map(|field| format!(":{}", field.ident))
+        .map(|field| format!(":{}", field.name))
         .collect::<Vec<String>>()
         .join(", ");
 
@@ -29,7 +29,7 @@ pub(crate) fn insert_bind_markers(fields: &Vec<Field>) -> String {
 pub(crate) fn set_bind_markers(fields: Vec<Field>) -> String {
     fields
         .iter()
-        .map(|field| format!("{} = :{}", field.ident, field.ident))
+        .map(|field| format!("{} = :{}", field.name, field.name))
         .collect::<Vec<String>>()
         .join(", ")
 }

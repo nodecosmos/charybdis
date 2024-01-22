@@ -26,7 +26,7 @@ pub(crate) fn find_by_primary_keys_functions(
         let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<Field>>();
         let current_field_names = current_fields
             .iter()
-            .map(|field| field.ident.to_string())
+            .map(|field| field.name.clone())
             .collect::<Vec<String>>();
 
         let query_str = format!(

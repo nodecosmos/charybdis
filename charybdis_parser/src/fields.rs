@@ -1,7 +1,71 @@
 use crate::macro_args::CharybdisMacroArgs;
 use darling::FromAttributes;
+use quote::ToTokens;
+use std::fmt::{Display, Formatter};
 use syn::spanned::Spanned;
 use syn::{Data, DeriveInput, Fields, FieldsNamed};
+
+pub enum Types {
+    Ascii,
+    BigInt,
+    Blob,
+    Boolean,
+    Counter,
+    Date,
+    Decimal,
+    Double,
+    Duration,
+    Float,
+    Inet,
+    Int,
+    SmallInt,
+    Text,
+    Time,
+    Timestamp,
+    Timeuuid,
+    TinyInt,
+    Uuid,
+    Varchar,
+    Varint,
+    Map,
+    List,
+    Set,
+    Tuple,
+    Frozen,
+}
+
+impl Display for Types {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Types::Ascii => write!(f, "Ascii"),
+            Types::BigInt => write!(f, "BigInt"),
+            Types::Blob => write!(f, "Blob"),
+            Types::Boolean => write!(f, "Boolean"),
+            Types::Counter => write!(f, "Counter"),
+            Types::Date => write!(f, "Date"),
+            Types::Decimal => write!(f, "Decimal"),
+            Types::Double => write!(f, "Double"),
+            Types::Duration => write!(f, "Duration"),
+            Types::Float => write!(f, "Float"),
+            Types::Inet => write!(f, "Inet"),
+            Types::Int => write!(f, "Int"),
+            Types::SmallInt => write!(f, "SmallInt"),
+            Types::Text => write!(f, "Text"),
+            Types::Time => write!(f, "Time"),
+            Types::Timestamp => write!(f, "Timestamp"),
+            Types::Timeuuid => write!(f, "Timeuuid"),
+            Types::TinyInt => write!(f, "TinyInt"),
+            Types::Uuid => write!(f, "Uuid"),
+            Types::Varchar => write!(f, "Varchar"),
+            Types::Varint => write!(f, "Varint"),
+            Types::Map => write!(f, "Map"),
+            Types::List => write!(f, "List"),
+            Types::Set => write!(f, "Set"),
+            Types::Tuple => write!(f, "Tuple"),
+            Types::Frozen => write!(f, "Frozen"),
+        }
+    }
+}
 
 #[derive(FromAttributes, Clone)]
 #[darling(attributes(charybdis))]
@@ -12,6 +76,7 @@ pub struct FieldAttributes {
 
 #[derive(Clone)]
 pub struct Field {
+    pub name: String,
     pub ident: syn::Ident,
     pub ty: syn::Type,
     pub ty_path: syn::TypePath,
@@ -28,6 +93,7 @@ impl Field {
             .map(|char_attrs| {
                 let ident = field.ident.clone().unwrap();
                 return Field {
+                    name: ident.to_string(),
                     ident: ident.clone(),
                     ty: field.ty.clone(),
                     ty_path: match &field.ty {
@@ -44,8 +110,20 @@ impl Field {
             .unwrap()
     }
 
+    pub fn type_string(&self) -> String {
+        self.ty.to_token_stream().to_string()
+    }
+
     pub fn is_primary_key(&self) -> bool {
         self.is_partition_key || self.is_clustering_key
+    }
+
+    pub fn is_list(&self) -> bool {
+        self.type_string().contains(Types::List.to_string().as_str())
+    }
+
+    pub fn is_set(&self) -> bool {
+        self.type_string().contains(Types::Set.to_string().as_str())
     }
 }
 
@@ -164,7 +242,7 @@ impl CharybdisFields {
         }
     }
 
-    /// Map charybdis(ignore) to scylla(skip) and leave other attributes as is
+    /// Map charybdis(ignore) to scylla(skip)
     pub fn proxy_charybdis_attrs_to_scylla(input: &mut DeriveInput) {
         if let Data::Struct(data_struct) = &mut input.data {
             if let Fields::Named(fields_named) = &mut data_struct.fields {

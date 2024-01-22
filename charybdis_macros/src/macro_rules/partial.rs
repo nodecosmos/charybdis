@@ -206,10 +206,10 @@ fn build_field_types_hash(fields: &Vec<Field>) -> String {
     let mut field_types = quote! {};
 
     for field in fields.iter() {
-        let name = &field.ident;
+        let field_ident = &field.ident;
         let ty = &field.ty;
 
-        field_types.extend(quote! { #name => #ty; });
+        field_types.extend(quote! { #field_ident => #ty; });
     }
 
     field_types.to_string().replace('\n', "")
@@ -220,10 +220,10 @@ fn build_field_attributes_hash(fields: &Vec<Field>) -> String {
     let mut field_attributes = quote! {};
 
     for field in fields.iter() {
-        let name = &field.ident;
+        let field_ident = &field.ident;
         let attrs: &Vec<Attribute> = &field.attrs;
 
-        field_attributes.extend(quote! { #name => #(#attrs)*; });
+        field_attributes.extend(quote! { #field_ident => #(#attrs)*; });
     }
 
     // strip newlines

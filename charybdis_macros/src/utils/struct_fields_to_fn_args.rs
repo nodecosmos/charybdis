@@ -11,7 +11,7 @@ pub(crate) fn struct_fields_to_fn_args(
         .map(|key| {
             let key_type = struct_fields
                 .iter()
-                .find(|field| field.ident == key)
+                .find(|field| field.name == *key)
                 .unwrap_or_else(|| {
                     panic!(
                         "Key {} not found in struct {}. Partial models need to have complete primary key!",

@@ -6,11 +6,11 @@ pub(crate) fn from_row(struct_name: &syn::Ident, fields: &CharybdisFields) -> Im
     let fields_count: usize = fields.db_fields.len();
 
     let set_db_fields = fields.db_fields.iter().map(|field| {
-        let field_name = &field.ident;
+        let field_ident = &field.ident;
         let field_type = &field.ty;
 
         quote_spanned! {field.span =>
-            #field_name: {
+            #field_ident: {
                 let (col_ix, col_value) = vals_iter
                     .next()
                     .unwrap(); // vals_iter size is checked before this code is reached, so
@@ -27,10 +27,10 @@ pub(crate) fn from_row(struct_name: &syn::Ident, fields: &CharybdisFields) -> Im
 
     let other_fields = fields.non_db_fields();
     let set_other_fields = other_fields.iter().map(|field| {
-        let field_name = &field.ident;
+        let field_ident = &field.ident;
 
         quote_spanned! {field.span =>
-            #field_name: Default::default(),
+            #field_ident: Default::default(),
         }
     });
 
