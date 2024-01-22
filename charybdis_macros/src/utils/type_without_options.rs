@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use syn::{GenericArgument, PathArguments, Type};
 
-pub fn type_without_options(o_type: &Type) -> TokenStream {
+pub(crate) fn type_without_options(o_type: &Type) -> TokenStream {
     let mut type_name = quote::quote! { #o_type };
 
     match o_type {

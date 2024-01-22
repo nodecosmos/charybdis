@@ -89,7 +89,7 @@ pub(crate) fn pull_from_collection_consts(ch_args: &CharybdisMacroArgs, fields: 
     expanded
 }
 
-pub fn push_to_collection_funs(fields: &CharybdisFields) -> TokenStream {
+pub(crate) fn push_to_collection_funs(fields: &CharybdisFields) -> TokenStream {
     let push_to_collection_rules: Vec<TokenStream> = fields
         .db_fields
         .iter()
@@ -143,7 +143,7 @@ pub fn push_to_collection_funs(fields: &CharybdisFields) -> TokenStream {
     expanded
 }
 
-pub fn pull_from_collection_funs(fields: &CharybdisFields) -> TokenStream {
+pub(crate) fn pull_from_collection_funs(fields: &CharybdisFields) -> TokenStream {
     let pull_from_collection_rules: Vec<TokenStream> = fields
         .db_fields
         .iter()

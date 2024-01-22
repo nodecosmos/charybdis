@@ -235,7 +235,7 @@ fn build_field_attributes_hash(fields: &Vec<Field>) -> String {
 /// `charybdis_macros::partial_model_macro_generator` macro.
 /// field_attributes_hash -> key is field name and value is field attributes.
 /// field_types_hash -> key is field name and value is field type and generates a struct with
-pub fn char_model_field_attrs_macro_gen(args: CharybdisMacroArgs, input: DeriveInput) -> TokenStream {
+pub(crate) fn char_model_field_attrs_macro_gen(args: CharybdisMacroArgs, input: DeriveInput) -> TokenStream {
     let input_attributes = &input.attrs;
 
     let struct_name = &input.ident;

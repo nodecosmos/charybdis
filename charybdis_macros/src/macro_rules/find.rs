@@ -5,7 +5,11 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::parse_str;
 
-pub fn find_model_query_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
+pub(crate) fn find_model_query_rule(
+    struct_name: &Ident,
+    args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
+) -> TokenStream {
     let macro_name_str: String = format!("find_{}_query", camel_to_snake_case(&struct_name.to_string()));
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
@@ -29,7 +33,7 @@ pub fn find_model_query_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fie
     expanded
 }
 
-pub fn find_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
+pub(crate) fn find_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
     let macro_name_str: String = format!("find_{}", camel_to_snake_case(&struct_name.to_string()));
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
@@ -53,7 +57,11 @@ pub fn find_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &
     expanded
 }
 
-pub fn find_first_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
+pub(crate) fn find_first_model_rule(
+    struct_name: &Ident,
+    args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
+) -> TokenStream {
     let macro_name_str: String = format!("find_first_{}", camel_to_snake_case(&struct_name.to_string()));
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 

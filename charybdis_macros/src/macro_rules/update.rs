@@ -5,7 +5,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::parse_str;
 
-pub fn update_model_query_rule(
+pub(crate) fn update_model_query_rule(
     struct_name: &Ident,
     args: &CharybdisMacroArgs,
     fields: &CharybdisFields,
