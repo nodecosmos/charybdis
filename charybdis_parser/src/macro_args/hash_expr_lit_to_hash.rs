@@ -1,6 +1,25 @@
 use proc_macro2::TokenStream;
 use std::collections::HashMap;
 
+enum HashSplitter {
+    Line,
+    Pair,
+}
+
+impl<'a> HashSplitter {
+    const LINE: &'static str = ";";
+    const PAIR: &'static str = "=>";
+
+    fn split(&self, string: &'a str) -> Vec<&'a str> {
+        let str = match self {
+            HashSplitter::Line => string.split(Self::LINE),
+            HashSplitter::Pair => string.split(Self::PAIR),
+        };
+
+        str.collect()
+    }
+}
+
 pub(crate) fn hash_expr_lit_to_hash(expr: syn::Expr, cha_attr_name: String) -> HashMap<String, TokenStream> {
     // parse ruby style hash
     let hash = match expr {
@@ -13,9 +32,9 @@ pub(crate) fn hash_expr_lit_to_hash(expr: syn::Expr, cha_attr_name: String) -> H
 
     // hashmap
     let mut parsed_field_types_hash = HashMap::new();
-    for pair in hash.split(';') {
+    for pair in HashSplitter::Line.split(&hash) {
         let pair = pair.trim();
-        let pair: Vec<&str> = pair.split("=>").collect();
+        let pair: Vec<&str> = HashSplitter::Pair.split(&pair);
 
         if pair.len() != 2 {
             continue;
@@ -23,9 +42,6 @@ pub(crate) fn hash_expr_lit_to_hash(expr: syn::Expr, cha_attr_name: String) -> H
 
         let key = pair[0].trim_matches('\'').trim();
         let value = pair[1].trim_matches('\'');
-
-        // println!("key: {}", key);
-        // println!("value: {}", value);
 
         let token = syn::parse_str::<TokenStream>(value).unwrap();
 
