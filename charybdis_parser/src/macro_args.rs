@@ -1,8 +1,8 @@
-mod hash_expr_lit_to_hash;
-mod parse_fields_from_array;
+mod array;
+mod hash;
 
-use crate::macro_args::hash_expr_lit_to_hash::hash_expr_lit_to_hash;
-use crate::macro_args::parse_fields_from_array::{parse_arr_expr_from_literals, parse_loc_sec_idx_array_expr};
+use crate::macro_args::array::{parse_arr_expr_from_literals, parse_loc_sec_idx_array_expr};
+use crate::macro_args::hash::hash_expr_lit_to_hash;
 use crate::schema::secondary_indexes::LocalIndexTarget;
 use proc_macro2::TokenStream;
 use quote::ToTokens;
