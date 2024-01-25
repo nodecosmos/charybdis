@@ -43,16 +43,7 @@ impl<'a> MigrationUnit<'a> {
 
     pub(crate) async fn run(&self) {
         if self.data.is_first_migration() {
-            self.runner.run_first_migration().await;
-
-            if self.data.has_new_global_secondary_indexes() {
-                self.runner.run_global_index_added_migration().await;
-            }
-
-            if self.data.has_new_local_secondary_indexes() {
-                self.runner.run_local_index_added_migration().await;
-            }
-
+            self.handle_first_migration().await;
             return;
         }
 
@@ -64,52 +55,38 @@ impl<'a> MigrationUnit<'a> {
         let mut is_any_field_changed = false;
 
         if self.data.has_changed_type_fields() {
-            if self.drop_and_replace {
-                self.panic_on_mv_fields_change();
-                self.panic_on_udt_fields_removal();
-
-                self.runner.run_field_type_changed_migration().await;
-                is_any_field_changed = true;
-            } else {
-                self.panic_on_field_type_change();
-            }
+            is_any_field_changed = true;
+            self.handle_fields_type_change().await;
         }
 
         if self.data.has_new_fields() {
-            self.panic_on_mv_fields_change();
-
-            self.runner.run_field_added_migration().await;
             is_any_field_changed = true;
+            self.handle_new_fields().await;
         }
 
         if self.data.has_removed_fields() {
-            self.panic_on_mv_fields_change();
-            self.panic_on_udt_fields_removal();
-
-            self.runner.run_field_removed_migration().await;
             is_any_field_changed = true;
+            self.handle_removed_fields().await;
         }
 
-        if self.data.migration_object_type != MigrationObjectType::Udt {
-            if self.data.has_new_global_secondary_indexes() {
-                is_any_field_changed = true;
-                self.runner.run_global_index_added_migration().await;
-            }
+        if self.data.has_new_global_secondary_indexes() {
+            is_any_field_changed = true;
+            self.runner.run_global_index_added_migration().await;
+        }
 
-            if self.data.has_new_local_secondary_indexes() {
-                is_any_field_changed = true;
-                self.runner.run_local_index_added_migration().await;
-            }
+        if self.data.has_new_local_secondary_indexes() {
+            is_any_field_changed = true;
+            self.runner.run_local_index_added_migration().await;
+        }
 
-            if self.data.has_removed_global_secondary_indexes() {
-                is_any_field_changed = true;
-                self.runner.run_global_index_removed_migration().await;
-            }
+        if self.data.has_removed_global_secondary_indexes() {
+            is_any_field_changed = true;
+            self.runner.run_global_index_removed_migration().await;
+        }
 
-            if self.data.has_removed_local_secondary_indexes() {
-                is_any_field_changed = true;
-                self.runner.run_local_index_removed_migration().await;
-            }
+        if self.data.has_removed_local_secondary_indexes() {
+            is_any_field_changed = true;
+            self.runner.run_local_index_removed_migration().await;
         }
 
         if !is_any_field_changed {
@@ -120,6 +97,42 @@ impl<'a> MigrationUnit<'a> {
                 self.data.migration_object_type.to_string().bright_magenta()
             );
         }
+    }
+
+    async fn handle_first_migration(&self) {
+        self.runner.run_first_migration().await;
+
+        if self.data.has_new_global_secondary_indexes() {
+            self.runner.run_global_index_added_migration().await;
+        }
+
+        if self.data.has_new_local_secondary_indexes() {
+            self.runner.run_local_index_added_migration().await;
+        }
+    }
+
+    async fn handle_fields_type_change(&self) {
+        if self.drop_and_replace {
+            self.panic_on_mv_fields_change();
+            self.panic_on_udt_fields_removal();
+
+            self.runner.run_field_type_changed_migration().await;
+        } else {
+            self.panic_on_field_type_change();
+        }
+    }
+
+    async fn handle_new_fields(&self) {
+        self.panic_on_mv_fields_change();
+
+        self.runner.run_field_added_migration().await;
+    }
+
+    async fn handle_removed_fields(&self) {
+        self.panic_on_mv_fields_change();
+        self.panic_on_udt_fields_removal();
+
+        self.runner.run_field_removed_migration().await;
     }
 
     fn panic_on_field_type_change(&self) {
