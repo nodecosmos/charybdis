@@ -25,15 +25,20 @@ impl Display for MigrationObjectType {
 }
 
 pub(crate) struct MigrationUnit<'a> {
-    pub(crate) data: &'a MigrationUnitData<'a>,
-    pub(crate) runner: MigrationUnitRunner<'a>,
+    data: &'a MigrationUnitData<'a>,
+    runner: MigrationUnitRunner<'a>,
+    drop_and_replace: bool,
 }
 
 impl<'a> MigrationUnit<'a> {
-    pub(crate) fn new(data: &'a MigrationUnitData, session: &'a Session) -> Self {
+    pub(crate) fn new(data: &'a MigrationUnitData, session: &'a Session, drop_and_replace: bool) -> Self {
         let runner = MigrationUnitRunner::new(&session, &data);
 
-        Self { data, runner }
+        Self {
+            data,
+            runner,
+            drop_and_replace,
+        }
     }
 
     pub(crate) async fn run(&self) {
@@ -53,11 +58,22 @@ impl<'a> MigrationUnit<'a> {
             self.runner.run_table_options_change_migration().await;
         }
 
-        self.panic_on_field_type_change();
+        let mut is_any_field_changed = false;
+
+        if self.data.has_changed_type_fields() {
+            if self.drop_and_replace {
+                self.panic_on_mv_fields_change();
+                self.panic_on_udt_fields_removal();
+
+                self.runner.run_field_type_changed_migration().await;
+                is_any_field_changed = true;
+            } else {
+                self.panic_on_field_type_change();
+            }
+        }
+
         self.panic_on_partition_key_change();
         self.panic_on_clustering_key_change();
-
-        let mut is_any_field_changed = false;
 
         if self.data.has_new_fields() {
             self.panic_on_mv_fields_change();
@@ -107,19 +123,13 @@ impl<'a> MigrationUnit<'a> {
     }
 
     fn panic_on_field_type_change(&self) {
-        if self.data.field_type_changed() {
-            panic!(
-                "\n\n{} {} {}\n{}\n\n",
-                "Illegal change in".bright_red(),
-                self.data.migration_object_name.bright_yellow(),
-                self.data.migration_object_type.to_string().bright_magenta(),
-                "Field type change is not supported yet!".bright_red(),
-            );
-
-            // TODO: implement migration flag so on field type change
-            //  we can allow dropping and replacement.
-            // self.run_field_type_changed_migration();
-        }
+        panic!(
+            "\n\n{} {} {}\n{}\n\n",
+            "Illegal change in".bright_red(),
+            self.data.migration_object_name.bright_yellow(),
+            self.data.migration_object_type.to_string().bright_magenta(),
+            "Field type change is not allowed. Use `-d` flag to drop and recreate field with new type!".bright_red(),
+        );
     }
 
     fn panic_on_partition_key_change(&self) {

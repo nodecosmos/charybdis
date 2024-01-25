@@ -188,6 +188,48 @@ impl<'a> MigrationUnitRunner<'a> {
         self.execute(&cql).await;
     }
 
+    pub(crate) async fn run_field_type_changed_migration(&self) {
+        println!(
+            "{}",
+            "Field Type Change Migration (Drop and replace):"
+                .on_bright_green()
+                .black()
+        );
+
+        // remove fields with changed types
+        let changed_fields = self
+            .data
+            .changed_field_types
+            .iter()
+            .map(|(field_name, _, _)| field_name.clone())
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        let cql = format!(
+            "ALTER {} {} DROP ({})",
+            self.data.migration_object_type.to_string(),
+            self.data.migration_object_name,
+            changed_fields,
+        );
+
+        self.execute(&cql).await;
+
+        let add_fields_clause = self
+            .data
+            .changed_field_types
+            .iter()
+            .map(|(field_name, _, field_type)| format!("{} {}", field_name, field_type))
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        let cql = format!(
+            "ALTER {} {} ADD ({})",
+            self.data.migration_object_type, self.data.migration_object_name, add_fields_clause,
+        );
+
+        self.execute(&cql).await;
+    }
+
     pub(crate) async fn run_global_index_added_migration(&self) {
         println!(
             "\n{} {} {}",

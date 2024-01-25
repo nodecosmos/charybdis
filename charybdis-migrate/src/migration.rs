@@ -10,6 +10,7 @@ pub(crate) struct Migration<'a> {
     current_db_schema: &'a DbSchema,
     current_code_schema: &'a CodeSchema,
     session: &'a Session,
+    drop_and_replace: bool,
 }
 
 impl<'a> Migration<'a> {
@@ -17,11 +18,13 @@ impl<'a> Migration<'a> {
         current_db_schema: &'a DbSchema,
         current_code_schema: &'a CodeSchema,
         session: &'a Session,
+        drop_and_replace: bool,
     ) -> Self {
         Migration {
             current_db_schema,
             current_code_schema,
             session,
+            drop_and_replace,
         }
     }
 
@@ -44,7 +47,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.udts.get(name).unwrap_or(&empty_udt),
             );
 
-            let migration = MigrationUnit::new(&migration_unit_data, self.session);
+            let migration = MigrationUnit::new(&migration_unit_data, self.session, self.drop_and_replace);
 
             migration.run().await;
         }
@@ -61,7 +64,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.tables.get(name).unwrap_or(&empty_table),
             );
 
-            let migration = MigrationUnit::new(&migration_unit_data, self.session);
+            let migration = MigrationUnit::new(&migration_unit_data, self.session, self.drop_and_replace);
 
             migration.run().await;
         }
@@ -78,7 +81,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.materialized_views.get(name).unwrap_or(&empty_mv),
             );
 
-            let migration = MigrationUnit::new(&migration_unit_data, self.session);
+            let migration = MigrationUnit::new(&migration_unit_data, self.session, self.drop_and_replace);
 
             migration.run().await;
         }

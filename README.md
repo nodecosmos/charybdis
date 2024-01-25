@@ -127,6 +127,7 @@ It supports following operations:
 - Create new tables
 - Create new columns
 - Drop columns
+- Change field types (drop and recreate column)
 - Create secondary indexes
 - Drop secondary indexes
 - Create UDTs (`src/models/udts`)
