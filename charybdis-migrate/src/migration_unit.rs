@@ -54,9 +54,9 @@ impl<'a> MigrationUnit<'a> {
             }
 
             return;
-        } else {
-            self.runner.run_table_options_change_migration().await;
         }
+
+        self.runner.run_table_options_change_migration().await;
 
         self.panic_on_partition_key_change();
         self.panic_on_clustering_key_change();
