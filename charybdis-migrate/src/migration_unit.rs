@@ -58,6 +58,9 @@ impl<'a> MigrationUnit<'a> {
             self.runner.run_table_options_change_migration().await;
         }
 
+        self.panic_on_partition_key_change();
+        self.panic_on_clustering_key_change();
+
         let mut is_any_field_changed = false;
 
         if self.data.has_changed_type_fields() {
@@ -71,9 +74,6 @@ impl<'a> MigrationUnit<'a> {
                 self.panic_on_field_type_change();
             }
         }
-
-        self.panic_on_partition_key_change();
-        self.panic_on_clustering_key_change();
 
         if self.data.has_new_fields() {
             self.panic_on_mv_fields_change();
