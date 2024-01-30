@@ -174,7 +174,9 @@ impl<'a> MigrationUnit<'a> {
     }
 
     fn panic_on_udt_fields_removal(&self) {
-        if self.data.migration_object_type == MigrationObjectType::Udt && !self.data.removed_fields.is_empty() {
+        if self.data.migration_object_type == MigrationObjectType::Udt
+            && (self.data.has_removed_fields() || self.data.has_changed_type_fields())
+        {
             panic!("\n{}\n", "UDT fields removal is not allowed!".bold().bright_red());
         }
     }
