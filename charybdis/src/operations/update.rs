@@ -1,19 +1,16 @@
 use crate::callbacks::{Callbacks, ExtCallbacks};
 use crate::errors::CharybdisError;
 use crate::model::Model;
-use scylla::frame::value::ValueList;
 use scylla::{CachingSession, QueryResult};
 
 pub trait Update {
     async fn update(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
 }
 
-impl<T: Model + ValueList> Update for T {
+impl<T: Model> Update for T {
     async fn update(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
-        let update_values = self.update_values()?;
-
         session
-            .execute(Self::UPDATE_QUERY, update_values)
+            .execute(Self::UPDATE_QUERY, self)
             .await
             .map_err(CharybdisError::from)
     }

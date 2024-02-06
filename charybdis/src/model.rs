@@ -1,21 +1,16 @@
-use crate::SerializedResult;
+use crate::SerializeRow;
 use scylla::FromRow;
 
 pub trait BaseModel: FromRow + Sized {
+    type PrimaryKey: SerializeRow + Send + Sync;
+    type PartitionKey: SerializeRow + Send + Sync;
+
     const DB_MODEL_NAME: &'static str;
-
-    const PARTITION_KEYS: &'static [&'static str];
-    const CLUSTERING_KEYS: &'static [&'static str];
-    const PRIMARY_KEY: &'static [&'static str];
-
-    const SELECT_FIELDS_CLAUSE: &'static str;
-
     const FIND_BY_PRIMARY_KEY_QUERY: &'static str;
     const FIND_BY_PARTITION_KEY_QUERY: &'static str;
 
-    fn primary_key_values(&self) -> SerializedResult;
-    fn partition_key_values(&self) -> SerializedResult;
-    fn clustering_key_values(&self) -> SerializedResult;
+    fn primary_key_values(&self) -> Self::PrimaryKey;
+    fn partition_key_values(&self) -> Self::PartitionKey;
 }
 
 ///
@@ -44,8 +39,8 @@ pub trait BaseModel: FromRow + Sized {
 ///     pub created_at: Timestamp,
 ///     pub updated_at: Timestamp,
 /// }
-/// ```
 ///
+/// ```
 /// These structure is used by smart `migration` tool that automatically migrate the database
 /// schema from the code.
 /// It detects changes in the model and automatically applies the changes to the database.
@@ -53,14 +48,12 @@ pub trait BaseModel: FromRow + Sized {
 /// If you have migration package installed, you can run the `migrate` command to automatically
 /// migrate the database schema without having to write any CQL queries.
 ///
-pub trait Model: BaseModel {
+pub trait Model: BaseModel + SerializeRow {
     const INSERT_QUERY: &'static str;
     const INSERT_IF_NOT_EXIST_QUERY: &'static str;
     const UPDATE_QUERY: &'static str;
     const DELETE_QUERY: &'static str;
     const DELETE_BY_PARTITION_KEY_QUERY: &'static str;
-
-    fn update_values(&self) -> SerializedResult;
 }
 
 ///
@@ -123,7 +116,7 @@ pub trait TableOptions {
 ///
 /// In extension of partial_model!() in case you need native model in order to run calculations
 /// or other operations, you can use `as_native` method:
-/// ```rust
+/// ```rust ignore
 /// use charybdis_macros::charybdis_model;
 /// use charybdis::types::{Text, Timestamp, Uuid};
 /// use charybdis::model::AsNative;

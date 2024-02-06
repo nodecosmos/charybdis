@@ -2,23 +2,24 @@ use crate::migration_unit::runner::INDEX_SUFFIX;
 use crate::migration_unit::MigrationObjectType;
 use charybdis_parser::schema::secondary_indexes::LocalIndexTarget;
 use charybdis_parser::schema::{IndexName, SchemaObject};
-use colored::Colorize;
 
-pub type FieldName = String;
-pub type FieldType = String;
-type NewField = (FieldName, FieldType);
+type FieldName = String;
+type FieldType = String;
+type OldFieldType = FieldType;
+type NewFieldType = FieldType;
 
 pub struct MigrationUnitData<'a> {
     pub(crate) migration_object_name: &'a String,
     pub(crate) migration_object_type: MigrationObjectType,
     pub(crate) current_code_schema: &'a SchemaObject,
     pub(crate) current_db_schema: &'a SchemaObject,
-    pub(crate) new_fields: Vec<NewField>,
+    pub(crate) new_fields: Vec<(FieldName, FieldType)>,
     pub(crate) removed_fields: Vec<FieldName>,
     pub(crate) new_global_secondary_indexes: Vec<FieldName>,
     pub(crate) new_local_secondary_indexes: Vec<LocalIndexTarget>,
     pub(crate) removed_global_secondary_indexes: Vec<IndexName>,
     pub(crate) removed_local_secondary_indexes: Vec<IndexName>,
+    pub(crate) changed_field_types: Vec<(FieldName, OldFieldType, NewFieldType)>,
 }
 
 impl<'a> MigrationUnitData<'a> {
@@ -39,6 +40,7 @@ impl<'a> MigrationUnitData<'a> {
             new_local_secondary_indexes: vec![],
             removed_global_secondary_indexes: vec![],
             removed_local_secondary_indexes: vec![],
+            changed_field_types: vec![],
         };
 
         data.fetch_new_fields();
@@ -47,6 +49,7 @@ impl<'a> MigrationUnitData<'a> {
         data.fetch_removed_global_secondary_indexes();
         data.fetch_new_local_secondary_indexes();
         data.fetch_removed_local_secondary_indexes();
+        data.fetch_changed_field_types();
 
         data
     }
@@ -84,25 +87,8 @@ impl<'a> MigrationUnitData<'a> {
     }
 
     // Checks if any field of db schema has changed type in code schema.
-    pub(crate) fn field_type_changed(&self) -> bool {
-        for (field_name, field_type) in self.current_code_schema.fields.iter() {
-            if let Some(db_field_type) = self.current_db_schema.fields.get(field_name) {
-                let code_field_type = field_type.to_lowercase().replace(' ', "");
-                let db_field_type = db_field_type.to_lowercase().replace(' ', "");
-
-                if code_field_type != db_field_type {
-                    println!(
-                        "\nType Change: {} -> {}",
-                        db_field_type.to_uppercase().yellow().bold(),
-                        code_field_type.to_uppercase().bright_red().bold()
-                    );
-
-                    return true;
-                }
-            }
-        }
-
-        false
+    pub(crate) fn has_changed_type_fields(&self) -> bool {
+        !self.changed_field_types.is_empty()
     }
 
     pub(crate) fn partition_key_changed(&self) -> bool {
@@ -207,5 +193,19 @@ impl<'a> MigrationUnitData<'a> {
                     self.removed_local_secondary_indexes.push(index_name.clone());
                 }
             });
+    }
+
+    fn fetch_changed_field_types(&mut self) {
+        for (field_name, field_type) in self.current_code_schema.fields.iter() {
+            if let Some(db_field_type) = self.current_db_schema.fields.get(field_name) {
+                let code_field_type = field_type.to_lowercase().replace(' ', "");
+                let db_field_type = db_field_type.to_lowercase().replace(' ', "");
+
+                if code_field_type != db_field_type {
+                    self.changed_field_types
+                        .push((field_name.clone(), db_field_type.clone(), code_field_type.clone()));
+                }
+            }
+        }
     }
 }

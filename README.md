@@ -1,8 +1,6 @@
 # Rust ORM for ScyllaDB
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP*: This project is currently in an experimental stage. It depends on Rust: 1.75.0 which is currently Beta and it's scheduled for stable release on [Dec 28](https://forge.rust-lang.org/)
-
-
+⚠️ *WIP*: This project is currently in an experimental stage. It's not recommended to use it in production yet.
 
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
 
@@ -22,7 +20,6 @@
 - By using `find_<model>!` macro we can run complex queries that are generated at compile time as `&'static str`
 - Although it has expressive API it's thin layer on top of scylla_rust_driver, and it does not introduce any significant overhead
 
-
 ## Table of Contents
 - [Charybdis Models](#charybdis-models)
   - [Define Tables](#define-tables)
@@ -37,15 +34,14 @@
   - [Delete](#delete)
 - [Partial Model Operations](#partial-model-operations)
   - [Considerations](#partial-model-considerations)
+  - [As Native](#as-native)
 - [Callbacks](#callbacks)
 - [Batch Operations](#batch-operations)
-- [As Native](#as-native)
 - [Collection queries](#collection-queries)
 - [Ignored fields](#ignored-fields)
 - [Roadmap](#Roadmap)
 
 ## Charybdis Models
-
 
 ### Define Tables
 
@@ -131,6 +127,7 @@ It supports following operations:
 - Create new tables
 - Create new columns
 - Drop columns
+- Change field types (drop and recreate column)
 - Create secondary indexes
 - Drop secondary indexes
 - Create UDTs (`src/models/udts`)
@@ -388,12 +385,31 @@ let user = user.as_native().find_by_primary_key(&session).await?;
 
 
 ### Partial Model Considerations:
-1) `partial_<model>` require complete primary key in definition
-
-2) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
-
-3) `partial_<model>` struct implements same field attributes as original model,
+1) `partial_<model>` requires `#[derive(Default)]` on original model
+2) `partial_<model>` require complete primary key in definition
+3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
+4) `partial_<model>` struct implements same field attributes as original model,
    so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+
+
+### As Native
+In case we need to run operations on native model, we can use `as_native` method:
+```rust
+partial_user!(UpdateUser, id, username);
+
+let mut update_user_username = UpdateUser {
+    id,
+    username: "updated_username".to_string(),
+};
+
+let native_user: User = update_user_username.as_native().find_by_primary_key(&session).await?;
+
+// action that requires native model
+authorize_user(&native_user);
+```
+`as_native` works by returning new instance of native model with fields from partial model.
+For other fields it uses default values.
+
 
 Recommended naming convention is `Purpose` + `Original Struct Name`. E.g:
 `UpdateAdresssUser`, `UpdateDescriptionPost`.
@@ -525,24 +541,6 @@ It also supports chunked batch operations
 chunk_size = 100;
 CharybdisModelBatch::chunked_inserts(&session, users, chunk_size).await?;
 ```
-
-## As Native
-In case we need to run operations on native model, we can use `as_native` method:
-```rust
-partial_user!(UpdateUser, id, username);
-
-let mut update_user_username = UpdateUser {
-    id,
-    username: "updated_username".to_string(),
-};
-
-let native_user: User = update_user_username.as_native().find_by_primary_key(&session).await?;
-
-// action that requires native model
-authorize_user(&native_user);
-```
-`as_native` works by returning new instance of native model with fields from partial model.
-For other fields it uses default values.
 
 ## Collections
 For every field that is defined with `List<T> `type or `Set<T>`, we get following:

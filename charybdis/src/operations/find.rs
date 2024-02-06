@@ -1,4 +1,3 @@
-use scylla::frame::value::ValueList;
 use scylla::query::Query;
 use scylla::{Bytes, IntoTypedRows};
 use scylla::{CachingSession, QueryResult};
@@ -7,38 +6,41 @@ use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
 use crate::stream::CharybdisModelStream;
+use crate::SerializeRow;
 
 pub trait Find: BaseModel {
     async fn find(
         session: &CachingSession,
         query: &'static str,
-        values: impl ValueList,
+        values: impl SerializeRow,
     ) -> Result<CharybdisModelStream<Self>, CharybdisError>;
 
     async fn find_first(
         session: &CachingSession,
         query: &'static str,
-        values: impl ValueList,
+        values: impl SerializeRow,
     ) -> Result<Self, CharybdisError>;
 
     async fn find_paged(
         session: &CachingSession,
         query: &'static str,
-        values: impl ValueList,
+        values: impl SerializeRow,
         page_size: Option<Bytes>,
     ) -> Result<(CharybdisModelIterator<Self>, Option<Bytes>), CharybdisError>;
 
-    async fn find_by_primary_key_value(session: &CachingSession, value: impl ValueList)
-        -> Result<Self, CharybdisError>;
+    async fn find_by_primary_key_value(
+        session: &CachingSession,
+        value: impl SerializeRow,
+    ) -> Result<Self, CharybdisError>;
 
     async fn find_by_partition_key_value(
         session: &CachingSession,
-        value: impl ValueList,
+        value: impl SerializeRow,
     ) -> Result<CharybdisModelStream<Self>, CharybdisError>;
 
     async fn find_first_by_partition_key_value(
         session: &CachingSession,
-        value: impl ValueList,
+        value: impl SerializeRow,
     ) -> Result<Self, CharybdisError>;
 
     async fn find_by_primary_key(&self, session: &CachingSession) -> Result<Self, CharybdisError>;
@@ -54,7 +56,7 @@ impl<T: BaseModel> Find for T {
     async fn find(
         session: &CachingSession,
         query: &'static str,
-        values: impl ValueList,
+        values: impl SerializeRow,
     ) -> Result<CharybdisModelStream<Self>, CharybdisError> {
         let query = Query::new(query);
 
@@ -66,7 +68,7 @@ impl<T: BaseModel> Find for T {
     async fn find_first(
         session: &CachingSession,
         query: &'static str,
-        values: impl ValueList,
+        values: impl SerializeRow,
     ) -> Result<Self, CharybdisError> {
         let result: QueryResult = session.execute(query, values).await?;
         let typed_row: Self = result.first_row_typed()?;
@@ -77,7 +79,7 @@ impl<T: BaseModel> Find for T {
     async fn find_paged(
         session: &CachingSession,
         query: &'static str,
-        values: impl ValueList,
+        values: impl SerializeRow,
         paging_state: Option<Bytes>,
     ) -> Result<(CharybdisModelIterator<Self>, Option<Bytes>), CharybdisError> {
         let res = session.execute_paged(query, values, paging_state).await?;
@@ -90,7 +92,7 @@ impl<T: BaseModel> Find for T {
 
     async fn find_by_primary_key_value(
         session: &CachingSession,
-        value: impl ValueList,
+        value: impl SerializeRow,
     ) -> Result<Self, CharybdisError> {
         let result: QueryResult = session.execute(Self::FIND_BY_PRIMARY_KEY_QUERY, value).await?;
 
@@ -101,7 +103,7 @@ impl<T: BaseModel> Find for T {
 
     async fn find_by_partition_key_value(
         session: &CachingSession,
-        value: impl ValueList,
+        value: impl SerializeRow,
     ) -> Result<CharybdisModelStream<Self>, CharybdisError> {
         let rows = session
             .execute_iter(Self::FIND_BY_PARTITION_KEY_QUERY, value)
@@ -113,7 +115,7 @@ impl<T: BaseModel> Find for T {
 
     async fn find_first_by_partition_key_value(
         session: &CachingSession,
-        value: impl ValueList,
+        value: impl SerializeRow,
     ) -> Result<Self, CharybdisError> {
         let result: QueryResult = session.execute(Self::FIND_BY_PARTITION_KEY_QUERY, value).await?;
 
@@ -124,12 +126,8 @@ impl<T: BaseModel> Find for T {
 
     /// Preferred way to find by partition key, as keys will be in correct order
     async fn find_by_primary_key(&self, session: &CachingSession) -> Result<Self, CharybdisError> {
-        let primary_key_values = self
-            .primary_key_values()
-            .map_err(|e| CharybdisError::SerializeValuesError(e, Self::DB_MODEL_NAME.to_string()))?;
-
         let result: QueryResult = session
-            .execute(Self::FIND_BY_PRIMARY_KEY_QUERY, &primary_key_values)
+            .execute(Self::FIND_BY_PRIMARY_KEY_QUERY, self.primary_key_values())
             .await?;
 
         let res = result.first_row_typed()?;
@@ -142,12 +140,8 @@ impl<T: BaseModel> Find for T {
         &self,
         session: &CachingSession,
     ) -> Result<CharybdisModelStream<Self>, CharybdisError> {
-        let partition_key_values = self
-            .partition_key_values()
-            .map_err(|e| CharybdisError::SerializeValuesError(e, Self::DB_MODEL_NAME.to_string()))?;
-
         let rows = session
-            .execute_iter(Self::FIND_BY_PARTITION_KEY_QUERY, partition_key_values)
+            .execute_iter(Self::FIND_BY_PARTITION_KEY_QUERY, self.partition_key_values())
             .await?
             .into_typed::<Self>();
 

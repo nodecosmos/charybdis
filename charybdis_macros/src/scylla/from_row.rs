@@ -1,16 +1,16 @@
+use charybdis_parser::fields::CharybdisFields;
 use quote::{quote, quote_spanned};
-use syn::spanned::Spanned;
-use syn::{Field, ImplItem};
+use syn::ImplItem;
 
-pub(crate) fn from_row(struct_name: &syn::Ident, db_fields: &Vec<Field>, all_fields: &Vec<Field>) -> ImplItem {
-    let fields_count: usize = db_fields.len();
+pub(crate) fn from_row(struct_name: &syn::Ident, fields: &CharybdisFields) -> ImplItem {
+    let fields_count: usize = fields.db_fields.len();
 
-    let set_db_fields = db_fields.iter().map(|field| {
-        let field_name = &field.ident;
+    let set_db_fields = fields.db_fields.iter().map(|field| {
+        let field_ident = &field.ident;
         let field_type = &field.ty;
 
-        quote_spanned! {field.span() =>
-            #field_name: {
+        quote_spanned! {field.span =>
+            #field_ident: {
                 let (col_ix, col_value) = vals_iter
                     .next()
                     .unwrap(); // vals_iter size is checked before this code is reached, so
@@ -25,16 +25,14 @@ pub(crate) fn from_row(struct_name: &syn::Ident, db_fields: &Vec<Field>, all_fie
         }
     });
 
-    let set_other_fields = all_fields
-        .iter()
-        .filter(|field| !db_fields.contains(field))
-        .map(|field| {
-            let field_name = &field.ident;
+    let other_fields = fields.non_db_fields();
+    let set_other_fields = other_fields.iter().map(|field| {
+        let field_ident = &field.ident;
 
-            quote_spanned! {field.span() =>
-                #field_name: Default::default(),
-            }
-        });
+        quote_spanned! {field.span =>
+            #field_ident: Default::default(),
+        }
+    });
 
     let generated = quote! {
         fn from_row(row: charybdis::Row) -> ::std::result::Result<Self, charybdis::FromRowError> {
