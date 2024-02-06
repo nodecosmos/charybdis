@@ -52,7 +52,7 @@
 Declare model as a struct within `src/models` dir:
 ```rust
 // src/modles/user.rs
-use charybdis_macros::charybdis_model;
+use charybdis::macros::charybdis_model;
 use charybdis::types::{Text, Timestamp, Uuid};
 
 #[charybdis_model(
@@ -77,7 +77,7 @@ pub struct User {
 `src/models/udts`
 ```rust
 // src/models/udts/address.rs
-use charybdis_macros::charybdis_udt_model;
+use use charybdis::macros::charybdis_udt_model;;
 use charybdis::types::Text;
 
 #[charybdis_udt_model(type_name = address)]
@@ -94,7 +94,7 @@ pub struct Address {
 
 ```rust
 // src/models/materialized_views/users_by_username.rs
-use charybdis_macros::charybdis_view_model;
+use use charybdis::macros::charybdis_view_model;;
 use charybdis::types::{Text, Timestamp, Uuid};
 
 #[charybdis_view_model(

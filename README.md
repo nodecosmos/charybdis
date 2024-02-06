@@ -48,7 +48,7 @@
 Declare model as a struct within `src/models` dir:
 ```rust
 // src/modles/user.rs
-use charybdis_macros::charybdis_model;
+use charybdis::macros::charybdis_model;
 use charybdis::types::{Text, Timestamp, Uuid};
 
 #[charybdis_model(
@@ -73,7 +73,7 @@ pub struct User {
 `src/models/udts`
 ```rust
 // src/models/udts/address.rs
-use charybdis_macros::charybdis_udt_model;
+use use charybdis::macros::charybdis_udt_model;;
 use charybdis::types::Text;
 
 #[charybdis_udt_model(type_name = address)]
@@ -90,7 +90,7 @@ pub struct Address {
 
 ```rust
 // src/models/materialized_views/users_by_username.rs
-use charybdis_macros::charybdis_view_model;
+use use charybdis::macros::charybdis_view_model;;
 use charybdis::types::{Text, Timestamp, Uuid};
 
 #[charybdis_view_model(
@@ -127,7 +127,7 @@ It supports following operations:
 - Create new tables
 - Create new columns
 - Drop columns
-- Change field types (drop and recreate column)
+- Change field types (drop and recreate column `--drop-and-replace` flag)
 - Create secondary indexes
 - Drop secondary indexes
 - Create UDTs (`src/models/udts`)
@@ -156,7 +156,7 @@ it will leave db structure as it is.
 ```bash
 cargo install charybdis-migrate
 
-migrate --hosts <host> --keyspace <your_keyspace>
+migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
 ```
 
 ⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model**
@@ -261,12 +261,16 @@ async fn main() {
   ```
 
   ```rust
-  Post::find_by_date(session: &Session, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
+  Post::find_by_date(session: &CachingSession, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id(session: &CachingSession, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id_and_title(session: &CachingSession, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
   ```
   We have macro generated  functions for up to 3 fields from primary key. Note that if **complete**
-  primary key is provided, we get single typed result.
+  primary key is provided, we get single typed result. So in case of our User model, we would get:
+
+  ```rust
+  User::find_by_id(session: &CachingSession, id: Uuid) -> Result<User, CharybdisError>
+  ```
 
 
 ## Custom filtering:
@@ -300,7 +304,7 @@ We can also use `find_first_post!` macro to get single result:
 let post = find_first_post!(
     session,
     "category_id in ? AND date > ? LIMIT 1",
-    (date, categor_vec]
+    (date, categor_vec)
 ).await?;
 ```
 
@@ -308,7 +312,7 @@ If we just need the `Query` and not the result, we can use `find_post_query!` ma
 ```rust
 let query = find_post_query!(
     "date = ? AND category_id in ?",
-    (date, categor_vec])
+    (date, categor_vec)
 ```
 
 ## Update
@@ -347,9 +351,9 @@ pub struct Post {
 We have macro generated  functions for up to 3 fields from primary key.
 
 ```rust
-Post::delete_by_date(session: &Session, date: Date);
-Post::delete_by_date_and_category_id(session: &Session, date: Date, category_id: Uuid);
-Post::delete_by_date_and_category_id_and_title(session: &Session, date: Date, category_id: Uuid, title: String);
+Post::delete_by_date(session: &CachingSession, date: Date);
+Post::delete_by_date_and_category_id(session: &CachingSession, date: Date, category_id: Uuid);
+Post::delete_by_date_and_category_id_and_title(session: &CachingSession, date: Date, category_id: Uuid, title: String);
 ```
 
 

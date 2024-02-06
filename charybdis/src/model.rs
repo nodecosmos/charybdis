@@ -19,7 +19,7 @@ pub trait BaseModel: FromRow + Sized {
 /// Macro 'charybdis_model` generates the necessary code for implementation so you don't have
 /// to write it manually. The macro is used in the following way:
 /// ```rust
-/// use charybdis_macros::charybdis_model;
+/// use charybdis::macros::charybdis_model;
 /// use charybdis::types::{Text, Timestamp, Uuid};
 ///
 /// #[charybdis_model(
@@ -62,7 +62,7 @@ pub trait Model: BaseModel + SerializeRow {
 /// Macro 'charybdis_view_model` generates the necessary code for implementation
 /// so you don't have to write it manually.
 /// ```rust
-/// use charybdis_macros::charybdis_view_model;
+/// use use charybdis::macros::charybdis_view_model;;
 /// use charybdis::types::{Text, Timestamp, Uuid};
 ///
 /// #[charybdis_view_model(
@@ -93,7 +93,7 @@ pub trait MaterializedView: BaseModel {}
 
 /// Declare udt model as a struct within `src/models/udts` dir:
 /// ```rust
-/// use charybdis_macros::charybdis_udt_model;
+/// use use charybdis::macros::charybdis_udt_model;;
 /// use charybdis::types::Text;
 ///
 /// #[charybdis_udt_model(type_name = address)]
@@ -117,7 +117,7 @@ pub trait TableOptions {
 /// In extension of partial_model!() in case you need native model in order to run calculations
 /// or other operations, you can use `as_native` method:
 /// ```rust ignore
-/// use charybdis_macros::charybdis_model;
+/// use charybdis::macros::charybdis_model;
 /// use charybdis::types::{Text, Timestamp, Uuid};
 /// use charybdis::model::AsNative;
 ///

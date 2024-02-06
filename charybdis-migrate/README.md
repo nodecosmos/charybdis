@@ -15,13 +15,14 @@ between model definitions and database.
 
 ### Usage
 ```bash
-  migrate --keyspace <your_keyspace> --host <host:port>
+migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
 ```
 
 ### It supports following operations:
 - Create new tables
 - Create new columns
 - Drop columns
+- Change field types (drop and recreate column `--drop-and-replace` flag)
 - Create secondary indexes
 - Drop secondary indexes
 - Create UDTs (`src/models/udts`)
