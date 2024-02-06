@@ -47,7 +47,7 @@
 
 Declare model as a struct within `src/models` dir:
 ```rust
-// src/modles/user.rs
+// src/models/user.rs
 use charybdis::macros::charybdis_model;
 use charybdis::types::{Text, Timestamp, Uuid};
 
