@@ -62,7 +62,7 @@ pub trait Model: BaseModel + SerializeRow {
 /// Macro 'charybdis_view_model` generates the necessary code for implementation
 /// so you don't have to write it manually.
 /// ```rust
-/// use use charybdis::macros::charybdis_view_model;;
+/// use charybdis::macros::charybdis_view_model;
 /// use charybdis::types::{Text, Timestamp, Uuid};
 ///
 /// #[charybdis_view_model(
@@ -93,7 +93,7 @@ pub trait MaterializedView: BaseModel {}
 
 /// Declare udt model as a struct within `src/models/udts` dir:
 /// ```rust
-/// use use charybdis::macros::charybdis_udt_model;;
+/// use charybdis::macros::charybdis_udt_model;
 /// use charybdis::types::Text;
 ///
 /// #[charybdis_udt_model(type_name = address)]

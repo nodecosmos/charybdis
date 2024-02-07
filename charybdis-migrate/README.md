@@ -1,7 +1,3 @@
-⚠️ *WIP: This project is currently in an experimental stage; It uses async trait support from
-rust 1.75.0 beta release*
-
-
 ## Automatic migration Tool:
 <a name="automatic-migration"></a>
 `charybdis-migrate` tool that enables automatic migration to database without need to write 
