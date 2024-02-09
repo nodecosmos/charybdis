@@ -73,7 +73,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(struct_name, &args, &fields);
 
-    let partial_model_generator = partial_model_macro_generator(args, &input);
+    let partial_model_generator = partial_model_macro_generator(&args, &input);
 
     let expanded = quote! {
         #[derive(charybdis::SerializeRow)]
