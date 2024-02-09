@@ -27,6 +27,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input: DeriveInput = parse_macro_input!(input);
     let fields = CharybdisFields::from_input(&input, &args);
 
+    let partial_model_generator = partial_model_macro_generator(&args, &mut input);
+
     CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
     CharybdisFields::strip_charybdis_attributes(&mut input);
 
@@ -72,8 +74,6 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     // Associated functions for finding by primary key
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(struct_name, &args, &fields);
-
-    let partial_model_generator = partial_model_macro_generator(&args, &input);
 
     let expanded = quote! {
         #[derive(charybdis::SerializeRow)]
