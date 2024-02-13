@@ -75,7 +75,7 @@ impl CodeSchema {
     pub fn populate_udts(&mut self, entry: DirEntry) {
         let file_content: String = parser::parse_file_as_string(entry.path());
         let schema_object: SchemaObject = parser::parse_charybdis_model_def(&file_content, UDT_MACRO_NAME);
-        let type_name = schema_object.type_name.clone();
+        let type_name = schema_object.type_name.clone().to_lowercase();
 
         if type_name.is_empty() {
             panic!(

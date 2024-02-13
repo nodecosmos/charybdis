@@ -257,7 +257,7 @@ impl DbSchema {
                         .insert(field_name.clone(), field_types[index].clone());
                 }
 
-                self.udts.insert(type_name, schema_object);
+                self.udts.insert(type_name.to_lowercase(), schema_object);
             }
         }
         Ok(())
