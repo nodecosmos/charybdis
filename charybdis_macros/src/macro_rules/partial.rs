@@ -126,7 +126,6 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
 
     // macro names (avoiding name collisions)
     let native_struct = &input.ident;
-
     let macro_name_str = format!("partial_{}", camel_to_snake_case(&native_struct.to_string()));
     let macro_name = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
@@ -135,15 +134,14 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
 
     let table_name = args.table_name().to_token_stream();
 
-    let cks = args.clustering_keys();
-    let pks = args.partition_keys();
-
-    let cks: Vec<syn::Ident> = cks
+    let partition_keys: Vec<syn::Ident> = args
+        .partition_keys()
         .into_iter()
         .map(|s| syn::Ident::new(&s, proc_macro2::Span::call_site()))
         .collect();
 
-    let pks: Vec<syn::Ident> = pks
+    let clustering_keys: Vec<syn::Ident> = args
+        .clustering_keys()
         .into_iter()
         .map(|s| syn::Ident::new(&s, proc_macro2::Span::call_site()))
         .collect();
@@ -166,8 +164,8 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
                 )]
                 #[charybdis::macros::charybdis_model(
                     table_name=#table_name,
-                    partition_keys=[ #(#pks),* ],
-                    clustering_keys=[ #(#cks),* ],
+                    partition_keys=[ #(#partition_keys),* ],
+                    clustering_keys=[ #(#clustering_keys),* ],
                     exclude_partial_model=true
                 )]
                 #(#other_attrs)*
