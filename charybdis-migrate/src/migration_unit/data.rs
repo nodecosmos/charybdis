@@ -92,7 +92,7 @@ impl<'a> MigrationUnitData<'a> {
     }
 
     pub(crate) fn partition_key_changed(&self) -> bool {
-        let mut code_partition_keys: Vec<String> = self.current_code_schema.partition_keys.clone();
+        let mut code_partition_keys = self.current_code_schema.partition_keys.clone();
         let mut db_partition_keys = self.current_db_schema.partition_keys.clone();
 
         code_partition_keys.sort();
