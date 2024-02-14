@@ -26,6 +26,10 @@ pub struct CharybdisMacroArgs {
 }
 
 impl CharybdisMacroArgs {
+    pub fn table_name(&self) -> String {
+        self.table_name.clone().expect("table_name is required")
+    }
+
     pub fn partition_keys(&self) -> Vec<String> {
         self.partition_keys.clone().expect("partition_keys is required")
     }
@@ -39,10 +43,6 @@ impl CharybdisMacroArgs {
         primary_key.extend(self.clustering_keys());
 
         primary_key
-    }
-
-    pub fn table_name(&self) -> String {
-        self.table_name.clone().expect("table_name is required")
     }
 }
 

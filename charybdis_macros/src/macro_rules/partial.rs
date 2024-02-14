@@ -137,7 +137,6 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
 
     let cks = args.clustering_keys();
     let pks = args.partition_keys();
-    let sec_idxes = args.global_secondary_indexes.clone().unwrap_or(vec![]);
 
     let cks: Vec<syn::Ident> = cks
         .into_iter()
@@ -145,11 +144,6 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
         .collect();
 
     let pks: Vec<syn::Ident> = pks
-        .into_iter()
-        .map(|s| syn::Ident::new(&s, proc_macro2::Span::call_site()))
-        .collect();
-
-    let sec_idxes: Vec<syn::Ident> = sec_idxes
         .into_iter()
         .map(|s| syn::Ident::new(&s, proc_macro2::Span::call_site()))
         .collect();
@@ -174,7 +168,6 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
                     table_name=#table_name,
                     partition_keys=[ #(#pks),* ],
                     clustering_keys=[ #(#cks),* ],
-                    global_secondary_indexes=[ #(#sec_idxes),* ],
                     exclude_partial_model=true
                 )]
                 #(#other_attrs)*
