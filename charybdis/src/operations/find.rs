@@ -151,86 +151,52 @@ impl<T: BaseModel> Find for T {
 }
 
 /// Configurable Find Queries
-pub trait FindConfigured<'a>: BaseModel {
-    async fn find_cfg(
-        query: &'static str,
-        values: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, CharybdisModelStream<Self>>, CharybdisError>;
+pub trait FindConfigured: BaseModel {
+    fn find_cfg<V: SerializeRow>(query: &'static str, values: V) -> CharybdisQuery<CharybdisModelStream<Self>, V>;
 
-    async fn find_first_cfg(
-        query: &'static str,
-        values: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, Self>, CharybdisError>;
+    fn find_first_cfg<V: SerializeRow>(query: &'static str, values: V) -> CharybdisQuery<Self, V>;
 
-    async fn find_by_primary_key_value_cfg(
-        value: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, Self>, CharybdisError>;
+    fn find_by_primary_key_value_cfg(value: Self::PrimaryKey) -> CharybdisQuery<Self, Self::PrimaryKey>;
 
-    async fn find_by_partition_key_value_cfg(
-        value: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, CharybdisModelStream<Self>>, CharybdisError>;
+    fn find_by_partition_key_value_cfg(
+        value: Self::PartitionKey,
+    ) -> CharybdisQuery<CharybdisModelStream<Self>, Self::PartitionKey>;
 
-    async fn find_first_by_partition_key_value_cfg(
-        value: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, Self>, CharybdisError>;
+    fn find_first_by_partition_key_value_cfg(value: Self::PartitionKey) -> CharybdisQuery<Self, Self::PartitionKey>;
 
-    async fn find_by_primary_key_cfg(&self) -> Result<CharybdisQuery<Self>, CharybdisError>;
+    fn find_by_primary_key_cfg(&self) -> CharybdisQuery<Self, Self::PrimaryKey>;
 
-    async fn find_by_partition_key_cfg(&self) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError>;
+    fn find_by_partition_key_cfg(&self) -> CharybdisQuery<CharybdisModelStream<Self>, Self::PartitionKey>;
 }
 
-impl<'a, T: BaseModel> FindConfigured<'a> for T {
-    async fn find_cfg(
-        query: &'static str,
-        values: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, CharybdisModelStream<Self>>, CharybdisError> {
-        let query = CharybdisQuery::new(query, values);
-
-        Ok(query)
+impl<T: BaseModel> FindConfigured for T {
+    fn find_cfg<V: SerializeRow>(query: &'static str, values: V) -> CharybdisQuery<CharybdisModelStream<Self>, V> {
+        CharybdisQuery::new(query, values)
     }
 
-    async fn find_first_cfg(
-        query: &'static str,
-        values: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, Self>, CharybdisError> {
-        let query = CharybdisQuery::new(query, values);
-
-        Ok(query)
+    fn find_first_cfg<V: SerializeRow>(query: &'static str, values: V) -> CharybdisQuery<Self, V> {
+        CharybdisQuery::new(query, values)
     }
 
-    async fn find_by_primary_key_value_cfg(
-        value: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, Self>, CharybdisError> {
-        let query = CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, value);
-
-        Ok(query)
+    fn find_by_primary_key_value_cfg(value: T::PrimaryKey) -> CharybdisQuery<Self, T::PrimaryKey> {
+        CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, value)
     }
 
-    async fn find_by_partition_key_value_cfg(
-        value: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, CharybdisModelStream<Self>>, CharybdisError> {
-        let query = CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, value);
-
-        Ok(query)
+    fn find_by_partition_key_value_cfg(
+        value: Self::PartitionKey,
+    ) -> CharybdisQuery<CharybdisModelStream<Self>, Self::PartitionKey> {
+        CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, value)
     }
 
-    async fn find_first_by_partition_key_value_cfg(
-        value: impl SerializeRow + 'a,
-    ) -> Result<CharybdisQuery<'a, Self>, CharybdisError> {
-        let query = CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, value);
-
-        Ok(query)
+    fn find_first_by_partition_key_value_cfg(value: Self::PartitionKey) -> CharybdisQuery<Self, Self::PartitionKey> {
+        CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, value)
     }
 
-    async fn find_by_primary_key_cfg(&self) -> Result<CharybdisQuery<Self>, CharybdisError> {
-        let query = CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, self.primary_key_values());
-
-        Ok(query)
+    fn find_by_primary_key_cfg(&self) -> CharybdisQuery<Self, Self::PrimaryKey> {
+        CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, self.primary_key_values())
     }
 
-    async fn find_by_partition_key_cfg(&self) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError> {
-        let query = CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, self.partition_key_values());
-
-        Ok(query)
+    fn find_by_partition_key_cfg(&self) -> CharybdisQuery<CharybdisModelStream<Self>, Self::PartitionKey> {
+        CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, self.partition_key_values())
     }
 }

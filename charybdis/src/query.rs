@@ -15,8 +15,8 @@ use std::time::Duration;
 pub trait QueryExecutor {
     type Output;
 
-    async fn execute<T: QueryExecutor>(
-        query: CharybdisQuery<T>,
+    async fn execute<T: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<T, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>;
 }
@@ -25,11 +25,11 @@ pub trait QueryExecutor {
 impl<M: BaseModel> QueryExecutor for M {
     type Output = M;
 
-    async fn execute<'a, T: QueryExecutor>(
-        query: CharybdisQuery<'a, T>,
+    async fn execute<T: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<T, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
-        let row = session.execute(query.inner, query.values.as_ref()).await?;
+        let row = session.execute(query.inner, query.values).await?;
         let res = row.first_row_typed::<M>()?;
 
         Ok(res)
@@ -40,12 +40,12 @@ impl<M: BaseModel> QueryExecutor for M {
 impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
     type Output = (CharybdisModelIterator<M>, Option<Bytes>);
 
-    async fn execute<'a, T: QueryExecutor>(
-        query: CharybdisQuery<'a, T>,
+    async fn execute<T: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<T, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         let res = session
-            .execute_paged(query.inner, query.values.as_ref(), query.paging_state)
+            .execute_paged(query.inner, query.values, query.paging_state)
             .await?;
         let paging_state = res.paging_state.clone();
         let rows = res.rows()?;
@@ -59,14 +59,11 @@ impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
 impl<M: BaseModel> QueryExecutor for CharybdisModelStream<M> {
     type Output = CharybdisModelStream<M>;
 
-    async fn execute<'a, T: QueryExecutor>(
-        query: CharybdisQuery<'a, T>,
+    async fn execute<T: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<T, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
-        let rows = session
-            .execute_iter(query.inner, query.values.as_ref())
-            .await?
-            .into_typed::<M>();
+        let rows = session.execute_iter(query.inner, query.values).await?.into_typed::<M>();
 
         Ok(CharybdisModelStream::from(rows))
     }
@@ -76,29 +73,29 @@ impl<M: BaseModel> QueryExecutor for CharybdisModelStream<M> {
 impl QueryExecutor for QueryResult {
     type Output = QueryResult;
 
-    async fn execute<'a, T: QueryExecutor>(
-        query: CharybdisQuery<'a, T>,
+    async fn execute<T: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<T, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         session
-            .execute(query.inner, query.values.as_ref())
+            .execute(query.inner, query.values)
             .await
             .map_err(CharybdisError::from)
     }
 }
 
-pub struct CharybdisQuery<'a, T: QueryExecutor> {
+pub struct CharybdisQuery<E: QueryExecutor, V: SerializeRow> {
     inner: Query,
-    values: Box<dyn SerializeRow + 'a>,
+    values: V,
     paging_state: Option<Bytes>,
-    phantom: std::marker::PhantomData<T>,
+    phantom: std::marker::PhantomData<E>,
 }
 
-impl<'a, T: QueryExecutor> CharybdisQuery<'a, T> {
-    pub(crate) fn new(query: impl Into<String>, values: impl SerializeRow + 'a) -> Self {
+impl<E: QueryExecutor, V: SerializeRow> CharybdisQuery<E, V> {
+    pub(crate) fn new(query: impl Into<String>, values: V) -> Self {
         Self {
             inner: Query::new(query),
-            values: Box::new(values),
+            values,
             paging_state: None,
             phantom: std::marker::PhantomData,
         }
@@ -164,7 +161,7 @@ impl<'a, T: QueryExecutor> CharybdisQuery<'a, T> {
         self
     }
 
-    pub async fn execute(self, session: &CachingSession) -> Result<T::Output, CharybdisError> {
-        T::execute(self, session).await
+    pub async fn execute(self, session: &CachingSession) -> Result<E::Output, CharybdisError> {
+        E::execute(self, session).await
     }
 }
