@@ -2,6 +2,7 @@ use crate::SerializeRow;
 use scylla::FromRow;
 
 pub trait BaseModel: FromRow + Sized {
+    // Tuple of pk values
     type PrimaryKey: SerializeRow + Send + Sync;
     type PartitionKey: SerializeRow + Send + Sync;
 

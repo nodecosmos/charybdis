@@ -15,8 +15,8 @@ use std::time::Duration;
 pub trait QueryExecutor {
     type Output;
 
-    async fn execute<T: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<T, Val>,
+    async fn execute<E: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<E, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>;
 }
@@ -25,8 +25,8 @@ pub trait QueryExecutor {
 impl<M: BaseModel> QueryExecutor for M {
     type Output = M;
 
-    async fn execute<T: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<T, Val>,
+    async fn execute<E: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<E, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         let row = session.execute(query.inner, query.values).await?;
@@ -40,8 +40,8 @@ impl<M: BaseModel> QueryExecutor for M {
 impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
     type Output = (CharybdisModelIterator<M>, Option<Bytes>);
 
-    async fn execute<T: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<T, Val>,
+    async fn execute<E: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<E, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         let res = session
@@ -59,8 +59,8 @@ impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
 impl<M: BaseModel> QueryExecutor for CharybdisModelStream<M> {
     type Output = CharybdisModelStream<M>;
 
-    async fn execute<T: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<T, Val>,
+    async fn execute<E: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<E, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         let rows = session.execute_iter(query.inner, query.values).await?.into_typed::<M>();
@@ -73,8 +73,8 @@ impl<M: BaseModel> QueryExecutor for CharybdisModelStream<M> {
 impl QueryExecutor for QueryResult {
     type Output = QueryResult;
 
-    async fn execute<T: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<T, Val>,
+    async fn execute<E: QueryExecutor, Val: SerializeRow>(
+        query: CharybdisQuery<E, Val>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         session
@@ -106,6 +106,11 @@ impl<E: QueryExecutor, V: SerializeRow> CharybdisQuery<E, V> {
         self
     }
 
+    pub fn consistency(mut self, consistency: Consistency) -> Self {
+        self.inner.set_consistency(consistency);
+        self
+    }
+
     pub fn serial_consistency(mut self, consistency: SerialConsistency) -> Self {
         self.inner.set_serial_consistency(Some(consistency));
         self
@@ -133,11 +138,6 @@ impl<E: QueryExecutor, V: SerializeRow> CharybdisQuery<E, V> {
 
     pub fn timeout(mut self, timeout: Duration) -> Self {
         self.inner.set_request_timeout(Some(timeout));
-        self
-    }
-
-    pub fn consistency(mut self, consistency: Consistency) -> Self {
-        self.inner.set_consistency(consistency);
         self
     }
 
