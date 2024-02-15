@@ -5,6 +5,7 @@ use scylla::{CachingSession, QueryResult};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
+use crate::query::CharybdisQuery;
 use crate::stream::CharybdisModelStream;
 use crate::SerializeRow;
 
@@ -146,5 +147,102 @@ impl<T: BaseModel> Find for T {
             .into_typed::<Self>();
 
         Ok(CharybdisModelStream::from(rows))
+    }
+}
+
+/// Configurable Find Queries
+pub trait FindConfigured: BaseModel {
+    async fn find_cfg(
+        query: &'static str,
+        values: impl SerializeRow,
+    ) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError>;
+
+    async fn find_first_cfg(
+        query: &'static str,
+        values: impl SerializeRow,
+    ) -> Result<CharybdisQuery<Self>, CharybdisError>;
+
+    async fn find_paged_cfg(
+        query: &'static str,
+        values: impl SerializeRow,
+        page_size: Option<Bytes>,
+    ) -> Result<CharybdisQuery<CharybdisModelIterator<Self>>, CharybdisError>;
+
+    async fn find_by_primary_key_value_cfg(value: impl SerializeRow) -> Result<CharybdisQuery<Self>, CharybdisError>;
+
+    async fn find_by_partition_key_value_cfg(
+        value: impl SerializeRow,
+    ) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError>;
+
+    async fn find_first_by_partition_key_value_cfg(
+        value: impl SerializeRow,
+    ) -> Result<CharybdisQuery<Self>, CharybdisError>;
+
+    async fn find_by_primary_key_cfg(&self) -> Result<CharybdisQuery<Self>, CharybdisError>;
+
+    async fn find_by_partition_key_cfg(&self) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError>;
+}
+
+impl<T: BaseModel> FindConfigured for T {
+    async fn find_cfg(
+        query: &'static str,
+        values: impl SerializeRow,
+    ) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError> {
+        let query = CharybdisQuery::new(query, values);
+
+        Ok(query)
+    }
+
+    async fn find_first_cfg(
+        query: &'static str,
+        values: impl SerializeRow,
+    ) -> Result<CharybdisQuery<Self>, CharybdisError> {
+        let query = CharybdisQuery::new(query, values);
+
+        Ok(query)
+    }
+
+    async fn find_paged_cfg(
+        query: &'static str,
+        values: impl SerializeRow,
+        page_size: Option<Bytes>,
+    ) -> Result<CharybdisQuery<CharybdisModelIterator<Self>>, CharybdisError> {
+        let query = CharybdisQuery::new(query, values).with_page_size(page_size);
+
+        Ok(query)
+    }
+
+    async fn find_by_primary_key_value_cfg(value: impl SerializeRow) -> Result<CharybdisQuery<Self>, CharybdisError> {
+        let query = CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, value);
+
+        Ok(query)
+    }
+
+    async fn find_by_partition_key_value_cfg(
+        value: impl SerializeRow,
+    ) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError> {
+        let query = CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, value);
+
+        Ok(query)
+    }
+
+    async fn find_first_by_partition_key_value_cfg(
+        value: impl SerializeRow,
+    ) -> Result<CharybdisQuery<Self>, CharybdisError> {
+        let query = CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, value);
+
+        Ok(query)
+    }
+
+    async fn find_by_primary_key_cfg(&self) -> Result<CharybdisQuery<Self>, CharybdisError> {
+        let query = CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, self.primary_key_values());
+
+        Ok(query)
+    }
+
+    async fn find_by_partition_key_cfg(&self) -> Result<CharybdisQuery<CharybdisModelStream<Self>>, CharybdisError> {
+        let query = CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, self.partition_key_values());
+
+        Ok(query)
     }
 }
