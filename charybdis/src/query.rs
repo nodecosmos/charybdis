@@ -12,7 +12,7 @@ use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
 use std::sync::Arc;
 use std::time::Duration;
 
-trait QueryExecutor {
+pub trait QueryExecutor {
     type Output;
 
     async fn execute<T: QueryExecutor>(
@@ -25,8 +25,8 @@ trait QueryExecutor {
 impl<M: BaseModel> QueryExecutor for M {
     type Output = M;
 
-    async fn execute<T: QueryExecutor>(
-        query: CharybdisQuery<T>,
+    async fn execute<'a, T: QueryExecutor>(
+        query: CharybdisQuery<'a, T>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         let row = session.execute(query.inner, query.values.as_ref()).await?;
@@ -40,8 +40,8 @@ impl<M: BaseModel> QueryExecutor for M {
 impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
     type Output = (CharybdisModelIterator<M>, Option<Bytes>);
 
-    async fn execute<T: QueryExecutor>(
-        query: CharybdisQuery<T>,
+    async fn execute<'a, T: QueryExecutor>(
+        query: CharybdisQuery<'a, T>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         let res = session
@@ -59,8 +59,8 @@ impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
 impl<M: BaseModel> QueryExecutor for CharybdisModelStream<M> {
     type Output = CharybdisModelStream<M>;
 
-    async fn execute<T: QueryExecutor>(
-        query: CharybdisQuery<T>,
+    async fn execute<'a, T: QueryExecutor>(
+        query: CharybdisQuery<'a, T>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         let rows = session
@@ -76,8 +76,8 @@ impl<M: BaseModel> QueryExecutor for CharybdisModelStream<M> {
 impl QueryExecutor for QueryResult {
     type Output = QueryResult;
 
-    async fn execute<T: QueryExecutor>(
-        query: CharybdisQuery<T>,
+    async fn execute<'a, T: QueryExecutor>(
+        query: CharybdisQuery<'a, T>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError> {
         session
@@ -87,15 +87,15 @@ impl QueryExecutor for QueryResult {
     }
 }
 
-pub struct CharybdisQuery<T: QueryExecutor> {
+pub struct CharybdisQuery<'a, T: QueryExecutor> {
     inner: Query,
-    values: Box<dyn SerializeRow>,
+    values: Box<dyn SerializeRow + 'a>,
     paging_state: Option<Bytes>,
     phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: QueryExecutor> CharybdisQuery<T> {
-    pub(crate) fn new(query: impl Into<String>, values: impl SerializeRow) -> Self {
+impl<'a, T: QueryExecutor> CharybdisQuery<'a, T> {
+    pub(crate) fn new(query: impl Into<String>, values: impl SerializeRow + 'a) -> Self {
         Self {
             inner: Query::new(query),
             values: Box::new(values),

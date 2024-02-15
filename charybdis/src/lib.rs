@@ -2,12 +2,11 @@
 
 pub mod batch;
 pub mod callbacks;
-pub mod config;
 pub mod errors;
 pub mod iterator;
 pub mod model;
 pub mod operations;
-pub(crate) mod query;
+pub mod query;
 pub mod serializers;
 pub mod stream;
 pub mod types;
