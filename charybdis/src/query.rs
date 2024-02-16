@@ -3,6 +3,7 @@ use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
 use crate::stream::CharybdisModelStream;
 use crate::{Consistency, SerializeRow};
+use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
 use scylla::execution_profile::ExecutionProfileHandle;
 use scylla::history::HistoryListener;
 use scylla::query::Query;
@@ -12,23 +13,43 @@ use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
 use std::sync::Arc;
 use std::time::Duration;
 
-pub trait QueryExecutor {
-    type Output;
+pub struct SingleRow<M: BaseModel>(M);
+pub struct RowStream<M: BaseModel>(CharybdisModelStream<M>);
+pub struct Paged<M: BaseModel>(CharybdisModelIterator<M>, Option<Bytes>);
+pub struct QueryResultWrapper(QueryResult);
 
-    async fn execute<E: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<E, Val>,
+pub trait ResponseType {
+    type Output;
+}
+
+impl<M: BaseModel> ResponseType for SingleRow<M> {
+    type Output = M;
+}
+
+impl<M: BaseModel> ResponseType for RowStream<M> {
+    type Output = CharybdisModelStream<M>;
+}
+
+impl<M: BaseModel> ResponseType for Paged<M> {
+    type Output = (CharybdisModelIterator<M>, Option<Bytes>);
+}
+
+impl ResponseType for QueryResultWrapper {
+    type Output = QueryResult;
+}
+
+pub trait QueryExecutor: ResponseType {
+    async fn execute<Val: SerializeRow, RtQe: ResponseType + QueryExecutor>(
+        query: CharybdisQuery<'_, Val, RtQe>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>;
 }
 
-/// Single typed row
-impl<M: BaseModel> QueryExecutor for M {
-    type Output = M;
-
-    async fn execute<E: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<E, Val>,
+impl<M: BaseModel> QueryExecutor for SingleRow<M> {
+    async fn execute<Val: SerializeRow, RtQe: ResponseType + QueryExecutor>(
+        query: CharybdisQuery<'_, Val, RtQe>,
         session: &CachingSession,
-    ) -> Result<Self::Output, CharybdisError> {
+    ) -> Result<M, CharybdisError> {
         let row = session.execute(query.inner, query.values).await?;
         let res = row.first_row_typed::<M>()?;
 
@@ -36,14 +57,22 @@ impl<M: BaseModel> QueryExecutor for M {
     }
 }
 
-/// Multiple typed rows as iterator. Iterator is only used for paging queries, otherwise use stream.
-impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
-    type Output = (CharybdisModelIterator<M>, Option<Bytes>);
-
-    async fn execute<E: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<E, Val>,
+impl<M: BaseModel> QueryExecutor for RowStream<M> {
+    async fn execute<Val: SerializeRow, RtQe: ResponseType + QueryExecutor>(
+        query: CharybdisQuery<'_, Val, RtQe>,
         session: &CachingSession,
-    ) -> Result<Self::Output, CharybdisError> {
+    ) -> Result<CharybdisModelStream<M>, CharybdisError> {
+        let rows = session.execute_iter(query.inner, query.values).await?.into_typed::<M>();
+
+        Ok(CharybdisModelStream::from(rows))
+    }
+}
+
+impl<M: BaseModel> QueryExecutor for Paged<M> {
+    async fn execute<Val: SerializeRow, RtQe: ResponseType + QueryExecutor>(
+        query: CharybdisQuery<'_, Val, RtQe>,
+        session: &CachingSession,
+    ) -> Result<(CharybdisModelIterator<M>, Option<Bytes>), CharybdisError> {
         let res = session
             .execute_paged(query.inner, query.values, query.paging_state)
             .await?;
@@ -55,28 +84,11 @@ impl<M: BaseModel> QueryExecutor for CharybdisModelIterator<M> {
     }
 }
 
-/// Multiple typed rows as stream.
-impl<M: BaseModel> QueryExecutor for CharybdisModelStream<M> {
-    type Output = CharybdisModelStream<M>;
-
-    async fn execute<E: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<E, Val>,
+impl QueryExecutor for QueryResultWrapper {
+    async fn execute<Val: SerializeRow, RtQe: ResponseType + QueryExecutor>(
+        query: CharybdisQuery<'_, Val, RtQe>,
         session: &CachingSession,
-    ) -> Result<Self::Output, CharybdisError> {
-        let rows = session.execute_iter(query.inner, query.values).await?.into_typed::<M>();
-
-        Ok(CharybdisModelStream::from(rows))
-    }
-}
-
-/// Raw query result
-impl QueryExecutor for QueryResult {
-    type Output = QueryResult;
-
-    async fn execute<E: QueryExecutor, Val: SerializeRow>(
-        query: CharybdisQuery<E, Val>,
-        session: &CachingSession,
-    ) -> Result<Self::Output, CharybdisError> {
+    ) -> Result<QueryResult, CharybdisError> {
         session
             .execute(query.inner, query.values)
             .await
@@ -84,20 +96,41 @@ impl QueryExecutor for QueryResult {
     }
 }
 
-pub struct CharybdisQuery<E: QueryExecutor, V: SerializeRow> {
-    inner: Query,
-    values: V,
-    paging_state: Option<Bytes>,
-    phantom: std::marker::PhantomData<E>,
+pub(crate) enum QueryValue<'a, Val: SerializeRow> {
+    Owned(Val),
+    Ref(&'a Val),
 }
 
-impl<E: QueryExecutor, V: SerializeRow> CharybdisQuery<E, V> {
-    pub(crate) fn new(query: impl Into<String>, values: V) -> Self {
+impl<Val: SerializeRow> SerializeRow for QueryValue<'_, Val> {
+    fn serialize(&self, ctx: &RowSerializationContext<'_>, writer: &mut RowWriter) -> Result<(), SerializationError> {
+        match self {
+            QueryValue::Owned(val) => val.serialize(ctx, writer),
+            QueryValue::Ref(val) => val.serialize(ctx, writer),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        match self {
+            QueryValue::Owned(val) => val.is_empty(),
+            QueryValue::Ref(val) => val.is_empty(),
+        }
+    }
+}
+
+pub struct CharybdisQuery<'a, Val: SerializeRow, RtQe: ResponseType + QueryExecutor> {
+    inner: Query,
+    paging_state: Option<Bytes>,
+    values: QueryValue<'a, Val>,
+    _phantom: std::marker::PhantomData<RtQe>,
+}
+
+impl<'a, Val: SerializeRow, RtQe: ResponseType + QueryExecutor> CharybdisQuery<'a, Val, RtQe> {
+    pub(crate) fn new(query: impl Into<String>, values: QueryValue<'a, Val>) -> Self {
         Self {
             inner: Query::new(query),
-            values,
             paging_state: None,
-            phantom: std::marker::PhantomData,
+            values,
+            _phantom: Default::default(),
         }
     }
 
@@ -111,13 +144,13 @@ impl<E: QueryExecutor, V: SerializeRow> CharybdisQuery<E, V> {
         self
     }
 
-    pub fn serial_consistency(mut self, consistency: SerialConsistency) -> Self {
-        self.inner.set_serial_consistency(Some(consistency));
+    pub fn serial_consistency(mut self, consistency: Option<SerialConsistency>) -> Self {
+        self.inner.set_serial_consistency(consistency);
         self
     }
 
-    pub fn paging_state(mut self, paging_state: Bytes) -> Self {
-        self.paging_state = Some(paging_state);
+    pub fn paging_state(mut self, paging_state: Option<Bytes>) -> Self {
+        self.paging_state = paging_state;
         self
     }
 
@@ -131,18 +164,18 @@ impl<E: QueryExecutor, V: SerializeRow> CharybdisQuery<E, V> {
         self
     }
 
-    pub fn timestamp(mut self, timestamp: i64) -> Self {
-        self.inner.set_timestamp(Some(timestamp));
+    pub fn timestamp(mut self, timestamp: Option<i64>) -> Self {
+        self.inner.set_timestamp(timestamp);
         self
     }
 
-    pub fn timeout(mut self, timeout: Duration) -> Self {
-        self.inner.set_request_timeout(Some(timeout));
+    pub fn timeout(mut self, timeout: Option<Duration>) -> Self {
+        self.inner.set_request_timeout(timeout);
         self
     }
 
-    pub fn retry_policy(mut self, retry_policy: Arc<dyn RetryPolicy>) -> Self {
-        self.inner.set_retry_policy(Some(retry_policy));
+    pub fn retry_policy(mut self, retry_policy: Option<Arc<dyn RetryPolicy>>) -> Self {
+        self.inner.set_retry_policy(retry_policy);
         self
     }
 
@@ -156,12 +189,12 @@ impl<E: QueryExecutor, V: SerializeRow> CharybdisQuery<E, V> {
         self
     }
 
-    pub fn profile_handle(mut self, profile_handle: ExecutionProfileHandle) -> Self {
-        self.inner.set_execution_profile_handle(Some(profile_handle));
+    pub fn profile_handle(mut self, profile_handle: Option<ExecutionProfileHandle>) -> Self {
+        self.inner.set_execution_profile_handle(profile_handle);
         self
     }
 
-    pub async fn execute(self, session: &CachingSession) -> Result<E::Output, CharybdisError> {
-        E::execute(self, session).await
+    pub async fn execute(self, session: &CachingSession) -> Result<RtQe::Output, CharybdisError> {
+        RtQe::execute(self, session).await
     }
 }

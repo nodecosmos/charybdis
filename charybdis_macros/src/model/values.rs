@@ -70,7 +70,7 @@ fn values_tuple(fields: &Vec<Field>) -> TokenStream {
         .iter()
         .map(|field| {
             let field_name = field.ident.clone();
-            quote! { self.#field_name.clone() }
+            quote! { &self.#field_name }
         })
         .collect::<Vec<_>>();
 

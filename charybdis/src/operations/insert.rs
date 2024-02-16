@@ -1,53 +1,39 @@
-use crate::callbacks::{Callbacks, ExtCallbacks};
-use crate::errors::CharybdisError;
 use crate::model::Model;
-use scylla::{CachingSession, QueryResult};
+use crate::query::{CharybdisQuery, QueryResultWrapper, QueryValue};
 
-pub trait Insert: Model {
-    async fn insert(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
-    async fn insert_if_not_exists(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
+pub trait Insert<M: Model>: Model {
+    fn insert(&self) -> CharybdisQuery<M, QueryResultWrapper>;
+    fn insert_if_not_exists(&self) -> CharybdisQuery<M, QueryResultWrapper>;
 }
 
-impl<T: Model> Insert for T {
-    async fn insert(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
-        session
-            .execute(T::INSERT_QUERY, self)
-            .await
-            .map_err(CharybdisError::from)
+impl<M: Model> Insert<M> for M {
+    fn insert(&self) -> CharybdisQuery<M, QueryResultWrapper> {
+        CharybdisQuery::new(Self::INSERT_QUERY, QueryValue::Ref(self))
     }
 
-    async fn insert_if_not_exists(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
-        session
-            .execute(T::INSERT_IF_NOT_EXIST_QUERY, self)
-            .await
-            .map_err(CharybdisError::from)
+    fn insert_if_not_exists(&self) -> CharybdisQuery<M, QueryResultWrapper> {
+        CharybdisQuery::new(Self::INSERT_IF_NOT_EXIST_QUERY, QueryValue::Ref(self))
     }
 }
 
-pub trait InsertWithCallbacks<T: Insert + Callbacks> {
-    async fn insert_cb(&mut self, session: &CachingSession) -> Result<QueryResult, T::Error>;
-}
-
-impl<T: Insert + Callbacks> InsertWithCallbacks<T> for T {
-    async fn insert_cb(&mut self, session: &CachingSession) -> Result<QueryResult, T::Error> {
-        self.before_insert(session).await?;
-        let res = self.insert(session).await;
-        self.after_insert(session).await?;
-
-        res.map_err(T::Error::from)
-    }
-}
-
-pub trait InsertWithExtCallbacks<T: Insert + ExtCallbacks> {
-    async fn insert_cb(&mut self, session: &CachingSession, extension: &T::Extension) -> Result<QueryResult, T::Error>;
-}
-
-impl<T: Insert + ExtCallbacks> InsertWithExtCallbacks<T> for T {
-    async fn insert_cb(&mut self, session: &CachingSession, extension: &T::Extension) -> Result<QueryResult, T::Error> {
-        self.before_insert(session, extension).await?;
-        let res = self.insert(session).await;
-        self.after_insert(session, extension).await?;
-
-        res.map_err(T::Error::from)
-    }
-}
+// pub trait InsertWithCallbacks<M: Model + Callbacks> {
+//     fn insert_cb(&mut self) -> CharybdisQuery<M, InsertWithCb<M>>;
+// }
+//
+// impl<M: Model + Callbacks> InsertWithCallbacks<M> for M {
+//     fn insert_cb(&mut self) -> CharybdisQuery<M, InsertWithCb<M>> {
+//         let cq = CharybdisQuery::new(Self::INSERT_QUERY, &self);
+//         cq.model(self)
+//     }
+// }
+//
+// pub trait InsertWithExtCallbacks<M: Model + ExtCallbacks> {
+//     fn insert_cb(&mut self) -> CharybdisQuery<M, InsertWithExtCb<M>>;
+// }
+//
+// impl<M: Model + ExtCallbacks> InsertWithExtCallbacks<M> for M {
+//     async fn insert_cb(&mut self) -> CharybdisQuery<M, InsertWithExtCb<M>> {
+//         let cq = CharybdisQuery::new(Self::INSERT_QUERY, &self);
+//         cq.model(self)
+//     }
+// }
