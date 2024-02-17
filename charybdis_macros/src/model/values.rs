@@ -56,11 +56,11 @@ fn types_tuple(fields: impl FieldsTypes) -> TokenStream {
     return if types.len() == 1 {
         let single_type = types.first().unwrap();
         quote! {
-            (&'a #single_type,)
+            (#single_type,)
         }
     } else {
         quote! {
-            (#(&#types),*)
+            (#(#types),*)
         }
     };
 }
@@ -70,7 +70,7 @@ fn values_tuple(fields: &Vec<Field>) -> TokenStream {
         .iter()
         .map(|field| {
             let field_name = field.ident.clone();
-            quote! { &self.#field_name }
+            quote! { self.#field_name.clone() }
         })
         .collect::<Vec<_>>();
 
