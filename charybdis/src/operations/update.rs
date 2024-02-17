@@ -1,29 +1,24 @@
 use crate::callbacks::Callbacks;
-use crate::errors::CharybdisError;
 use crate::model::Model;
 use crate::operations::OperationsWithCallbacks;
-use crate::query::CharybdisCbQuery;
-use scylla::{CachingSession, QueryResult};
+use crate::query::{CharybdisCbQuery, CharybdisQuery, QueryResultWrapper, QueryValue};
 
-pub trait Update {
-    async fn update(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
+pub trait Update: Model {
+    fn update(&self) -> CharybdisQuery<Self, Self, QueryResultWrapper>;
 }
 
-impl<T: Model> Update for T {
-    async fn update(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
-        session
-            .execute(Self::UPDATE_QUERY, self)
-            .await
-            .map_err(CharybdisError::from)
+impl<M: Model> Update for M {
+    fn update(&self) -> CharybdisQuery<Self, Self, QueryResultWrapper> {
+        CharybdisQuery::new(Self::UPDATE_QUERY, QueryValue::Ref(self))
     }
 }
 
-pub trait UpdateWithCallbacks<'a, M: Model + Callbacks> {
-    fn update_cb(&'a mut self, extension: &'a M::Extension) -> CharybdisCbQuery<'a, M, M>;
+pub trait UpdateWithCallbacks: Update + Callbacks {
+    fn update_cb<'a>(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<Self, Self>;
 }
 
-impl<'a, M: Model + Callbacks> UpdateWithCallbacks<'a, M> for M {
-    fn update_cb(&'a mut self, extension: &'a M::Extension) -> CharybdisCbQuery<'a, M, M> {
+impl<M: Model + Callbacks> UpdateWithCallbacks for M {
+    fn update_cb<'a>(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<Self, Self> {
         CharybdisCbQuery::new(Self::UPDATE_QUERY, OperationsWithCallbacks::Update, extension, self)
     }
 }

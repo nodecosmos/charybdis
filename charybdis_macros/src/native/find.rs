@@ -1,4 +1,4 @@
-use crate::utils::{args_to_pass, comma_sep_cols, struct_fields_to_fn_args, where_placeholders};
+use crate::utils::{comma_sep_cols, struct_fields_to_fn_args, where_placeholders, Tuple};
 use charybdis_parser::fields::{CharybdisFields, Field};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
@@ -44,17 +44,14 @@ pub(crate) fn find_by_primary_keys_functions(
             fields.db_fields.clone(),
             current_field_names.clone(),
         );
-        let args_to_pass = args_to_pass(current_field_names);
         let generated_func;
 
         if is_complete_pk {
             // for complete pk we get single row
-            generated_func =
-                find_one_generated_fn(&find_by_fun_name, &arguments, &args_to_pass, struct_name, query_str);
+            generated_func = find_one_generated_fn(&find_by_fun_name, &arguments, struct_name, query_str);
         } else {
             // for partial pk we get a stream
-            generated_func =
-                find_many_generated_fn(&find_by_fun_name, &arguments, &args_to_pass, struct_name, query_str);
+            generated_func = find_many_generated_fn(&find_by_fun_name, &arguments, struct_name, query_str);
         }
 
         generated.extend(generated_func);
@@ -66,19 +63,17 @@ pub(crate) fn find_by_primary_keys_functions(
 fn find_one_generated_fn(
     find_by_fun_name: &syn::Ident,
     arguments: &Vec<syn::FnArg>,
-    args_to_pass: &Vec<syn::Ident>,
     struct_name: &syn::Ident,
     query_str: String,
 ) -> TokenStream {
-    quote! {
-        pub async fn #find_by_fun_name(
-            session: &charybdis::CachingSession,
-            #(#arguments),*
-        ) -> Result<#struct_name, charybdis::errors::CharybdisError> {
-            let query_result = session.execute(#query_str, (#(#args_to_pass),*,)).await?;
-            let res = query_result.first_row_typed()?;
+    let types_tp = arguments.types_tp();
+    let values_tp = arguments.values_tp();
 
-            Ok(res)
+    quote! {
+        pub fn #find_by_fun_name<'a>(
+            #(#arguments),*
+        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::SingleRow<Self>> {
+            <#struct_name as charybdis::operations::Find>::find_first(#query_str, #values_tp)
         }
     }
 }
@@ -86,19 +81,17 @@ fn find_one_generated_fn(
 fn find_many_generated_fn(
     find_by_fun_name: &syn::Ident,
     arguments: &Vec<syn::FnArg>,
-    args_to_pass: &Vec<syn::Ident>,
     struct_name: &syn::Ident,
     query_str: String,
 ) -> TokenStream {
-    quote! {
-        pub async fn #find_by_fun_name(
-            session: &charybdis::CachingSession,
-            #(#arguments),*
-        ) -> Result<charybdis::stream::CharybdisModelStream<#struct_name>, charybdis::errors::CharybdisError> {
-            let query_result = session.execute_iter(#query_str, (#(#args_to_pass),*,)).await?;
-            let rows = query_result.into_typed::<Self>();
+    let types_tp = arguments.types_tp();
+    let values_tp = arguments.values_tp();
 
-            Ok(charybdis::stream::CharybdisModelStream::from(rows))
+    quote! {
+        pub fn #find_by_fun_name<'a>(
+            #(#arguments),*
+        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::RowStream<Self>> {
+            <#struct_name as charybdis::operations::Find>::find(#query_str, #values_tp)
         }
     }
 }

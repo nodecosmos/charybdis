@@ -46,8 +46,8 @@ pub(crate) fn find_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fi
     let expanded = quote! {
         #[allow(unused_macros)]
         macro_rules! #macro_name {
-            ($session: ident, $query: literal, $values: expr) => {
-               <#struct_name as charybdis::operations::Find>::find($session, concat!(#query_str, $query), $values)
+            ($query: literal, $values: expr) => {
+               <#struct_name as charybdis::operations::Find>::find(concat!(#query_str, $query), $values)
             }
         }
 
@@ -74,8 +74,8 @@ pub(crate) fn find_first_model_rule(
     let expanded = quote! {
         #[allow(unused_macros)]
         macro_rules! #macro_name {
-            ($session: ident, $query: literal, $values: expr) => {
-                <#struct_name as charybdis::operations::Find>::find_first($session, concat!(#query_str, $query), $values)
+            ($query: literal, $values: expr) => {
+                <#struct_name as charybdis::operations::Find>::find_first(concat!(#query_str, $query), $values)
             }
         }
 

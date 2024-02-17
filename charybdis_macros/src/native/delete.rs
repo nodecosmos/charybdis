@@ -1,4 +1,4 @@
-use crate::utils::{args_to_pass, struct_fields_to_fn_args, where_placeholders};
+use crate::utils::{struct_fields_to_fn_args, where_placeholders, Tuple};
 use charybdis_parser::fields::{CharybdisFields, Field};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
@@ -52,16 +52,14 @@ pub(crate) fn delete_by_primary_key_functions(
             fields.db_fields.clone(),
             current_field_names.clone(),
         );
-        let args_to_pass = args_to_pass(current_field_names);
+        let types_tp = arguments.types_tp();
+        let values_tp = arguments.values_tp();
 
         let generated_func = quote! {
-            pub async fn #delete_by_fun_name(
-                session: &charybdis::CachingSession,
+            pub fn #delete_by_fun_name<'a>(
                 #(#arguments),*
-            ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
-                let query_result = session.execute(#query_str, (#(#args_to_pass),*,)).await?;
-
-                Ok(query_result)
+            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::QueryResultWrapper> {
+                charybdis::query::CharybdisQuery::new(#query_str, charybdis::query::QueryValue::Owned(#values_tp))
             }
         };
 

@@ -99,7 +99,7 @@ impl<M: BaseModel> QueryExecutor<M> for QueryResultWrapper {
 }
 
 #[derive(Default)]
-pub(crate) enum QueryValue<'a, Val: SerializeRow, M: BaseModel> {
+pub enum QueryValue<'a, Val: SerializeRow, M: BaseModel> {
     Owned(Val),
     Ref(&'a Val),
     PrimaryKey(M::PrimaryKey),
@@ -138,7 +138,7 @@ pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, RtQe: ResponseTyp
 }
 
 impl<'a, Val: SerializeRow, M: BaseModel, RtQe: ResponseType + QueryExecutor<M>> CharybdisQuery<'a, Val, M, RtQe> {
-    pub(crate) fn new(query: impl Into<String>, values: QueryValue<'a, Val, M>) -> Self {
+    pub fn new(query: impl Into<String>, values: QueryValue<'a, Val, M>) -> Self {
         Self {
             inner: Query::new(query),
             paging_state: None,

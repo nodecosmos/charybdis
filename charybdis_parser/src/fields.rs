@@ -127,16 +127,6 @@ impl Field {
     }
 }
 
-pub trait FieldsTypes {
-    fn types(&self) -> Vec<syn::Type>;
-}
-
-impl FieldsTypes for &Vec<Field> {
-    fn types(&self) -> Vec<syn::Type> {
-        self.iter().map(|field| field.ty.clone()).collect()
-    }
-}
-
 pub struct CharybdisFields {
     pub all_fields: Vec<Field>,
     pub partition_key_fields: Vec<Field>,

@@ -26,9 +26,3 @@ pub(crate) fn struct_fields_to_fn_args(
         })
         .collect::<Vec<syn::FnArg>>()
 }
-
-pub(crate) fn args_to_pass(args: Vec<String>) -> Vec<syn::Ident> {
-    args.iter()
-        .map(|key| syn::Ident::new(key, proc_macro2::Span::call_site()))
-        .collect::<Vec<syn::Ident>>()
-}
