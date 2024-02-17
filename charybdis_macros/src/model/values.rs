@@ -56,11 +56,11 @@ fn types_tuple(fields: impl FieldsTypes) -> TokenStream {
     return if types.len() == 1 {
         let single_type = types.first().unwrap();
         quote! {
-            (#single_type,)
+            (&'a #single_type,)
         }
     } else {
         quote! {
-            (#(#types),*)
+            (#(&#types),*)
         }
     };
 }

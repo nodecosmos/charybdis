@@ -11,3 +11,10 @@ pub use find::*;
 pub use insert::*;
 pub use new::*;
 pub use update::*;
+
+#[derive(Clone, Copy)]
+pub enum OperationsWithCallbacks {
+    Insert,
+    Update,
+    Delete,
+}

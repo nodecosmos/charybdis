@@ -161,6 +161,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
 
     let expanded = quote! {
+        #[derive(charybdis::SerializeRow)]
         #[derive(charybdis::FromRow)]
         #input
 

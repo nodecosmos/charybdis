@@ -1,8 +1,8 @@
 use crate::SerializeRow;
 use scylla::FromRow;
 
-pub trait BaseModel: FromRow + Sized {
-    // Tuple of pk values
+pub trait BaseModel: FromRow + Sized + SerializeRow {
+    // usually tuple of primary key values
     type PrimaryKey: SerializeRow + Send + Sync;
     type PartitionKey: SerializeRow + Send + Sync;
 
@@ -49,7 +49,7 @@ pub trait BaseModel: FromRow + Sized {
 /// If you have migration package installed, you can run the `migrate` command to automatically
 /// migrate the database schema without having to write any CQL queries.
 ///
-pub trait Model: BaseModel + SerializeRow {
+pub trait Model: BaseModel {
     const INSERT_QUERY: &'static str;
     const INSERT_IF_NOT_EXIST_QUERY: &'static str;
     const UPDATE_QUERY: &'static str;

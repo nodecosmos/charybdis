@@ -1,6 +1,8 @@
-use crate::callbacks::{Callbacks, ExtCallbacks};
+use crate::callbacks::Callbacks;
 use crate::errors::CharybdisError;
 use crate::model::Model;
+use crate::operations::OperationsWithCallbacks;
+use crate::query::CharybdisCbQuery;
 use scylla::{CachingSession, QueryResult};
 
 pub trait Delete {
@@ -24,30 +26,12 @@ impl<T: Model> Delete for T {
     }
 }
 
-pub trait DeleteWithCallbacks<T: Delete + Callbacks> {
-    async fn delete_cb(&mut self, session: &CachingSession) -> Result<QueryResult, T::Error>;
+pub trait DeleteWithCallbacks<'a, M: Model + Callbacks> {
+    fn delete_cb(&'a mut self, extension: &'a M::Extension) -> CharybdisCbQuery<'a, M, M>;
 }
 
-impl<T: Delete + Callbacks> DeleteWithCallbacks<T> for T {
-    async fn delete_cb(&mut self, session: &CachingSession) -> Result<QueryResult, T::Error> {
-        self.before_delete(session).await?;
-        let res = self.delete(session).await;
-        self.after_delete(session).await?;
-
-        Ok(res?)
-    }
-}
-
-pub trait DeleteWithExtCallbacks<T: Delete + ExtCallbacks> {
-    async fn delete_cb(&mut self, session: &CachingSession, extension: &T::Extension) -> Result<QueryResult, T::Error>;
-}
-
-impl<T: Delete + ExtCallbacks> DeleteWithExtCallbacks<T> for T {
-    async fn delete_cb(&mut self, session: &CachingSession, extension: &T::Extension) -> Result<QueryResult, T::Error> {
-        self.before_delete(session, extension).await?;
-        let res = self.delete(session).await;
-        self.after_delete(session, extension).await?;
-
-        Ok(res?)
+impl<'a, M: Model + Callbacks> DeleteWithCallbacks<'a, M> for M {
+    fn delete_cb(&'a mut self, extension: &'a M::Extension) -> CharybdisCbQuery<'a, M, M> {
+        CharybdisCbQuery::new(Self::DELETE_QUERY, OperationsWithCallbacks::Delete, extension, self)
     }
 }
