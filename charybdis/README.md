@@ -24,6 +24,8 @@
       let batch = User::batch().consistency(Consistency::One).chunked_insert(&session, users, 100).await?;
       ```
 
+
+
 ## Usage considerations:
 - Provide and expressive API for CRUD & Complex Query operations on model as a whole
 - Provide easy way to work with subset of model fields by using automatically generated `partial_<model>!` macro
@@ -293,13 +295,12 @@ in `charybdis::operations` module.
     }
   ```
   We have macro generated functions for up to 3 fields from primary key. Note that if **complete**
-  primary key is provided, we get single typed result. So in case of our User model, we would get:
-
-    ```rust
-    Post::find_by_date(date: Date).execute(session) -> Result<CharybdisModelStream<Post>, CharybdisError>
-    Post::find_by_date_and_category_id(date: Date, category_id: Uuid).execute(session) ->  Result<CharybdisModelStream<Post>, CharybdisError>
-    Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text).execute(session) -> Result<Post, CharybdisError>
-    ```
+  primary key is provided, we get single typed result.
+  ```rust
+  Post::find_by_date(date: Date).execute(session) -> Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id(date: Date, category_id: Uuid).execute(session) ->  Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text).execute(session) -> Result<Post, CharybdisError>
+  ```
   And for our user model we would have
     ```rust
     User::find_by_id(id: Uuid).execute(session) -> Result<User, CharybdisError>
