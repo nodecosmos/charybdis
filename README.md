@@ -430,9 +430,14 @@ Supported configuration options:
 
 - ### Chunked Batch Operations
 
-  Chunked batch operations are used to insert large amount of data in chunks.
+  Chunked batch operations are used to operate on  large amount of data in chunks.
   ```rust
-  User::batch().chunked_inserts(&session, users, 100).await?;
+    let users: Vec<User>;
+    let chunk_size = 100;
+  
+    User::batch().chunked_inserts(&session, users, chunk_size).await?;
+    User::batch().chunked_updates(&session, users, chunk_size).await?;
+    User::batch().chunked_deletes(&session, users, chunk_size).await?;
   ```
 
 - ### Batch Configuration
@@ -444,6 +449,20 @@ Supported configuration options:
       .chunked_inserts(&session, users, 100).await?;
       .await?;
   ```
+  
+- ### Statements Batch
+    We can use batch statements to perform collection operations in batch:
+    ```rust
+    let batch = User::batch();
+    let users: Vec<User>;
+    
+    for user in users {
+        batch.append_statement(User::PUSH_TAGS_QUERY, (vec![tag], user.id));
+    }
+    
+    batch.execute(&session).await;
+    ```
+  
 
 ## Partial Model:
 - Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.

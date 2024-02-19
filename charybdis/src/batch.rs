@@ -32,6 +32,13 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         }
     }
 
+    pub fn from_batch(batch: &Batch) -> Self {
+        Self {
+            inner: batch.clone(),
+            values: Vec::new(),
+        }
+    }
+
     pub fn consistency(mut self, consistency: Consistency) -> Self {
         self.inner.set_consistency(consistency);
         self
@@ -78,7 +85,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 
     pub async fn chunked_insert(
-        &self,
+        self,
         db_session: &CachingSession,
         iter: &Vec<M>,
         chunk_size: usize,
@@ -86,18 +93,18 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         let chunks = iter.chunks(chunk_size);
 
         for chunk in chunks {
-            let mut batch: CharybdisModelBatch<M, M> = CharybdisModelBatch::new();
+            let mut batch: CharybdisModelBatch<M, M> = CharybdisModelBatch::from_batch(&self.inner);
 
             batch.append_inserts(chunk)?;
 
-            db_session.batch(&self.inner, &batch.values).await?;
+            batch.execute(db_session).await?;
         }
 
         Ok(())
     }
 
     pub async fn chunked_update(
-        &self,
+        self,
         db_session: &CachingSession,
         iter: &Vec<M>,
         chunk_size: usize,
@@ -105,18 +112,18 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         let chunks = iter.chunks(chunk_size);
 
         for chunk in chunks {
-            let mut batch: CharybdisModelBatch<M, M> = CharybdisModelBatch::new();
+            let mut batch: CharybdisModelBatch<M, M> = CharybdisModelBatch::from_batch(&self.inner);
 
             batch.append_updates(chunk)?;
 
-            db_session.batch(&self.inner, &batch.values).await?;
+            batch.execute(db_session).await?;
         }
 
         Ok(())
     }
 
     pub async fn chunked_delete(
-        &self,
+        self,
         db_session: &CachingSession,
         iter: &Vec<M>,
         chunk_size: usize,
@@ -124,20 +131,20 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         let chunks = iter.chunks(chunk_size);
 
         for chunk in chunks {
-            let mut batch: CharybdisModelBatch<M::PrimaryKey, M> = CharybdisModelBatch::new();
+            let mut batch: CharybdisModelBatch<M, M> = CharybdisModelBatch::from_batch(&self.inner);
 
             for model in chunk {
                 batch.append_delete(model)?;
             }
 
-            db_session.batch(&self.inner, &batch.values).await?;
+            batch.execute(db_session).await?;
         }
 
         Ok(())
     }
 
     pub async fn chunked_delete_by_partition_key(
-        &self,
+        self,
         db_session: &CachingSession,
         iter: &Vec<M>,
         chunk_size: usize,
@@ -145,18 +152,18 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         let chunks = iter.chunks(chunk_size);
 
         for chunk in chunks {
-            let mut batch: CharybdisModelBatch<M::PartitionKey, M> = CharybdisModelBatch::new();
+            let mut batch: CharybdisModelBatch<M, M> = CharybdisModelBatch::from_batch(&self.inner);
 
             batch.append_deletes_by_partition_key(chunk)?;
 
-            db_session.batch(&self.inner, &batch.values).await?;
+            batch.execute(db_session).await?;
         }
 
         Ok(())
     }
 
     pub async fn chunked_statements(
-        &self,
+        self,
         db_session: &CachingSession,
         statement: &str,
         mut values: Vec<Val>,
@@ -164,11 +171,11 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     ) -> Result<(), CharybdisError> {
         while !values.is_empty() {
             let chunk: Vec<Val> = values.drain(..std::cmp::min(chunk_size, values.len())).collect();
-            let batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::new();
+            let batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::from_batch(&self.inner);
 
             batch.statements(db_session, statement, chunk).await?;
 
-            db_session.batch(&self.inner, &batch.values).await?;
+            batch.execute(db_session).await?;
         }
 
         Ok(())
@@ -180,13 +187,13 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         statement: &str,
         values: Vec<Val>,
     ) -> Result<(), CharybdisError> {
-        let mut batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::new();
+        let mut batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::from_batch(&self.inner);
 
         for val in values {
             batch.append_statement(statement, val)?;
         }
 
-        db_session.batch(&self.inner, &batch.values).await?;
+        batch.execute(db_session).await?;
 
         Ok(())
     }
