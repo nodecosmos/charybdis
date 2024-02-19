@@ -33,7 +33,6 @@
 - Automatic migration tool that analyzes the `src/model/*.rs` files and runs migrations according to differences between the model definition and database
 
 ## Performance consideration:
-- It's build by beta release, so it uses builtin support for `async/await` in traits that will be stabilized in Rust `1.75`
 - It uses prepared statements (shard/token aware) -> bind values
 - It expects `CachingSession` as a session arg for operations
 - Queries are macro generated str constants (no concatenation at runtime)
