@@ -125,15 +125,9 @@ impl Field {
     pub fn is_set(&self) -> bool {
         self.type_string().contains(Types::Set.to_string().as_str())
     }
-}
 
-pub trait FieldsTypes {
-    fn types(&self) -> Vec<syn::Type>;
-}
-
-impl FieldsTypes for &Vec<Field> {
-    fn types(&self) -> Vec<syn::Type> {
-        self.iter().map(|field| field.ty.clone()).collect()
+    pub fn is_counter(&self) -> bool {
+        self.type_string().contains(Types::Counter.to_string().as_str())
     }
 }
 

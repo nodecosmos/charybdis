@@ -1,11 +1,9 @@
 use crate::model::BaseModel;
 
-pub trait New<T: Default + BaseModel> {
-    fn new() -> Self;
-}
-
-impl<T: Default + BaseModel> New<T> for T {
+pub trait New: Default + BaseModel {
     fn new() -> Self {
         Self::default()
     }
 }
+
+impl<M: Default + BaseModel> New for M {}

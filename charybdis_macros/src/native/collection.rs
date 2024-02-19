@@ -1,4 +1,4 @@
-use crate::utils::where_placeholders;
+use crate::utils::{where_placeholders, FieldsAsTuple};
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
@@ -75,7 +75,7 @@ pub(crate) fn pull_from_collection_consts(ch_args: &CharybdisMacroArgs, fields: 
     expanded
 }
 
-pub(crate) fn push_to_collection_funs(fields: &CharybdisFields) -> TokenStream {
+pub(crate) fn push_to_collection_methods(fields: &CharybdisFields) -> TokenStream {
     let push_to_collection_rules: Vec<TokenStream> = fields
         .db_fields
         .iter()
@@ -88,26 +88,18 @@ pub(crate) fn push_to_collection_funs(fields: &CharybdisFields) -> TokenStream {
             let push_to_query = parse_str::<TokenStream>(&push_to_query_str).unwrap();
             let fun_name_str = format!("push_{}", field.name);
             let fun_name = parse_str::<TokenStream>(&fun_name_str).unwrap();
-
-            // Create tuple of primary key fields
-            let pk_fields_tuple = fields.primary_key_fields.iter().map(|pk_field| {
-                let pk_field_ident = &pk_field.ident;
-                quote! { self.#pk_field_ident.clone() }
-            });
+            let types = fields.primary_key_fields.types();
+            let values = fields.primary_key_fields.values();
 
             let expanded = quote! {
-                pub async fn #fun_name(
+                pub fn #fun_name<V: charybdis::SerializeCql>(
                     &self,
-                    session: &charybdis::CachingSession,
-                    value: &impl charybdis::SerializeCql
-                ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
-                    let res = charybdis::operations::execute(
-                        session,
+                    value: V
+                ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    charybdis::query::CharybdisQuery::new(
                         #push_to_query,
-                        (value, #(#pk_fields_tuple),*)
-                    ).await?;
-
-                    Ok(res)
+                        charybdis::query::QueryValue::Owned((value, #(#values),*)),
+                    )
                 }
             };
 
@@ -122,7 +114,7 @@ pub(crate) fn push_to_collection_funs(fields: &CharybdisFields) -> TokenStream {
     expanded
 }
 
-pub(crate) fn pull_from_collection_funs(fields: &CharybdisFields) -> TokenStream {
+pub(crate) fn pull_from_collection_methods(fields: &CharybdisFields) -> TokenStream {
     let pull_from_collection_rules: Vec<TokenStream> = fields
         .db_fields
         .iter()
@@ -133,29 +125,20 @@ pub(crate) fn pull_from_collection_funs(fields: &CharybdisFields) -> TokenStream
 
             let pull_from_query_str = format!("Self::PULL_{}_QUERY", field.name.to_uppercase());
             let pull_from_query = parse_str::<TokenStream>(&pull_from_query_str).unwrap();
-
             let fun_name_str = format!("pull_{}", field.name);
             let fun_name = parse_str::<TokenStream>(&fun_name_str).unwrap();
-
-            let pk_fields_tuple = fields.primary_key_fields.iter().map(|pk_field| {
-                let pk_field_ident = &pk_field.ident;
-                quote! { self.#pk_field_ident.clone() }
-            });
+            let types = fields.primary_key_fields.types();
+            let values = fields.primary_key_fields.values();
 
             let expanded = quote! {
-                pub async fn #fun_name(
+                pub fn #fun_name<V: charybdis::SerializeCql>(
                     &self,
-                    session: &charybdis::CachingSession,
-                    value: &impl charybdis::SerializeCql
-                ) -> Result<charybdis::QueryResult, charybdis::errors::CharybdisError> {
-
-                    let res = charybdis::operations::execute(
-                        session,
+                    value: V
+                ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    charybdis::query::CharybdisQuery::new(
                         #pull_from_query,
-                        (value, #(#pk_fields_tuple),*))
-                    .await?;
-
-                    Ok(res)
+                        charybdis::query::QueryValue::Owned((value, #(#values),*)),
+                    )
                 }
             };
 

@@ -1,45 +1,19 @@
-use crate::callbacks::{Callbacks, ExtCallbacks};
-use crate::errors::CharybdisError;
+use crate::callbacks::{Callbacks, UpdateAction};
 use crate::model::Model;
-use scylla::{CachingSession, QueryResult};
+use crate::query::{CharybdisCbQuery, CharybdisQuery, ModelMutation, QueryValue};
 
-pub trait Update {
-    async fn update(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError>;
-}
-
-impl<T: Model> Update for T {
-    async fn update(&self, session: &CachingSession) -> Result<QueryResult, CharybdisError> {
-        session
-            .execute(Self::UPDATE_QUERY, self)
-            .await
-            .map_err(CharybdisError::from)
+pub trait Update: Model {
+    fn update(&self) -> CharybdisQuery<Self, Self, ModelMutation> {
+        CharybdisQuery::new(Self::UPDATE_QUERY, QueryValue::Model(self))
     }
 }
 
-pub trait UpdateWithCallbacks<T: Update + Callbacks> {
-    async fn update_cb(&mut self, session: &CachingSession) -> Result<QueryResult, T::Error>;
-}
+impl<M: Model> Update for M {}
 
-impl<T: Update + Callbacks> UpdateWithCallbacks<T> for T {
-    async fn update_cb(&mut self, session: &CachingSession) -> Result<QueryResult, T::Error> {
-        self.before_update(session).await?;
-        let res = self.update(session).await;
-        self.after_update(session).await?;
-
-        res.map_err(T::Error::from)
+pub trait UpdateWithCallbacks<'a>: Callbacks {
+    fn update_cb(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<'a, Self, UpdateAction<Self>, Self> {
+        CharybdisCbQuery::new(Self::UPDATE_QUERY, self, extension)
     }
 }
 
-pub trait UpdateWithExtCallbacks<T: Update + ExtCallbacks> {
-    async fn update_cb(&mut self, session: &CachingSession, extension: &T::Extension) -> Result<QueryResult, T::Error>;
-}
-
-impl<T: Update + ExtCallbacks> UpdateWithExtCallbacks<T> for T {
-    async fn update_cb(&mut self, session: &CachingSession, extension: &T::Extension) -> Result<QueryResult, T::Error> {
-        self.before_update(session, extension).await?;
-        let res = self.update(session).await;
-        self.after_update(session, extension).await?;
-
-        res.map_err(T::Error::from)
-    }
-}
+impl<'a, M: Callbacks> UpdateWithCallbacks<'a> for M {}
