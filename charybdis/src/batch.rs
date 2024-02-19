@@ -32,11 +32,15 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         }
     }
 
-    pub fn from_batch(batch: &Batch) -> Self {
+    pub(crate) fn from_batch(batch: &Batch) -> Self {
         Self {
             inner: batch.clone(),
             values: Vec::new(),
         }
+    }
+
+    fn append_query_to_batch(&mut self, statement: &str) {
+        self.inner.append_statement(statement);
     }
 
     pub fn consistency(mut self, consistency: Consistency) -> Self {
@@ -191,14 +195,8 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         Ok(())
     }
 
-    fn append_statement_to_batch(&mut self, statement: &str) {
-        let query = statement.to_string();
-
-        self.inner.append_statement(query.as_str());
-    }
-
     pub fn append_insert(&mut self, model: &'a M) -> Result<(), CharybdisError> {
-        self.append_statement_to_batch(M::INSERT_QUERY);
+        self.append_query_to_batch(M::INSERT_QUERY);
 
         self.values.push(QueryValue::Model(model));
 
@@ -215,7 +213,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 
     pub fn append_update(&mut self, model: &'a M) -> Result<(), CharybdisError> {
-        self.append_statement_to_batch(M::UPDATE_QUERY);
+        self.append_query_to_batch(M::UPDATE_QUERY);
 
         self.values.push(QueryValue::Model(model));
 
@@ -232,7 +230,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 
     pub fn append_delete(&mut self, model: &M) -> Result<(), CharybdisError> {
-        self.append_statement_to_batch(M::DELETE_QUERY);
+        self.append_query_to_batch(M::DELETE_QUERY);
 
         self.values.push(QueryValue::PrimaryKey(model.primary_key_values()));
 
@@ -249,7 +247,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 
     pub fn append_delete_by_partition_key(&mut self, model: &'a M) -> Result<(), CharybdisError> {
-        self.append_statement_to_batch(M::DELETE_BY_PARTITION_KEY_QUERY);
+        self.append_query_to_batch(M::DELETE_BY_PARTITION_KEY_QUERY);
 
         self.values.push(QueryValue::PartitionKey(model.partition_key_values()));
 
@@ -266,7 +264,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 
     pub fn append_statement(&mut self, statement: &str, val: Val) -> Result<(), CharybdisError> {
-        self.append_statement_to_batch(statement);
+        self.append_query_to_batch(statement);
 
         self.values.push(QueryValue::Owned(val));
 
