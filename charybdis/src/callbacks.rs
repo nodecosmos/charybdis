@@ -67,89 +67,56 @@ pub trait Callbacks: Model {
 /// Compiler complains about possible cycles in the code when using callbacks if we try to match operation with
 /// callback within CharybdisCbQuery::execute, so we need to use separate structs for each callback operation in order to clearly
 /// separate between actions and avoid warnings.
-pub struct InsertCbModel<'a, M: Callbacks> {
-    model: &'a mut M,
-    extension: &'a M::Extension,
+pub struct InsertAction<M: Callbacks>(M);
+pub struct UpdateAction<M: Callbacks>(M);
+pub struct DeleteAction<M: Callbacks>(M);
+
+pub trait CallbackAction<M: Callbacks> {
+    fn query_value<Val: SerializeRow>(model: &M) -> QueryValue<Val, M>;
+
+    async fn before_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error>;
+
+    async fn after_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error>;
 }
 
-pub struct UpdateCbModel<'a, M: Callbacks> {
-    model: &'a mut M,
-    extension: &'a M::Extension,
-}
-
-pub struct DeleteCbModel<'a, M: Callbacks> {
-    model: &'a mut M,
-    extension: &'a M::Extension,
-}
-
-pub trait CbModel<'a, M: Callbacks> {
-    type Error: From<CharybdisError>;
-
-    fn new(model: &'a mut M, extension: &'a M::Extension) -> Self;
-
-    fn value<Val: SerializeRow>(&self) -> QueryValue<Val, M>;
-
-    async fn before_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error>;
-
-    async fn after_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error>;
-}
-
-impl<'a, M: Callbacks> CbModel<'a, M> for InsertCbModel<'a, M> {
-    type Error = M::Error;
-
-    fn new(model: &'a mut M, extension: &'a M::Extension) -> Self {
-        InsertCbModel { model, extension }
+impl<M: Callbacks> CallbackAction<M> for InsertAction<M> {
+    fn query_value<Val: SerializeRow>(model: &M) -> QueryValue<Val, M> {
+        QueryValue::Model(&model)
     }
 
-    fn value<Val: SerializeRow>(&self) -> QueryValue<Val, M> {
-        QueryValue::Model(&self.model)
+    async fn before_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {
+        model.before_insert(session, extension).await
     }
 
-    async fn before_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error> {
-        self.model.before_insert(session, self.extension).await
-    }
-
-    async fn after_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error> {
-        self.model.after_insert(session, self.extension).await
+    async fn after_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {
+        model.after_insert(session, extension).await
     }
 }
 
-impl<'a, M: Callbacks> CbModel<'a, M> for UpdateCbModel<'a, M> {
-    type Error = M::Error;
-
-    fn new(model: &'a mut M, extension: &'a M::Extension) -> Self {
-        UpdateCbModel { model, extension }
+impl<M: Callbacks> CallbackAction<M> for UpdateAction<M> {
+    fn query_value<Val: SerializeRow>(model: &M) -> QueryValue<Val, M> {
+        QueryValue::Model(&model)
     }
 
-    fn value<Val: SerializeRow>(&self) -> QueryValue<Val, M> {
-        QueryValue::Model(&self.model)
+    async fn before_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {
+        model.before_update(session, extension).await
     }
 
-    async fn before_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error> {
-        self.model.before_update(session, self.extension).await
-    }
-
-    async fn after_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error> {
-        self.model.after_update(session, self.extension).await
+    async fn after_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {
+        model.after_update(session, extension).await
     }
 }
 
-impl<'a, M: Callbacks> CbModel<'a, M> for DeleteCbModel<'a, M> {
-    type Error = M::Error;
-
-    fn new(model: &'a mut M, extension: &'a M::Extension) -> Self {
-        DeleteCbModel { model, extension }
+impl<M: Callbacks> CallbackAction<M> for DeleteAction<M> {
+    fn query_value<Val: SerializeRow>(model: &M) -> QueryValue<Val, M> {
+        QueryValue::PrimaryKey(model.primary_key_values())
     }
 
-    fn value<Val: SerializeRow>(&self) -> QueryValue<Val, M> {
-        QueryValue::PrimaryKey(self.model.primary_key_values())
+    async fn before_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {
+        model.before_delete(session, extension).await
     }
 
-    async fn before_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error> {
-        self.model.before_delete(session, self.extension).await
-    }
-
-    async fn after_execute(&mut self, session: &CachingSession) -> Result<(), Self::Error> {
-        self.model.after_delete(session, self.extension).await
+    async fn after_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {
+        model.after_delete(session, extension).await
     }
 }

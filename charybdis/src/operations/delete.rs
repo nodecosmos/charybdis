@@ -1,4 +1,4 @@
-use crate::callbacks::{Callbacks, CbModel, DeleteCbModel};
+use crate::callbacks::{Callbacks, DeleteAction};
 use crate::model::Model;
 use crate::query::{CharybdisCbQuery, CharybdisQuery, ModelMutation, QueryValue};
 
@@ -21,8 +21,8 @@ pub trait DeleteWithCallbacks<'a>: Callbacks {
     fn delete_cb(
         &'a mut self,
         extension: &'a Self::Extension,
-    ) -> CharybdisCbQuery<Self, DeleteCbModel<Self>, Self::PrimaryKey> {
-        CharybdisCbQuery::new(Self::DELETE_QUERY, DeleteCbModel::new(self, extension))
+    ) -> CharybdisCbQuery<Self, DeleteAction<Self>, Self::PrimaryKey> {
+        CharybdisCbQuery::new(Self::DELETE_QUERY, self, extension)
     }
 }
 

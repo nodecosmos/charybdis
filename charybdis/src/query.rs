@@ -1,4 +1,4 @@
-use crate::callbacks::{Callbacks, CbModel};
+use crate::callbacks::{CallbackAction, Callbacks};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
@@ -266,16 +266,20 @@ macro_rules! delegate_inner_query_methods {
     };
 }
 
-pub struct CharybdisCbQuery<'a, M: Callbacks, CbM: CbModel<'a, M>, Val: SerializeRow> {
+pub struct CharybdisCbQuery<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> {
     inner: CharybdisQuery<'a, Val, M, ModelMutation>,
-    cb_model: CbM,
+    model: &'a mut M,
+    extension: &'a M::Extension,
+    _phantom: std::marker::PhantomData<CbA>,
 }
 
-impl<'a, M: Callbacks, CbM: CbModel<'a, M>, Val: SerializeRow> CharybdisCbQuery<'a, M, CbM, Val> {
-    pub(crate) fn new(query: impl Into<String>, cb_model: CbM) -> Self {
+impl<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> CharybdisCbQuery<'a, M, CbA, Val> {
+    pub(crate) fn new(query: impl Into<String>, model: &'a mut M, extension: &'a M::Extension) -> Self {
         Self {
             inner: CharybdisQuery::new(query, QueryValue::default()),
-            cb_model,
+            model,
+            extension,
+            _phantom: Default::default(),
         }
     }
 
@@ -294,12 +298,13 @@ impl<'a, M: Callbacks, CbM: CbModel<'a, M>, Val: SerializeRow> CharybdisCbQuery<
         profile_handle(profile_handle: Option<ExecutionProfileHandle>)
     }
 
-    pub async fn execute(mut self, session: &CachingSession) -> Result<QueryResult, CbM::Error> {
-        self.cb_model.before_execute(session).await?;
+    pub async fn execute(mut self, session: &CachingSession) -> Result<QueryResult, M::Error> {
+        CbA::before_execute(&mut self.model, session, self.extension).await?;
 
-        let res = self.inner.values(self.cb_model.value()).execute(session).await?;
+        let query_value = CbA::query_value(self.model);
+        let res = self.inner.values(query_value).execute(session).await?;
 
-        self.cb_model.after_execute(session).await?;
+        CbA::after_execute(&mut self.model, session, self.extension).await?;
 
         Ok(res)
     }
