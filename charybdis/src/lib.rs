@@ -26,10 +26,16 @@ pub use scylla::{
     query::Query,
     serialize::row::SerializeRow,
     serialize::value::SerializeCql,
-    statement::Consistency,
     transport::{errors::QueryError, session::TypedRowIter},
     CachingSession, QueryResult, Session,
 };
+
+pub mod options {
+    pub use scylla::execution_profile::ExecutionProfileHandle;
+    pub use scylla::history::HistoryListener;
+    pub use scylla::retry_policy::RetryPolicy;
+    pub use scylla::statement::{Consistency, SerialConsistency};
+}
 
 // scylla macros
 pub use scylla::macros::{FromRow, FromUserType, IntoUserType, SerializeCql, SerializeRow};

@@ -58,7 +58,7 @@ pub(crate) fn delete_by_primary_key_functions(
         let generated_func = quote! {
             pub fn #delete_by_fun_name<'a>(
                 #(#arguments),*
-            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::QueryResultWrapper> {
+            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelMutation> {
                 charybdis::query::CharybdisQuery::new(#query_str, charybdis::query::QueryValue::Owned(#values_tp))
             }
         };

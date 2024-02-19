@@ -72,7 +72,7 @@ fn find_one_generated_fn(
     quote! {
         pub fn #find_by_fun_name<'a>(
             #(#arguments),*
-        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::SingleRow<Self>> {
+        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelRow<Self>> {
             <#struct_name as charybdis::operations::Find>::find_first(#query_str, #values_tp)
         }
     }
@@ -90,7 +90,7 @@ fn find_many_generated_fn(
     quote! {
         pub fn #find_by_fun_name<'a>(
             #(#arguments),*
-        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::RowStream<Self>> {
+        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelStream<Self>> {
             <#struct_name as charybdis::operations::Find>::find(#query_str, #values_tp)
         }
     }

@@ -1,24 +1,22 @@
-use crate::callbacks::Callbacks;
+use crate::callbacks::{Callbacks, CbModel, UpdateCbModel};
 use crate::model::Model;
-use crate::operations::OperationsWithCallbacks;
-use crate::query::{CharybdisCbQuery, CharybdisQuery, QueryResultWrapper, QueryValue};
+use crate::query::{CharybdisCbQuery, CharybdisQuery, ModelMutation, QueryValue};
 
 pub trait Update: Model {
-    fn update(&self) -> CharybdisQuery<Self, Self, QueryResultWrapper>;
-}
-
-impl<M: Model> Update for M {
-    fn update(&self) -> CharybdisQuery<Self, Self, QueryResultWrapper> {
+    fn update(&self) -> CharybdisQuery<Self, Self, ModelMutation> {
         CharybdisQuery::new(Self::UPDATE_QUERY, QueryValue::Ref(self))
     }
 }
 
-pub trait UpdateWithCallbacks: Update + Callbacks {
-    fn update_cb<'a>(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<Self, Self>;
-}
+impl<M: Model> Update for M {}
 
-impl<M: Model + Callbacks> UpdateWithCallbacks for M {
-    fn update_cb<'a>(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<Self, Self> {
-        CharybdisCbQuery::new(Self::UPDATE_QUERY, OperationsWithCallbacks::Update, extension, self)
+pub trait UpdateWithCallbacks<'a>: Callbacks {
+    fn update_cb(
+        &'a mut self,
+        extension: &'a Self::Extension,
+    ) -> CharybdisCbQuery<'a, Self, UpdateCbModel<Self>, Self::PrimaryKey> {
+        CharybdisCbQuery::new(Self::UPDATE_QUERY, UpdateCbModel::new(self, extension))
     }
 }
+
+impl<'a, M: Callbacks> UpdateWithCallbacks<'a> for M {}
