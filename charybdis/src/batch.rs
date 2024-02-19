@@ -8,10 +8,6 @@ use scylla::serialize::row::SerializeRow;
 use scylla::{CachingSession, QueryResult};
 use std::sync::Arc;
 
-/// Send + Sync is required for `batch` to be sent to another thread, we need to use `Box` to
-/// make it possible to store different types in the same vector. Earlier we used `SerializedValues`
-/// and it was possible to store different types in the same vector. With new serialization API
-/// we can't do that anymore, so we need to use `Box` to store different types in the same vector.
 pub struct CharybdisModelBatch<'a, Val: SerializeRow, M: Model> {
     inner: Batch,
     values: Vec<QueryValue<'a, Val, M>>,
