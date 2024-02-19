@@ -173,7 +173,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
             let chunk: Vec<Val> = values.drain(..std::cmp::min(chunk_size, values.len())).collect();
             let batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::from_batch(&self.inner);
 
-            batch.statements(db_session, statement, chunk).await?;
+            batch.append_statements(statement, chunk)?;
 
             batch.execute(db_session).await?;
         }
@@ -181,19 +181,12 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         Ok(())
     }
 
-    pub async fn statements(
-        &self,
-        db_session: &CachingSession,
-        statement: &str,
-        values: Vec<Val>,
-    ) -> Result<(), CharybdisError> {
+    pub fn append_statements(&self, statement: &str, values: Vec<Val>) -> Result<(), CharybdisError> {
         let mut batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::from_batch(&self.inner);
 
         for val in values {
             batch.append_statement(statement, val)?;
         }
-
-        batch.execute(db_session).await?;
 
         Ok(())
     }
