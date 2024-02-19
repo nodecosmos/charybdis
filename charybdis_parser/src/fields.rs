@@ -125,6 +125,10 @@ impl Field {
     pub fn is_set(&self) -> bool {
         self.type_string().contains(Types::Set.to_string().as_str())
     }
+
+    pub fn is_counter(&self) -> bool {
+        self.type_string().contains(Types::Counter.to_string().as_str())
+    }
 }
 
 pub struct CharybdisFields {

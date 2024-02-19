@@ -229,55 +229,187 @@ in `charybdis::operations` module.
 
 ### Insert
 
-```rust
-use charybdis::{CachingSession, Insert};
-
-#[tokio::main]
-async fn main() {
-  let session: &CachingSession; // init sylla session
+- ```rust
+  use charybdis::{CachingSession, Insert};
   
-  // init user
-  let user: User = User {
-    id,
-    email: "charybdis@nodecosmos.com".to_string(),
-    username: "charybdis".to_string(),
-    created_at: Utc::now(),
-    updated_at: Utc::now(),
-    address: Some(
-        Address {
-            street: "street".to_string(),
-            state: "state".to_string(),
-            zip: "zip".to_string(),
-            country: "country".to_string(),
-            city: "city".to_string(),
-        }
-    ),
-  };
-
-  // create
-  user.insert().execute(&session).await;
-}
-```
+  #[tokio::main]
+  async fn main() {
+    let session: &CachingSession; // init sylla session
+    
+    // init user
+    let user: User = User {
+      id,
+      email: "charybdis@nodecosmos.com".to_string(),
+      username: "charybdis".to_string(),
+      created_at: Utc::now(),
+      updated_at: Utc::now(),
+      address: Some(
+          Address {
+              street: "street".to_string(),
+              state: "state".to_string(),
+              zip: "zip".to_string(),
+              country: "country".to_string(),
+              city: "city".to_string(),
+          }
+      ),
+    };
+  
+    // create
+    user.insert().execute(&session).await;
+  }
+  ```
 
 ## Find
 
-### Find by primary key
-
+- ### Find by primary key
   ```rust
     let user = User {id, ..Default::default()};
     let user = user.find_by_primary_key().execute(&session).await?;
   ```
-### Find by partition key
+- ### Find by partition key
 
   ```rust
     let users =  User {id, ..Default::default()}.find_by_partition_key().execute(&session).await;
   ```
-### Find by primary key associated
+- ### Find by primary key associated
   ```rust
   let users = User::find_by_primary_key_value(val: User::PrimaryKey).execute(&session).await;
   ```
-### Macro generated find helpers
-Lets say we have model:
+- ### Macro generated find helpers
+  Lets say we have model:
+    ```rust
+    #[charybdis_model(
+        table_name = posts,
+        partition_keys = [date],
+        clustering_keys = [categogry_id, title],
+        global_secondary_indexes = [])
+    ]
+    pub struct Post {
+        date: Date,
+        category_id: Uuid,
+        title: Text,
+        id: Uuid,
+        ...
+    }
+  ```
+  We have macro generated functions for up to 3 fields from primary key. Note that if **complete**
+  primary key is provided, we get single typed result. So in case of our User model, we would get:
+
+    ```rust
+    Post::find_by_date(date: Date).execute(session) -> Result<CharybdisModelStream<Post>, CharybdisError>
+    Post::find_by_date_and_category_id(date: Date, category_id: Uuid).execute(session) ->  Result<CharybdisModelStream<Post>, CharybdisError>
+    Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text).execute(session) -> Result<Post, CharybdisError>
+    ```
+  And for our user model we would have
+    ```rust
+    User::find_by_id(id: Uuid).execute(session) -> Result<User, CharybdisError>
+    ```
+
+- ### Custom filtering:
+  Lets use our `Post` model as an example:
+    ```rust 
+    #[charybdis_model(
+        table_name = posts, 
+        partition_keys = [category_id], 
+        clustering_keys = [date, title],
+        global_secondary_indexes = []
+    )]
+    pub struct Post {...}
+    ```
+  We get automatically generated `find_post!` macro that follows convention `find_<struct_name>!`.
+  It can be used to create custom queries.
+
+  Following will return stream of `Post` models, and query will be constructed at compile time as `&'static str`.
+
+    ```rust
+    // automatically generated macro rule
+    let posts = find_post!(
+        "category_id in ? AND date > ?",
+        (categor_vec, date)
+    ).execute(session).await?;
+    ```
+
+  We can also use `find_first_post!` macro to get single result:
+    ```rust
+    let post = find_first_post!(
+        "category_id in ? AND date > ? LIMIT 1",
+        (date, categor_vec)
+    ).execute(session).await?;
+    ```
+
+  If we just need the `Query` and not the result, we can use `find_post_query!` macro:
+    ```rust
+    let query = find_post_query!(
+        "date = ? AND category_id in ?",
+        (date, categor_vec)
+    ```
+
+## Update
+- ```rust
+  let user = User::from_json(json);
+  
+  user.username = "scylla".to_string();
+  user.email = "some@email.com";
+  
+  user.update().execute(&session).await;
+  ```
+- ### Collection:
+  - Let's use our `User` model as an example:
+    ```rust
+    #[charybdis_model(
+        table_name = users,
+        partition_keys = [id],
+        clustering_keys = [],
+    )]
+    pub struct User {
+        id: Uuid,
+        tags: Set<Text>,
+        post_ids: List<Uuid>,
+    }
+    ```
+  -  `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection field.
+      ```rust
+      let user: User;
+  
+      user.push_tags(vec![tag]).execute(&session).await;
+      user.pull_tags(vec![tag]).execute(&session).await;
+  
+      user.push_post_ids(vec![tag]).execute(&session).await;
+      user.pull_post_ids(vec![tag]).execute(&session).await;
+      ```
+- ### Counter
+  - Let's define post_counter model:
+    ```rust
+    #[charybdis_model(
+        table_name = post_counters,
+        partition_keys = [id],
+        clustering_keys = [],
+    )]
+    pub struct PostCounter {
+        id: Uuid,
+        likes: Counter,
+        comments: Counter,
+    }
+    ```
+  - We can use `increment_<field_name>` and `decrement_<field_name>` methods to update counter fields.
+    ```rust
+    let post_counter: PostCounter;
+    post_counter.increment_likes(1).execute(&session).await;
+    post_counter.decrement_likes(1).execute(&session).await;
+    
+    post_counter.increment_comments(1).execute(&session).await;
+    post_counter.decrement_comments(1).execute(&session).await;
+    ```
+
+## Delete
+- ```rust 
+  let user = User::from_json(json);
+
+  user.delete().execute(&session).await;
+  ```
+
+- ### Macro generated delete helpers
+  Lets use our `Post` model as an example:
   ```rust
   #[charybdis_model(
       table_name = posts,
@@ -288,103 +420,18 @@ Lets say we have model:
   pub struct Post {
       date: Date,
       category_id: Uuid,
-      title: String,
+      title: Text,
       id: Uuid,
       ...
   }
-
-  // We have macro generated functions for up to 3 fields from primary key. Note that if **complete**
-  // primary key is provided, we get single typed result. So in case of our User model, we would get:
-
-  Post::find_by_date(date: Date).execute(session) -> Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id(date: Date, category_id: Uuid).execute(session) ->  Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: String).execute(session) -> Result<Post, CharybdisError>
   ```
-And for our user model we would have
-  ```rust
-  User::find_by_id(id: Uuid).execute(session) -> Result<User, CharybdisError>
-  ```
-
-### Custom filtering:
-Let's say we have a model:
-  ```rust 
-  #[charybdis_model(
-      table_name = posts, 
-      partition_keys = [category_id], 
-      clustering_keys = [date, title],
-      global_secondary_indexes = []
-  )]
-  pub struct Post {...}
-  ```
-We get automatically generated `find_post!` macro that follows convention `find_<struct_name>!`.
-It can be used to create custom queries.
-
-Following will return stream of `Post` models, and query will be constructed at compile time as `&'static str`.
+  We have macro generated  functions for up to 3 fields from primary key.
 
   ```rust
-  // automatically generated macro rule
-  let posts = find_post!(
-      "category_id in ? AND date > ?",
-      (categor_vec, date)
-  ).execute(session).await?;
+  Post::delete_by_date(date: Date).execute(&session).await?;
+  Post::delete_by_date_and_category_id(date: Date, category_id: Uuid).execute(&session).await?;
+  Post::delete_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text).execute(&session).await?;
   ```
-
-We can also use `find_first_post!` macro to get single result:
-  ```rust
-  let post = find_first_post!(
-      "category_id in ? AND date > ? LIMIT 1",
-      (date, categor_vec)
-  ).execute(session).await?;
-  ```
-
-If we just need the `Query` and not the result, we can use `find_post_query!` macro:
-  ```rust
-  let query = find_post_query!(
-      "date = ? AND category_id in ?",
-      (date, categor_vec)
-  ```
-
-## Update
-```rust
-let user = User::from_json(json);
-
-user.username = "scylla".to_string();
-user.email = "some@email.com";
-
-user.update().execute(&session).await;
-```
-
-## Delete
-```rust 
-  let user = User::from_json(json);
-
-  user.delete().execute(&session).await;
-```
-
-
-### Macro generated delete helpers
-```rust
-#[charybdis_model(
-    table_name = posts,
-    partition_keys = [date],
-    clustering_keys = [categogry_id, title],
-    global_secondary_indexes = [])
-]
-pub struct Post {
-    date: Date,
-    category_id: Uuid,
-    title: String,
-    id: Uuid,
-    ...
-}
-```
-We have macro generated  functions for up to 3 fields from primary key.
-
-```rust
-Post::delete_by_date(date: Date).execute(&session).await?;
-Post::delete_by_date_and_category_id(date: Date, category_id: Uuid).execute(&session).await?;
-Post::delete_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: String).execute(&session).await?;
-```
 
 ## Configuration
 Every operation returns `CharybdisQuery` that can be configured before execution with method chaining.
@@ -626,7 +673,7 @@ Callbacks are  convenient way to run additional logic on model before or after c
     )]
     pub struct User {
       id: Uuid,
-      tags: Set<String>,
+      tags: Set<Text>,
       post_ids: List<Uuid>,
     }
     ```
@@ -668,7 +715,7 @@ Callbacks are  convenient way to run additional logic on model before or after c
 - ### Generated Collection Methods:
   `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection field.
   ```rust
-  let user = User::new();
+  let user: User;
   
   user.push_tags(vec![tag]).execute(&session).await;
   user.pull_tags(vec![tag]).execute(&session).await;

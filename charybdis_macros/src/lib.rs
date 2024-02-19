@@ -9,8 +9,9 @@ mod utils;
 use crate::macro_rules::*;
 use crate::model::*;
 use crate::native::{
-    delete_by_primary_key_functions, find_by_primary_keys_functions, pull_from_collection_consts,
-    pull_from_collection_funs, push_to_collection_consts, push_to_collection_funs,
+    decrement_counter_methods, delete_by_primary_key_functions, find_by_primary_keys_functions,
+    increment_counter_methods, pull_from_collection_consts, pull_from_collection_methods, push_to_collection_consts,
+    push_to_collection_methods,
 };
 use crate::scylla::from_row;
 use charybdis_parser::fields::CharybdisFields;
@@ -59,8 +60,12 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let pull_from_collection_consts = pull_from_collection_consts(&args, &fields);
 
     // Collection methods
-    let push_to_collection_funs = push_to_collection_funs(&fields);
-    let pull_from_collection_funs = pull_from_collection_funs(&fields);
+    let push_to_collection_methods = push_to_collection_methods(&fields);
+    let pull_from_collection_methods = pull_from_collection_methods(&fields);
+
+    // Counter methods
+    let increment_counter_methods = increment_counter_methods(&args, &fields);
+    let decrement_counter_methods = decrement_counter_methods(&args, &fields);
 
     // FromRow trait
     let from_row = from_row(struct_name, &fields);
@@ -87,8 +92,10 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
             #pull_from_collection_consts
 
             // methods
-            #push_to_collection_funs
-            #pull_from_collection_funs
+            #push_to_collection_methods
+            #pull_from_collection_methods
+            #increment_counter_methods
+            #decrement_counter_methods
         }
 
        impl charybdis::model::BaseModel for #struct_name {
@@ -113,6 +120,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
             #update_query_const
             #delete_query_const
             #delete_by_partition_key_query_const
+
         }
 
         impl charybdis::FromRow for #struct_name {
