@@ -6,6 +6,24 @@
 
 #### Charybdis is a ORM layer on top of `scylla_rust_driver` focused on easy of use and performance
 
+## Announcements:
+- ### Queries are now configurable
+  With `0.4.0` release we have provided users with ability to configure each query before execution
+- ###  Breaking changes
+  1) **Operations**: `find`, `insert`, `update`, `delete` now return `CharybdisQuery` that can be configured before execution.
+      ```rust
+      let mut user = user.find_by_primary_key().consistency(Consistency::One).execute(session);
+      ```
+
+  2) **Callbacks**: We now have only single `Callbacks` trait that is used for all operation that can accept extension.
+     In case extension is not needed, we can use `()` or Option<()> and provide `None` as extension argument.
+
+  3) **Batch Operations**:  Batch is now coupled with Model and it's created by calling `Model::batch()` method. It
+     can also be configured before execution.
+      ```rust
+      let batch = User::batch().consistency(Consistency::One).chunked_insert(&session, users, 100).await?;
+      ```
+
 ## Usage considerations:
 - Provide and expressive API for CRUD & Complex Query operations on model as a whole
 - Provide easy way to work with subset of model fields by using automatically generated `partial_<model>!` macro
@@ -27,17 +45,29 @@
   - [Define Materialized Views](#Define-Materialized-Views)
 - [Automatic migration with `charybdis-migrate`](#automatic-migration)
 - [Basic Operations](#basic-operations)
-  - [Create](#create)
+  - [Insert](#insert)
   - [Find](#find)
+    - [Find by primary key](#find-by-primary-key)
+    - [Find by partition key](#find-by-partition-key)
+    - [Find by primary key associated](#find-by-primary-key-associated)
+    - [Macro generated find helpers](#macro-generated-find-helpers)
     - [Custom filtering](#custom-filtering)
   - [Update](#update)
   - [Delete](#delete)
-- [Partial Model Operations](#partial-model-operations)
+    - [Macro generated delete helpers](#macro-generated-delete-helpers)
+- [Configuration Options](#configuration)
+- [Batch Operations](#batch-operations)
+  - [Chunked Batch Operations](#chunked-batch-operations)
+  - [Batch Configuration](#batch-configuration)
+- [Partial Model](#partial-model)
   - [Considerations](#partial-model-considerations)
   - [As Native](#as-native)
 - [Callbacks](#callbacks)
-- [Batch Operations](#batch-operations)
-- [Collection queries](#collection-queries)
+  - [Implementation](#implementation)
+  - [Triggering Callbacks](#triggering-callbacks)
+- [Collection](#collections)
+  - [Generated Collection Queries](#generated-collection-queries)
+  - [Generated Collection Methods](#generated-collection-methods)
 - [Ignored fields](#ignored-fields)
 - [Roadmap](#Roadmap)
 
@@ -55,7 +85,7 @@ use charybdis::types::{Text, Timestamp, Uuid};
     table_name = users,
     partition_keys = [id],
     clustering_keys = [],
-    global_secondary_indexes = [],
+    global_secondary_indexes = [username],
     local_secondary_indexes = [],
 )]
 pub struct User {
@@ -197,7 +227,7 @@ resulting query will be: `CREATE INDEX ON menus((location), dish_type);`
 For each operation you need to bring respective trait into scope. They are defined
 in `charybdis::operations` module.
 
-### Create
+### Insert
 
 ```rust
 use charybdis::{CachingSession, Insert};
@@ -225,25 +255,29 @@ async fn main() {
   };
 
   // create
-  user.insert(&session).await;
+  user.insert().execute(&session).await;
 }
 ```
 
 ## Find
 
-* #### Find by primary key
+### Find by primary key
 
   ```rust
     let user = User {id, ..Default::default()};
-    let user = user.find_by_primary_key(&session).await?;
+    let user = user.find_by_primary_key().execute(&session).await?;
   ```
-* #### Find by partition key
+### Find by partition key
 
   ```rust
-    let users =  User {id, ..Default::default()}.find_by_partition_key(&session).await;
+    let users =  User {id, ..Default::default()}.find_by_partition_key().execute(&session).await;
   ```
-* ### Macro generated find helpers
-  Lets say we have model:
+### Find by primary key associated
+  ```rust
+  let users = User::find_by_primary_key_value(val: User::PrimaryKey).execute(&session).await;
+  ```
+### Macro generated find helpers
+Lets say we have model:
   ```rust
   #[charybdis_model(
       table_name = posts,
@@ -258,62 +292,57 @@ async fn main() {
       id: Uuid,
       ...
   }
-  ```
 
+  // We have macro generated functions for up to 3 fields from primary key. Note that if **complete**
+  // primary key is provided, we get single typed result. So in case of our User model, we would get:
+
+  Post::find_by_date(date: Date).execute(session) -> Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id(date: Date, category_id: Uuid).execute(session) ->  Result<CharybdisModelStream<Post>, CharybdisError>
+  Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: String).execute(session) -> Result<Post, CharybdisError>
+  ```
+And for our user model we would have
   ```rust
-  Post::find_by_date(session: &CachingSession, date: Date) -> Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id(session: &CachingSession, date: Date, category_id: Uuid) ->  Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id_and_title(session: &CachingSession, date: Date, category_id: Uuid, title: String) -> Result<Post, CharybdisError>
-  ```
-  We have macro generated  functions for up to 3 fields from primary key. Note that if **complete**
-  primary key is provided, we get single typed result. So in case of our User model, we would get:
-
-  ```rust
-  User::find_by_id(session: &CachingSession, id: Uuid) -> Result<User, CharybdisError>
+  User::find_by_id(id: Uuid).execute(session) -> Result<User, CharybdisError>
   ```
 
-
-## Custom filtering:
+### Custom filtering:
 Let's say we have a model:
-```rust 
-#[charybdis_model(
-    table_name = posts, 
-    partition_keys = [category_id], 
-    clustering_keys = [date, title],
-    global_secondary_indexes = []
-)]
-pub struct Post {...}
-```
+  ```rust 
+  #[charybdis_model(
+      table_name = posts, 
+      partition_keys = [category_id], 
+      clustering_keys = [date, title],
+      global_secondary_indexes = []
+  )]
+  pub struct Post {...}
+  ```
 We get automatically generated `find_post!` macro that follows convention `find_<struct_name>!`.
 It can be used to create custom queries.
 
-
 Following will return stream of `Post` models, and query will be constructed at compile time as `&'static str`.
 
-```rust
-// automatically generated macro rule
-let posts = find_post!(
-    session,
-    "category_id in ? AND date > ?",
-    (categor_vec, date)
-).await?;
-```
+  ```rust
+  // automatically generated macro rule
+  let posts = find_post!(
+      "category_id in ? AND date > ?",
+      (categor_vec, date)
+  ).execute(session).await?;
+  ```
 
 We can also use `find_first_post!` macro to get single result:
-```rust
-let post = find_first_post!(
-    session,
-    "category_id in ? AND date > ? LIMIT 1",
-    (date, categor_vec)
-).await?;
-```
+  ```rust
+  let post = find_first_post!(
+      "category_id in ? AND date > ? LIMIT 1",
+      (date, categor_vec)
+  ).execute(session).await?;
+  ```
 
 If we just need the `Query` and not the result, we can use `find_post_query!` macro:
-```rust
-let query = find_post_query!(
-    "date = ? AND category_id in ?",
-    (date, categor_vec)
-```
+  ```rust
+  let query = find_post_query!(
+      "date = ? AND category_id in ?",
+      (date, categor_vec)
+  ```
 
 ## Update
 ```rust
@@ -322,15 +351,16 @@ let user = User::from_json(json);
 user.username = "scylla".to_string();
 user.email = "some@email.com";
 
-user.update(&session).await;
+user.update().execute(&session).await;
 ```
 
 ## Delete
 ```rust 
   let user = User::from_json(json);
 
-  user.delete(&session).await;
+  user.delete().execute(&session).await;
 ```
+
 
 ### Macro generated delete helpers
 ```rust
@@ -351,228 +381,284 @@ pub struct Post {
 We have macro generated  functions for up to 3 fields from primary key.
 
 ```rust
-Post::delete_by_date(session: &CachingSession, date: Date);
-Post::delete_by_date_and_category_id(session: &CachingSession, date: Date, category_id: Uuid);
-Post::delete_by_date_and_category_id_and_title(session: &CachingSession, date: Date, category_id: Uuid, title: String);
+Post::delete_by_date(date: Date).execute(&session).await?;
+Post::delete_by_date_and_category_id(date: Date, category_id: Uuid).execute(&session).await?;
+Post::delete_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: String).execute(&session).await?;
 ```
 
-
-## Partial Model Operations:
-Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.
-This macro generates a new struct with same structure as the original model, but only with provided fields.
-Macro is automatically generated by `#[charybdis_model]`.
-It follows convention `partial_<struct_name>!`.
-
+## Configuration
+Every operation returns `CharybdisQuery` that can be configured before execution with method chaining.
 ```rust
-// auto-generated macro - available in crate::models::user
-partial_user!(UpdateUsernameUser, id, username);
-
-let id = Uuid::new_v4();
-let user = UpdateUsernameUser { id, username: "scylla".to_string() };
-
-// we can have same operations as on base model
-// INSERT into users (id, username) VALUES (?, ?)
-user.insert(&session).await;
-
-// UPDATE users SET username = ? WHERE id = ?
-user.update(&session).await;
-
-// DELETE FROM users WHERE id = ?
-user.delete(&session).await;
-
-// get partial PartUser
-let partial_user = user.find_by_primary_key(&:session).await?;
-
-// get native user model by primary key
-let user = user.as_native().find_by_primary_key(&session).await?;
+let user: User = User::find_by_id(id)
+    .consistency(Consistency::One)
+    .timeout(Some(Duration::from_secs(5)))
+    .execute(&app.session)
+    .await?;
+    
+let result: QueryResult = user.update().consistency(Consistency::One).execute(&session).await?;
 ```
+Supported configuration options:
+- `consistency`
+- `serial_consistency`
+- `timestamp`
+- `timeout`
+- `page_size`
+- `timestamp`
 
 
-### Partial Model Considerations:
-1) `partial_<model>` requires `#[derive(Default)]` on original model
-2) `partial_<model>` require complete primary key in definition
-3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
-4) `partial_<model>` struct implements same field attributes as original model,
-   so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+## Batch
+`CharybdisModelBatch` operations are used to perform multiple operations in a single batch.
+
+- ### Batch Operations
+
+  ```rust
+  let users: Vec<User>;
+  let batch = User::batch();
+  
+  // inserts
+  batch.append_inserts(users);
+  
+  // or updates
+  batch.append_updates(users);
+  
+  // or deletes
+  batch.append_deletes(users);
+  
+  batch.execute(&session).await?;
+  ```
 
 
-### As Native
-In case we need to run operations on native model, we can use `as_native` method:
-```rust
-partial_user!(UpdateUser, id, username);
+- ### Chunked Batch Operations
 
-let mut update_user_username = UpdateUser {
-    id,
-    username: "updated_username".to_string(),
-};
+  Chunked batch operations are used to insert large amount of data in chunks.
+  ```rust
+  User::batch().chunked_inserts(&session, users, 100).await?;
+  ```
 
-let native_user: User = update_user_username.as_native().find_by_primary_key(&session).await?;
+- ### Batch Configuration
+  Batch operations can be configured before execution with method chaining.
+  ```rust
+  let batch = User::batch()
+      .consistency(Consistency::One)
+      .retry_policy(Some(Arc::new(DefaultRetryPolicy::new())))
+      .chunked_inserts(&session, users, 100).await?;
+      .await?;
+  ```
 
-// action that requires native model
-authorize_user(&native_user);
-```
-`as_native` works by returning new instance of native model with fields from partial model.
-For other fields it uses default values.
+## Partial Model:
+- Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.
+  This macro generates a new struct with same structure as the original model, but only with provided fields.
+  Macro is automatically generated by `#[charybdis_model]`.
+  It follows convention `partial_<struct_name>!`.
+
+  ```rust
+  // auto-generated macro - available in crate::models::user
+  partial_user!(UpdateUsernameUser, id, username);
+  
+  let id = Uuid::new_v4();
+  let user = UpdateUsernameUser { id, username: "scylla".to_string() };
+  
+  // we can have same operations as on base model
+  // INSERT into users (id, username) VALUES (?, ?)
+  user.insert().execute(&session).await;
+  
+  // UPDATE users SET username = ? WHERE id = ?
+  user.update().execute(&session).await;
+  
+  // DELETE FROM users WHERE id = ?
+  user.delete().execute(&session).await;
+  
+  // get partial PartUser
+  let partial_user = user.find_by_primary_key(&:session).await?;
+  
+  // get native user model by primary key
+  let user = user.as_native().find_by_primary_key().execute(&session).await?;
+  ```
 
 
-Recommended naming convention is `Purpose` + `Original Struct Name`. E.g:
-`UpdateAdresssUser`, `UpdateDescriptionPost`.
+- ### Partial Model Considerations:
+  1) `partial_<model>` requires `#[derive(Default)]` on original model
+  2) `partial_<model>` require complete primary key in definition
+  3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
+  4) `partial_<model>` struct implements same field attributes as original model,
+     so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+
+
+- ### As Native
+  In case we need to run operations on native model, we can use `as_native` method:
+  ```rust
+  partial_user!(UpdateUser, id, username);
+  
+  let mut update_user_username = UpdateUser {
+      id,
+      username: "updated_username".to_string(),
+  };
+  
+  let native_user: User = update_user_username.as_native().find_by_primary_key().execute(&session).await?;
+  
+  // action that requires native model
+  authorize_user(&native_user);
+  ```
+  `as_native` works by returning new instance of native model with fields from partial model.
+  For other fields it uses default values.
+
+
+- Recommended naming convention is `Purpose` + `Original Struct Name`. E.g: `UpdateAdresssUser`, `UpdateDescriptionPost`.
+
 
 ## Callbacks
-We can define callbacks that will be executed before and after certain operations.
-Note that callbacks returns custom error class that implements `From<CharybdisError>`.
+Callbacks are  convenient way to run additional logic on model before or after certain operations. E.g.
+- we can use `before_insert` to set default values and/or validate model before insert.
+- we can use `after_update` to update other data sources, e.g. elastic search.
 
-```rust
-use charybdis::*;
-
-#[charybdis_model(
-    table_name = organizations, 
-    partition_keys = [id], 
-    clustering_keys = [],
-    global_secondary_indexes = [name]
-)]
-pub struct Organization {
-    ...
-}
-
-impl Organization {
-  pub async fn find_by_name(&self, session: &CachingSession) -> Option<Organization> {
-    find_first_organization!(session, "name = ?", (&self.name,)).await.ok()
-  }
-}
-
-impl Callbacks for Organization {
-  type Error = CustomError;
-
-  async fn before_insert(&self, session: &CachingSession) -> Result<(), CustomError> {
-    if self.find_by_name(session).await.is_some() {
-      return Err(CustomError::ValidationError((
-        "name".to_string(),
-        "is taken".to_string(),
-      )));
+### Implementation:
+1) Let's say we define custom extension that will be used to
+   update elastic document on every post update:
+    ```rust
+    pub struct AppExtensions {
+        pub elastic_client: ElasticClient,
     }
-
-    Ok(())
-  }
-}
-```
-Possible callbacks:
-- `before_insert`
-- `after_insert`
-- `before_update`
-- `after_update`
-- `before_delete`
-- `after_delete`
-
-⚠️ In order to trigger callback, instead of calling `insert` method on model, we can call
-`insert_cb`. This enables us to have clear distinction between insert and insert with callbacks.
-```rust
-let post = Post::from_json(json);
-let res = post.insert_cb(&session).await;
-match res {
-        Ok(_) => println!("success"),
-        Err(e) => match e {
-            CharybdisError::ValidationError((field, reason)) => {
-                println!("validation error: {} {}", field, reason)
-            }
-            _ => println!("error: {:?}", e),
-        },
+    ```
+2) Now we can implement Callback that will utilize this extension:
+    ```rust
+    #[charybdis_model(...)]
+    pub struct Post {}
+    
+    impl ExtCallbacks for Post {
+        type Extention = AppExtensions;
+        type Error = AppError; // From<CharybdisError>
+        
+       // use before_insert to set default values
+        async fn before_insert(
+            &mut self,
+            _session: &CachingSession,
+            extension: &AppExtensions,
+        ) -> Result<(), CustomError> {
+            self.id = Uuid::new_v4();
+            self.created_at = Utc::now();
+            self.updated_at = Utc::now();
+            
+            Ok(())
+        }
+        
+        // use before_update to set updated_at
+        async fn before_update(
+            &mut self,
+            _session: &CachingSession,
+            extension: &AppExtensions,
+        ) -> Result<(), CustomError> {
+            self.updated_at = Utc::now();
+            
+            Ok(())
+        }
+    
+        // use after_update to update elastic document
+        async fn after_update(
+            &mut self,
+            _session: &CachingSession,
+            extension: &AppExtensions,
+        ) -> Result<(), CustomError> {
+            extension.elastic_client.update(...).await?;
+    
+            Ok(())
+        }
+        
+        // use after_delete to delete elastic document
+        async fn after_delete(
+            &mut self,
+            _session: &CachingSession,
+            extension: &AppExtensions,
+        ) -> Result<(), CustomError> {
+            extension.elastic_client.delete(...).await?;
+    
+            Ok(())
+        }
     }
-```
+    ```
+- ### Triggering Callbacks
+  In order to trigger callback we use `<operation>_cb`. method: `insert_cb`, `update_cb`, `delete_cb` according traits.
+  This enables us to have clear distinction between `insert` and insert with callbacks (`insert_cb`).
+  ```rust
+   use charybdis::operations::{DeleteWithCallbacks, InsertWithCallbacks, UpdateWithCallbacks};
+  
+   post.insert_cb(app_extensions).execute(&session).await;
+   post.update_cb(app_extensions).execute(&session).await;
+   post.delete_cb(app_extensions).execute(&session).await;
+  ```
+  
 
-## ExtensionCallbacks
-We can also define callbacks that will be given custom extension if needed.
-
-Let's say we define custom extension that will be used to
-update elastic document on every post update:
-```rust
-pub struct CustomExtension {
-    pub elastic_client: ElasticClient,
-}
-```
-
-We can define `after_update` callback on `Post`  
-that has custom extension as type:
-```rust
-#[charybdis_model(...)]
-pub struct Post {}
-
-impl ExtCallbacks for Post {
-    type Extention = CustomExtension;
-    type Error = CustomError;
-
-    async fn after_update(
-        &mut self,
-        _db_session: &CachingSession,
-        extension: &CustomExtension,
-    ) -> Result<(), CustomError> {
-        extension.elastic_client.update(...).await?;
-
-        Ok(())
-    }
-}
-```
-
-So to trigger callback we use same `update_cb` method:
-```rust
-let post = Post::from_json(json);
-let res = post.update_cb(&session, custom_extensions).await;
-```
-Note that CustomError has to implement `From<CharybdisError>`.
-
-## Batch Operations
-
-For batched operations we can make use of `CharybdisModelBatch`.
-
-```rust
-let mut batch = CharybdisModelBatch::new();
-let users: Vec<User> = Vec::from_json(json);
-
-// inserts
-batch.append_inserts(users);
-
-// or updates
-batch.append_updates(users);
-
-// or deletes
-batch.append_deletes(users);
-
-batch.execute(&session).await;
-```
-
-It also supports chunked batch operations
-```rust
-chunk_size = 100;
-CharybdisModelBatch::chunked_inserts(&session, users, chunk_size).await?;
-```
 
 ## Collections
-For every field that is defined with `List<T> `type or `Set<T>`, we get following:
-- `PUSH_<field_name>_QUERY` static str
-- `PULL_<field_name>_QUERY` static str
-- `push_<field_name>` method
-- `pull_<field_name>` method
+- For each collection field that is defined as  `List<T>  or `Set<T>`, we get following collection queries:
+  - `PUSH_<field_name>_QUERY` static str
+  - `PULL_<field_name>_QUERY` static str
+  - `push_<field_name>` method
+  - `pull_<field_name>` method
 
-```rust
-pub struct User {
-    id: Uuid,
-    tags: Set<String>,
-    post_ids: List<Uuid>,
-}
 
-let query = User::PUSH_TAGS_QUERY;
-execute(query, (vec![tag], &user.id)).await;
+-  ### Define Model:
+    ```rust
+    #[charybdis_model(
+      table_name = users,
+      partition_keys = [id],
+      clustering_keys = [],
+      global_secondary_indexes = [],
+      local_secondary_indexes = [],
+    )]
+    pub struct User {
+      id: Uuid,
+      tags: Set<String>,
+      post_ids: List<Uuid>,
+    }
+    ```
 
-let query = User::PULL_POST_IDS_QUERY;
-execute(query, (post_ids_vec, &user.id)).await;
-```
+- ### Generated Collection Queries:
+  ```rust
+   User::PUSH_TAGS_QUERY;
+   User::PULL_TAGS_QUERY;
+   
+   User::PUSH_POST_IDS_QUERY;
+   User::PULL_POST_IDS_QUERY;
+  ```
 
-Methods take session and value as arguments:
-```rust
-let user = User::from_json(json);
-user.push_tags(&session, vec![tag]).await;
-user.pull_post_ids(&session, post_ids_vec).await;
-```
+  Generated query will expect value as first bind value and primary key fields as next bind values.
+  ```rust
+  impl User {
+    const PUSH_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ?";
+    const PULL_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags - ? WHERE id = ?";
+    
+    const PUSH_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids + ? WHERE id = ?";
+    const PULL_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids - ? WHERE id = ?";
+  }
+  
+  ```
+  Now we could use this constant within Batch operations.
+
+  ```rust
+  let batch = User::batch();
+  let users: Vec<User>;
+  
+  for user in users {
+      batch.append_statement(User::PUSH_TAGS_QUERY, (vec![tag], user.id));
+  }
+  
+  batch.execute(&session).await;
+  
+  ```
+
+- ### Generated Collection Methods:
+  `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection field.
+  ```rust
+  let user = User::new();
+  
+  user.push_tags(vec![tag]).execute(&session).await;
+  user.pull_tags(vec![tag]).execute(&session).await;
+  
+  user.push_post_ids(vec![tag]).execute(&session).await;
+  user.pull_post_ids(vec![tag]).execute(&session).await;
+  ```
+
+
 ## Ignored fields
 We can ignore fields by using `#[charybdis(ignore)]` attribute:
 ```rust
@@ -590,5 +676,3 @@ It can be used to hold data that is not persisted in database.
 ## Roadmap:
 - [ ] Add tests
 - [ ] Write `modelize` command to generate `src/models/*` structs from existing database
-- [ ] Add --drop flag to migrate command to drop tables, types and UDTs if they are not defined in
-  `src/models`
