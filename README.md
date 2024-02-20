@@ -1,6 +1,11 @@
 # Rust ORM for ScyllaDB
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP*: This project is currently in an experimental stage. It's not recommended to use it in production yet.
+⚠️ *WIP*: This project is currently in an experimental stage. 
+Feedback and contributions are welcomed!
+
+[![Crates.io](https://img.shields.io/crates/v/charybdis)](https://crates.io/crates/charybdis)
+[![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
+[![License](https://img.shields.io/crates/l/charybdis)]()
 
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
 
