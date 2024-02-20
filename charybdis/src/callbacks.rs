@@ -64,9 +64,10 @@ pub trait Callbacks: Model {
     }
 }
 
-/// Compiler complains about possible cycles in the code when using callbacks if we try to match operation with
-/// callback within CharybdisCbQuery::execute, so we need to use separate structs for each callback operation in order to clearly
-/// separate between actions and avoid warnings.
+// The compiler issues warnings about potential cycles in the code due to callbacks when attempting to associate
+// operations with callbacks in CharybdisCbQuery::execute.
+// To circumvent these warnings and clearly delineate callback actions,
+// it's necessary to employ distinct structs for each callback operation.
 pub struct InsertAction<M: Callbacks>(M);
 pub struct UpdateAction<M: Callbacks>(M);
 pub struct DeleteAction<M: Callbacks>(M);
