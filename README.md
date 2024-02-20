@@ -1,13 +1,16 @@
-# Rust ORM for ScyllaDB
+# Rust ORM for ScyllaDB and Apache Cassandra
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP*: This project is currently in an experimental stage. 
+⚠️ *WIP*: This project is currently in an experimental stage.
 Feedback and contributions are welcomed!
 
 [![Crates.io](https://img.shields.io/crates/v/charybdis)](https://crates.io/crates/charybdis)
 [![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
 [![License](https://img.shields.io/crates/l/charybdis)]()
 
-<img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
+<p>
+<img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" width="150" alt="scylla_logo">
+<img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Cassandra_logo.svg" width="150" alt="cassandra_logo">
+</p>
 
 #### Charybdis is a ORM layer on top of `scylla_rust_driver` focused on easy of use and performance
 
@@ -30,7 +33,7 @@ Feedback and contributions are welcomed!
       ```
 
 
-  
+
 ## Usage considerations:
 - Provide and expressive API for CRUD & Complex Query operations on model as a whole
 - Provide easy way to work with subset of model fields by using automatically generated `partial_<model>!` macro
@@ -323,9 +326,9 @@ in `charybdis::operations` module.
     ```
   We get automatically generated `find_post!` macro that follows convention `find_<struct_name>!`.
   It can be used to create custom queries.
-  
+
   Following will return stream of `Post` models, and query will be constructed at compile time as `&'static str`.
-  
+
     ```rust
     // automatically generated macro rule
     let posts = find_post!(
@@ -333,7 +336,7 @@ in `charybdis::operations` module.
         (categor_vec, date)
     ).execute(session).await?;
     ```
-  
+
   We can also use `find_first_post!` macro to get single result:
     ```rust
     let post = find_first_post!(
@@ -341,7 +344,7 @@ in `charybdis::operations` module.
         (date, categor_vec)
     ).execute(session).await?;
     ```
-  
+
   If we just need the `Query` and not the result, we can use `find_post_query!` macro:
     ```rust
     let query = find_post_query!(
@@ -405,14 +408,14 @@ in `charybdis::operations` module.
     post_counter.increment_comments(1).execute(&session).await;
     post_counter.decrement_comments(1).execute(&session).await;
     ```
-  
+
 ## Delete
 - ```rust 
   let user = User::from_json(json);
 
   user.delete().execute(&session).await;
   ```
-  
+
 - ### Macro generated delete helpers
   Lets use our `Post` model as an example:
   ```rust
@@ -431,7 +434,7 @@ in `charybdis::operations` module.
   }
   ```
   We have macro generated  functions for up to 3 fields from primary key.
-  
+
   ```rust
   Post::delete_by_date(date: Date).execute(&session).await?;
   Post::delete_by_date_and_category_id(date: Date, category_id: Uuid).execute(&session).await?;
@@ -501,9 +504,9 @@ Supported configuration options:
       .chunked_inserts(&session, users, 100).await?;
       .await?;
   ```
-  
+
 - ### Statements Batch
-    We can use batch statements to perform collection operations in batch:
+  We can use batch statements to perform collection operations in batch:
     ```rust
     let batch = User::batch();
     let users: Vec<User>;
@@ -514,7 +517,7 @@ Supported configuration options:
     
     batch.execute(&session).await;
     ```
-  
+
 
 ## Partial Model:
 - Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.
@@ -646,7 +649,7 @@ Callbacks are  convenient way to run additional logic on model before or after c
         }
     }
     ```
-   
+
 - ### Possible Callbacks:
   - `before_insert`
   - `before_update`
@@ -664,7 +667,7 @@ Callbacks are  convenient way to run additional logic on model before or after c
    post.update_cb(app_extensions).execute(&session).await;
    post.delete_cb(app_extensions).execute(&session).await;
   ```
-  
+
 
 
 ## Collections

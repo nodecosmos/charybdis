@@ -1,4 +1,4 @@
-# Rust ORM for ScyllaDB
+# Rust ORM for ScyllaDB and Apache Cassandra
 ### Use monstrous tandem of scylla and charybdis for your next project
 ⚠️ *WIP*: This project is currently in an experimental stage.
 Feedback and contributions are welcomed!
@@ -7,7 +7,10 @@ Feedback and contributions are welcomed!
 [![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
 [![License](https://img.shields.io/crates/l/charybdis)]()
 
-<img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
+<p>
+<img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" width="150" alt="scylla_logo">
+<img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Cassandra_logo.svg" width="150" alt="cassandra_logo">
+</p>
 
 #### Charybdis is a ORM layer on top of `scylla_rust_driver` focused on easy of use and performance
 
