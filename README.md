@@ -646,6 +646,14 @@ Callbacks are  convenient way to run additional logic on model before or after c
         }
     }
     ```
+   
+- ### Possible Callbacks:
+  - `before_insert`
+  - `before_update`
+  - `before_delete`
+  - `after_insert`
+  - `after_update`
+  - `after_delete`
 - ### Triggering Callbacks
   In order to trigger callback we use `<operation>_cb`. method: `insert_cb`, `update_cb`, `delete_cb` according traits.
   This enables us to have clear distinction between `insert` and insert with callbacks (`insert_cb`).

@@ -1,6 +1,11 @@
 # Rust ORM for ScyllaDB
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP*: This project is currently in an experimental stage. It's not recommended to use it in production yet.
+⚠️ *WIP*: This project is currently in an experimental stage.
+Feedback and contributions are welcomed!
+
+[![Crates.io](https://img.shields.io/crates/v/charybdis)](https://crates.io/crates/charybdis)
+[![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
+[![License](https://img.shields.io/crates/l/charybdis)]()
 
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" height="250">
 
@@ -641,6 +646,14 @@ Callbacks are  convenient way to run additional logic on model before or after c
         }
     }
     ```
+
+- ### Possible Callbacks:
+  - `before_insert`
+  - `before_update`
+  - `before_delete`
+  - `after_insert`
+  - `after_update`
+  - `after_delete`
 - ### Triggering Callbacks
   In order to trigger callback we use `<operation>_cb`. method: `insert_cb`, `update_cb`, `delete_cb` according traits.
   This enables us to have clear distinction between `insert` and insert with callbacks (`insert_cb`).
