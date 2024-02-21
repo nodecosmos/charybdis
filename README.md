@@ -528,28 +528,16 @@ Supported configuration options:
   ```rust
   // auto-generated macro - available in crate::models::user
   partial_user!(UpdateUsernameUser, id, username);
-  
-  let id = Uuid::new_v4();
-  let user = UpdateUsernameUser { id, username: "scylla".to_string() };
-  
-  // we can have same operations as on base model
-  // INSERT into users (id, username) VALUES (?, ?)
-  user.insert().execute(&session).await;
-  
-  // UPDATE users SET username = ? WHERE id = ?
-  user.update().execute(&session).await;
-  
-  // DELETE FROM users WHERE id = ?
-  user.delete().execute(&session).await;
-  
-  // get partial PartUser
-  let partial_user = user.find_by_primary_key(&:session).await?;
-  
-  // get native user model by primary key
-  let user = user.as_native().find_by_primary_key().execute(&session).await?;
   ```
-
-
+  Now we have new struct `UpdateUsernameUser` that is equivalent to `User` model, but only with `id` and `username` fields.
+  ```rust
+  let mut update_user_username = UpdateUsernameUser {
+      id,
+      username: "updated_username".to_string(),
+  };
+  
+  update_user_username.update().execute(&session).await?;
+  ```
 - ### Partial Model Considerations:
   1) `partial_<model>` requires `#[derive(Default)]` on original model
   2) `partial_<model>` require complete primary key in definition
@@ -557,17 +545,9 @@ Supported configuration options:
   4) `partial_<model>` struct implements same field attributes as original model,
      so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
 
-
 - ### As Native
   In case we need to run operations on native model, we can use `as_native` method:
-  ```rust
-  partial_user!(UpdateUser, id, username);
-  
-  let mut update_user_username = UpdateUser {
-      id,
-      username: "updated_username".to_string(),
-  };
-  
+  ```rust 
   let native_user: User = update_user_username.as_native().find_by_primary_key().execute(&session).await?;
   
   // action that requires native model
@@ -659,15 +639,14 @@ Callbacks are  convenient way to run additional logic on model before or after c
 - ### Triggering Callbacks
   In order to trigger callback we use `<operation>_cb`. method: `insert_cb`, `update_cb`, `delete_cb` according traits.
   This enables us to have clear distinction between `insert` and insert with callbacks (`insert_cb`).
+  Just as on main operation, we can callback operation query before execution.
   ```rust
    use charybdis::operations::{DeleteWithCallbacks, InsertWithCallbacks, UpdateWithCallbacks};
   
    post.insert_cb(app_extensions).execute(&session).await;
    post.update_cb(app_extensions).execute(&session).await;
-   post.delete_cb(app_extensions).execute(&session).await;
+   post.delete_cb(app_extensions).consistency(Consistency::All).execute(&session).await;
   ```
-
-
 
 ## Collections
 - For each collection field that is defined as  `List<T>`  or `Set<T>`, we get following collection queries:
