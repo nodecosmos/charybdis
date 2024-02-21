@@ -610,7 +610,6 @@ Callbacks are  convenient way to run additional logic on model before or after c
         ) -> Result<(), CustomError> {
             self.id = Uuid::new_v4();
             self.created_at = Utc::now();
-            self.updated_at = Utc::now();
             
             Ok(())
         }
@@ -671,7 +670,7 @@ Callbacks are  convenient way to run additional logic on model before or after c
 
 
 ## Collections
-- For each collection field that is defined as  `List<T>  or `Set<T>`, we get following collection queries:
+- For each collection field that is defined as  `List<T>`  or `Set<T>`, we get following collection queries:
   - `PUSH_<field_name>_QUERY` static str
   - `PULL_<field_name>_QUERY` static str
   - `push_<field_name>` method
