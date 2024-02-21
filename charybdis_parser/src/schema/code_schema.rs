@@ -35,7 +35,9 @@ impl CodeSchema {
                 let entry: DirEntry = entry.unwrap();
 
                 if entry.path().is_file() {
-                    if entry.path().to_str().unwrap().contains("mod.rs") {
+                    let path = entry.path().to_str().unwrap();
+
+                    if path.contains("mod.rs") || !path.ends_with(".rs") {
                         continue;
                     }
 
