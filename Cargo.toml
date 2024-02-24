@@ -3,6 +3,6 @@ resolver = "2"
 members = [
     "charybdis-migrate",
     "charybdis",
-    "charybdis_macros",
-    "charybdis_parser",
+    "charybdis-macros",
+    "charybdis-parser",
 ]
