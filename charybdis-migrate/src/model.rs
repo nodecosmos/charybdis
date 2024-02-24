@@ -1,38 +1,38 @@
-pub mod data;
+pub(crate) mod data;
 mod runner;
 
-use crate::migration_unit::data::MigrationUnitData;
-use crate::migration_unit::runner::MigrationUnitRunner;
+use crate::model::data::ModelData;
+use crate::model::runner::ModelRunner;
 use colored::Colorize;
 use scylla::Session;
 use std::fmt::Display;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub(crate) enum MigrationObjectType {
+pub(crate) enum ModelType {
     Udt,
     Table,
     MaterializedView,
 }
 
-impl Display for MigrationObjectType {
+impl Display for ModelType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MigrationObjectType::Udt => write!(f, "UDT"),
-            MigrationObjectType::Table => write!(f, "Table"),
-            MigrationObjectType::MaterializedView => write!(f, "Materialized View"),
+            ModelType::Udt => write!(f, "UDT"),
+            ModelType::Table => write!(f, "Table"),
+            ModelType::MaterializedView => write!(f, "Materialized View"),
         }
     }
 }
 
-pub(crate) struct MigrationUnit<'a> {
-    data: &'a MigrationUnitData<'a>,
-    runner: MigrationUnitRunner<'a>,
+pub(crate) struct ModelMigration<'a> {
+    data: &'a ModelData<'a>,
+    runner: ModelRunner<'a>,
     drop_and_replace: bool,
 }
 
-impl<'a> MigrationUnit<'a> {
-    pub(crate) fn new(data: &'a MigrationUnitData, session: &'a Session, drop_and_replace: bool) -> Self {
-        let runner = MigrationUnitRunner::new(&session, &data);
+impl<'a> ModelMigration<'a> {
+    pub(crate) fn new(data: &'a ModelData, session: &'a Session, drop_and_replace: bool) -> Self {
+        let runner = ModelRunner::new(&session, &data);
 
         Self {
             data,
@@ -146,7 +146,7 @@ impl<'a> MigrationUnit<'a> {
     }
 
     fn panic_on_partition_key_change(&self) {
-        if self.data.migration_object_type != MigrationObjectType::Udt {
+        if self.data.migration_object_type != ModelType::Udt {
             if self.data.partition_key_changed() {
                 panic!(
                     "\n\n{} {} {}\n{}\n\n",
@@ -160,7 +160,7 @@ impl<'a> MigrationUnit<'a> {
     }
 
     fn panic_on_clustering_key_change(&self) {
-        if self.data.migration_object_type != MigrationObjectType::Udt {
+        if self.data.migration_object_type != ModelType::Udt {
             if self.data.clustering_key_changed() {
                 panic!(
                     "\n\n{} {} {}\n{}\n\n",
@@ -174,7 +174,7 @@ impl<'a> MigrationUnit<'a> {
     }
 
     fn panic_on_udt_fields_removal(&self) {
-        if self.data.migration_object_type == MigrationObjectType::Udt
+        if self.data.migration_object_type == ModelType::Udt
             && (self.data.has_removed_fields() || self.data.has_changed_type_fields())
         {
             panic!("\n{}\n", "UDT fields removal is not allowed!".bold().bright_red());
@@ -182,7 +182,7 @@ impl<'a> MigrationUnit<'a> {
     }
 
     fn panic_on_mv_fields_change(&self) {
-        if self.data.migration_object_type == MigrationObjectType::MaterializedView {
+        if self.data.migration_object_type == ModelType::MaterializedView {
             panic!(
                 "\n{}\n",
                 "Materialized view fields change is not allowed!".bold().bright_red()

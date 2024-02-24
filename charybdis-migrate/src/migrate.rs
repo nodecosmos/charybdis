@@ -1,5 +1,5 @@
 mod migration;
-mod migration_unit;
+mod model;
 mod session;
 
 use crate::migration::Migration;

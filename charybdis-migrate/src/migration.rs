@@ -1,5 +1,5 @@
-use crate::migration_unit::data::MigrationUnitData;
-use crate::migration_unit::{MigrationObjectType, MigrationUnit};
+use crate::model::data::ModelData;
+use crate::model::{ModelMigration, ModelType};
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
 use charybdis_parser::schema::SchemaObject;
@@ -40,14 +40,14 @@ impl<'a> Migration<'a> {
         let empty_udt = SchemaObject::new();
 
         for (name, code_udt_schema) in self.current_code_schema.udts.iter() {
-            let migration_unit_data = MigrationUnitData::new(
+            let model_data = ModelData::new(
                 name,
-                MigrationObjectType::Udt,
+                ModelType::Udt,
                 code_udt_schema,
                 self.current_db_schema.udts.get(name).unwrap_or(&empty_udt),
             );
 
-            let migration = MigrationUnit::new(&migration_unit_data, self.session, self.drop_and_replace);
+            let migration = ModelMigration::new(&model_data, self.session, self.drop_and_replace);
 
             migration.run().await;
         }
@@ -57,14 +57,14 @@ impl<'a> Migration<'a> {
         let empty_table = SchemaObject::new();
 
         for (name, code_table_schema) in self.current_code_schema.tables.iter() {
-            let migration_unit_data = MigrationUnitData::new(
+            let model_data = ModelData::new(
                 name,
-                MigrationObjectType::Table,
+                ModelType::Table,
                 code_table_schema,
                 self.current_db_schema.tables.get(name).unwrap_or(&empty_table),
             );
 
-            let migration = MigrationUnit::new(&migration_unit_data, self.session, self.drop_and_replace);
+            let migration = ModelMigration::new(&model_data, self.session, self.drop_and_replace);
 
             migration.run().await;
         }
@@ -74,14 +74,14 @@ impl<'a> Migration<'a> {
         let empty_mv = SchemaObject::new();
 
         for (name, code_mv_schema) in self.current_code_schema.materialized_views.iter() {
-            let migration_unit_data = MigrationUnitData::new(
+            let model_data = ModelData::new(
                 name,
-                MigrationObjectType::MaterializedView,
+                ModelType::MaterializedView,
                 code_mv_schema,
                 self.current_db_schema.materialized_views.get(name).unwrap_or(&empty_mv),
             );
 
-            let migration = MigrationUnit::new(&migration_unit_data, self.session, self.drop_and_replace);
+            let migration = ModelMigration::new(&model_data, self.session, self.drop_and_replace);
 
             migration.run().await;
         }

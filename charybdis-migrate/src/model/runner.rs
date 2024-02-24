@@ -1,4 +1,4 @@
-use crate::migration_unit::{MigrationObjectType, MigrationUnitData};
+use crate::model::{ModelData, ModelType};
 use colored::*;
 use regex::Regex;
 use scylla::Session;
@@ -6,13 +6,13 @@ use strip_ansi_escapes::strip;
 
 pub(crate) const INDEX_SUFFIX: &str = "idx";
 
-pub(crate) struct MigrationUnitRunner<'a> {
+pub(crate) struct ModelRunner<'a> {
     session: &'a Session,
-    data: &'a MigrationUnitData<'a>,
+    data: &'a ModelData<'a>,
 }
 
-impl<'a> MigrationUnitRunner<'a> {
-    pub fn new(session: &'a Session, data: &'a MigrationUnitData) -> Self {
+impl<'a> ModelRunner<'a> {
+    pub fn new(session: &'a Session, data: &'a ModelData) -> Self {
         Self { session, data }
     }
 
@@ -40,7 +40,7 @@ impl<'a> MigrationUnitRunner<'a> {
         );
 
         match self.data.migration_object_type {
-            MigrationObjectType::Udt => {
+            ModelType::Udt => {
                 let cql = format!(
                     "CREATE TYPE IF NOT EXISTS {}\n(\n{}\n);\n",
                     self.data.migration_object_name,
@@ -49,7 +49,7 @@ impl<'a> MigrationUnitRunner<'a> {
 
                 self.execute(&cql).await;
             }
-            MigrationObjectType::Table => {
+            ModelType::Table => {
                 let clustering_keys = self.data.current_code_schema.clustering_keys.join(", ");
                 let clustering_keys_clause = if !clustering_keys.is_empty() {
                     format!(",{}", clustering_keys)
@@ -75,7 +75,7 @@ impl<'a> MigrationUnitRunner<'a> {
 
                 self.execute(&cql).await;
             }
-            MigrationObjectType::MaterializedView => {
+            ModelType::MaterializedView => {
                 let mut primary_key = self.data.current_code_schema.partition_keys.clone();
                 primary_key.append(&mut self.data.current_code_schema.clustering_keys.clone());
 
@@ -133,7 +133,7 @@ impl<'a> MigrationUnitRunner<'a> {
             self.data.migration_object_type.to_string().bright_yellow()
         );
 
-        if self.data.migration_object_type == MigrationObjectType::Table {
+        if self.data.migration_object_type == ModelType::Table {
             self.run_table_field_added_migration().await;
         } else {
             self.run_udt_field_added_migration().await;
@@ -307,8 +307,8 @@ impl<'a> MigrationUnitRunner<'a> {
     }
 
     pub(crate) async fn run_table_options_change_migration(&self) {
-        if self.data.migration_object_type == MigrationObjectType::Table
-            || self.data.migration_object_type == MigrationObjectType::MaterializedView
+        if self.data.migration_object_type == ModelType::Table
+            || self.data.migration_object_type == ModelType::MaterializedView
         {
             if let Some(alter_table_options) = self.extract_alter_table_options() {
                 let cql = format!(

@@ -1,18 +1,18 @@
 extern crate proc_macro;
 
-mod macro_rules;
 mod model;
 mod native;
+mod rules;
 mod scylla;
 mod utils;
 
-use crate::macro_rules::*;
 use crate::model::*;
 use crate::native::{
     decrement_counter_methods, delete_by_primary_key_functions, find_by_primary_keys_functions,
     increment_counter_methods, pull_from_collection_consts, pull_from_collection_methods, push_to_collection_consts,
     push_to_collection_methods,
 };
+use crate::rules::*;
 use crate::scylla::from_row;
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;

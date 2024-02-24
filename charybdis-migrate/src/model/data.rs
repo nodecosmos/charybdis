@@ -1,5 +1,5 @@
-use crate::migration_unit::runner::INDEX_SUFFIX;
-use crate::migration_unit::MigrationObjectType;
+use crate::model::runner::INDEX_SUFFIX;
+use crate::model::ModelType;
 use charybdis_parser::schema::secondary_indexes::LocalIndexTarget;
 use charybdis_parser::schema::{IndexName, SchemaObject};
 
@@ -8,9 +8,9 @@ type FieldType = String;
 type OldFieldType = FieldType;
 type NewFieldType = FieldType;
 
-pub struct MigrationUnitData<'a> {
+pub struct ModelData<'a> {
     pub(crate) migration_object_name: &'a String,
-    pub(crate) migration_object_type: MigrationObjectType,
+    pub(crate) migration_object_type: ModelType,
     pub(crate) current_code_schema: &'a SchemaObject,
     pub(crate) current_db_schema: &'a SchemaObject,
     pub(crate) new_fields: Vec<(FieldName, FieldType)>,
@@ -22,10 +22,10 @@ pub struct MigrationUnitData<'a> {
     pub(crate) changed_field_types: Vec<(FieldName, OldFieldType, NewFieldType)>,
 }
 
-impl<'a> MigrationUnitData<'a> {
+impl<'a> ModelData<'a> {
     pub(crate) fn new(
         migration_object_name: &'a String,
-        migration_object_type: MigrationObjectType,
+        migration_object_type: ModelType,
         current_code_schema: &'a SchemaObject,
         current_db_schema: &'a SchemaObject,
     ) -> Self {
