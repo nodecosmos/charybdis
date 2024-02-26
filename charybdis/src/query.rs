@@ -16,13 +16,6 @@ pub struct ModelStream<M: BaseModel>(CharybdisModelStream<M>);
 pub struct ModelPaged<M: BaseModel>(CharybdisModelIterator<M>, Option<Bytes>);
 pub struct ModelMutation(QueryResult);
 
-pub enum ResponseTypes<M: BaseModel> {
-    ModelRow(M),
-    ModelStream(CharybdisModelStream<M>),
-    ModelPaged((CharybdisModelIterator<M>, Option<Bytes>)),
-    ModelMutation(QueryResult),
-}
-
 pub trait QueryType {
     type Output;
 }
