@@ -1,6 +1,5 @@
 use crate::model::runner::INDEX_SUFFIX;
 use crate::model::ModelType;
-use charybdis_parser::schema::secondary_indexes::LocalIndexTarget;
 use charybdis_parser::schema::{IndexName, SchemaObject};
 
 type FieldName = String;
@@ -16,7 +15,7 @@ pub struct ModelData<'a> {
     pub(crate) new_fields: Vec<(FieldName, FieldType)>,
     pub(crate) removed_fields: Vec<FieldName>,
     pub(crate) new_global_secondary_indexes: Vec<FieldName>,
-    pub(crate) new_local_secondary_indexes: Vec<LocalIndexTarget>,
+    pub(crate) new_local_secondary_indexes: Vec<FieldName>,
     pub(crate) removed_global_secondary_indexes: Vec<IndexName>,
     pub(crate) removed_local_secondary_indexes: Vec<IndexName>,
     pub(crate) changed_field_types: Vec<(FieldName, OldFieldType, NewFieldType)>,

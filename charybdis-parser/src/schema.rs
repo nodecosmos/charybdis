@@ -2,13 +2,12 @@ pub mod code_schema;
 pub mod db_schema;
 pub mod secondary_indexes;
 
-use crate::schema::secondary_indexes::LocalIndexTarget;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub type IndexName = String;
-pub type GlobalIndexTarget = String;
+pub type IdxField = String;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SchemaObject {
@@ -18,8 +17,8 @@ pub struct SchemaObject {
     pub base_table: String,
     pub partition_keys: Vec<String>,
     pub clustering_keys: Vec<String>,
-    pub global_secondary_indexes: Vec<(IndexName, GlobalIndexTarget)>,
-    pub local_secondary_indexes: Vec<(IndexName, LocalIndexTarget)>,
+    pub global_secondary_indexes: Vec<(IndexName, IdxField)>,
+    pub local_secondary_indexes: Vec<(IndexName, IdxField)>,
     pub table_options: Option<String>,
 }
 

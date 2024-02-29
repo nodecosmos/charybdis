@@ -274,17 +274,17 @@ impl<'a> ModelRunner<'a> {
         );
 
         for local_secondary_index in &self.data.new_local_secondary_indexes {
-            let mut idx_name = local_secondary_index.pk.join("_");
+            let partition_keys = self.data.current_code_schema.partition_keys.clone();
+
+            let mut idx_name = partition_keys.join("_");
             idx_name.push_str("_");
-            idx_name.push_str(&local_secondary_index.ck.join("_"));
+            idx_name.push_str(&local_secondary_index);
 
             let index_name: String = self.data.construct_index_name(&idx_name);
-
-            let pks = local_secondary_index.pk.join(", ");
-            let cks = local_secondary_index.ck.join(", ");
+            let pks = partition_keys.join(", ");
             let cql = format!(
                 "CREATE INDEX IF NOT EXISTS {} ON {} (({}), {})",
-                index_name, self.data.migration_object_name, pks, cks,
+                index_name, self.data.migration_object_name, pks, local_secondary_index,
             );
 
             self.execute(&cql).await;

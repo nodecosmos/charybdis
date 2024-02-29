@@ -1,7 +1,8 @@
 # Rust ORM for ScyllaDB and Apache Cassandra
+
 ### Use monstrous tandem of scylla and charybdis for your next project
-⚠️ *WIP*: This project is currently in an experimental stage.
-Feedback and contributions are welcomed!
+
+⚠️ This project is currently in an early stage of development. Feedback and contributions are welcomed!
 
 [![Crates.io](https://img.shields.io/crates/v/charybdis)](https://crates.io/crates/charybdis)
 [![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
@@ -15,68 +16,76 @@ Feedback and contributions are welcomed!
 #### Charybdis is a ORM layer on top of `scylla_rust_driver` focused on easy of use and performance
 
 ## Announcements:
+
 - ### Queries are now configurable
   With `0.4.0` release we have provided users with ability to configure each query before execution
-- ###  Breaking changes
-  1) **Operations**: `find`, `insert`, `update`, `delete` now return `CharybdisQuery` that can be configured before execution.
-      ```rust
-      let mut user = user.find_by_primary_key().consistency(Consistency::One).execute(session);
-      ```
+- ### Breaking changes
+    1) **Operations**: `find`, `insert`, `update`, `delete` now return `CharybdisQuery` that can be configured before
+       execution.
+        ```rust
+        let mut user = user.find_by_primary_key().consistency(Consistency::One).execute(session);
+        ```
 
-  2) **Callbacks**: We now have only single `Callbacks` trait that is used for all operation that can accept extension.
-     In case extension is not needed, we can use `()` or Option<()> and provide `None` as extension argument.
+    2) **Callbacks**: We now have only single `Callbacks` trait that is used for all operation that can accept
+       extension.
+       In case extension is not needed, we can use `()` or Option<()> and provide `None` as extension argument.
 
-  3) **Batch Operations**:  Batch is now coupled with Model and it's created by calling `Model::batch()` method. It
-     can also be configured before execution.
-      ```rust
-      let batch = User::batch().consistency(Consistency::One).chunked_insert(&session, users, 100).await?;
-      ```
-
-
+    3) **Batch Operations**:  Batch is now coupled with Model and it's created by calling `Model::batch()` method. It
+       can also be configured before execution.
+        ```rust
+        let batch = User::batch().consistency(Consistency::One).chunked_insert(&session, users, 100).await?;
+        ```
+    4) As of **0.4.3** version`local_secondary_indexes` are now defined as list of fields. Partition key part is derived
+       from `partition_keys` part of macro declaration and each element in array will result with new local index.
 
 ## Usage considerations:
+
 - Provide and expressive API for CRUD & Complex Query operations on model as a whole
 - Provide easy way to work with subset of model fields by using automatically generated `partial_<model>!` macro
 - Provide easy way to run complex queries by using automatically generated `find_<model>!` macro
-- Automatic migration tool that analyzes the `src/model/*.rs` files and runs migrations according to differences between the model definition and database
+- Automatic migration tool that analyzes the `src/model/*.rs` files and runs migrations according to differences between
+  the model definition and database
 
 ## Performance consideration:
+
 - It uses prepared statements (shard/token aware) -> bind values
 - It expects `CachingSession` as a session arg for operations
 - Queries are macro generated str constants (no concatenation at runtime)
 - By using `find_<model>!` macro we can run complex queries that are generated at compile time as `&'static str`
-- Although it has expressive API it's thin layer on top of scylla_rust_driver, and it does not introduce any significant overhead
+- Although it has expressive API it's thin layer on top of scylla_rust_driver, and it does not introduce any significant
+  overhead
 
 ## Table of Contents
+
 - [Charybdis Models](#charybdis-models)
-  - [Define Tables](#define-tables)
-  - [Define UDTs](#Define-UDT)
-  - [Define Materialized Views](#Define-Materialized-Views)
+    - [Define Tables](#define-tables)
+    - [Define UDTs](#Define-UDT)
+    - [Define Materialized Views](#Define-Materialized-Views)
 - [Automatic migration with `charybdis-migrate`](#automatic-migration)
 - [Basic Operations](#basic-operations)
-  - [Insert](#insert)
-  - [Find](#find)
-    - [Find by primary key](#find-by-primary-key)
-    - [Find by partition key](#find-by-partition-key)
-    - [Find by primary key associated](#find-by-primary-key-associated)
-    - [Macro generated find helpers](#macro-generated-find-helpers)
-    - [Custom filtering](#custom-filtering)
-  - [Update](#update)
-  - [Delete](#delete)
-    - [Macro generated delete helpers](#macro-generated-delete-helpers)
+    - [Insert](#insert)
+    - [Find](#find)
+        - [Find by primary key](#find-by-primary-key)
+        - [Find by partition key](#find-by-partition-key)
+        - [Find by primary key associated](#find-by-primary-key-associated)
+        - [Macro generated find helpers](#macro-generated-find-helpers)
+        - [Custom filtering](#custom-filtering)
+    - [Update](#update)
+    - [Delete](#delete)
+        - [Macro generated delete helpers](#macro-generated-delete-helpers)
 - [Configuration Options](#configuration)
 - [Batch Operations](#batch-operations)
-  - [Chunked Batch Operations](#chunked-batch-operations)
-  - [Batch Configuration](#batch-configuration)
+    - [Chunked Batch Operations](#chunked-batch-operations)
+    - [Batch Configuration](#batch-configuration)
 - [Partial Model](#partial-model)
-  - [Considerations](#partial-model-considerations)
-  - [As Native](#as-native)
+    - [Considerations](#partial-model-considerations)
+    - [As Native](#as-native)
 - [Callbacks](#callbacks)
-  - [Implementation](#implementation)
-  - [Triggering Callbacks](#triggering-callbacks)
+    - [Implementation](#implementation)
+    - [Triggering Callbacks](#triggering-callbacks)
 - [Collection](#collections)
-  - [Generated Collection Queries](#generated-collection-queries)
-  - [Generated Collection Methods](#generated-collection-methods)
+    - [Generated Collection Queries](#generated-collection-queries)
+    - [Generated Collection Methods](#generated-collection-methods)
 - [Ignored fields](#ignored-fields)
 - [Roadmap](#Roadmap)
 
@@ -84,155 +93,163 @@ Feedback and contributions are welcomed!
 
 ### Define Tables
 
-Declare model as a struct within `src/models` dir:
-```rust
-// src/models/user.rs
-use charybdis::macros::charybdis_model;
-use charybdis::types::{Text, Timestamp, Uuid};
+- Declare model as a struct within `src/models` dir:
+  ```rust
+  // src/models/user.rs
+  use charybdis::macros::charybdis_model;
+  use charybdis::types::{Text, Timestamp, Uuid};
+  
+  #[charybdis_model(
+      table_name = users,
+      partition_keys = [id],
+      clustering_keys = [],
+      global_secondary_indexes = [username],
+      local_secondary_indexes = [],
+  )]
+  pub struct User {
+      pub id: Uuid,
+      pub username: Text,
+      pub email: Text,
+      pub created_at: Timestamp,
+      pub updated_at: Timestamp,
+      pub address: Address,
+  }
+  ```
 
-#[charybdis_model(
-    table_name = users,
-    partition_keys = [id],
-    clustering_keys = [],
-    global_secondary_indexes = [username],
-    local_secondary_indexes = [],
-)]
-pub struct User {
-    pub id: Uuid,
-    pub username: Text,
-    pub email: Text,
-    pub created_at: Timestamp,
-    pub updated_at: Timestamp,
-    pub address: Address,
-}
-```
 (Note we use `src/models` as automatic migration tool expects that dir)
 
 ### Define UDT
-`src/models/udts`
-```rust
-// src/models/udts/address.rs
-use charybdis::macros::charybdis_udt_model;
-use charybdis::types::Text;
 
-#[charybdis_udt_model(type_name = address)]
-pub struct Address {
-    pub street: Text,
-    pub city: Text,
-    pub state: Option<Text>,
-    pub zip: Text,
-    pub country: Text,
-}
-```
+- `src/models/udts`
+  ```rust
+  // src/models/udts/address.rs
+  use charybdis::macros::charybdis_udt_model;
+  use charybdis::types::Text;
+  
+  #[charybdis_udt_model(type_name = address)]
+  pub struct Address {
+      pub street: Text,
+      pub city: Text,
+      pub state: Option<Text>,
+      pub zip: Text,
+      pub country: Text,
+  }
+  ```
+
 ### Define Materialized Views
-`src/models/materialized_views`
 
-```rust
-// src/models/materialized_views/users_by_username.rs
-use charybdis::macros::charybdis_view_model;
-use charybdis::types::{Text, Timestamp, Uuid};
+- `src/models/materialized_views`
 
-#[charybdis_view_model(
-    table_name=users_by_username,
-    base_table=users,
-    partition_keys=[username],
-    clustering_keys=[id]
-)]
-pub struct UsersByUsername {
-    pub username: Text,
-    pub id: Uuid,
-    pub email: Text,
-    pub created_at: Timestamp,
-    pub updated_at: Timestamp,
-}
+  ```rust
+  // src/models/materialized_views/users_by_username.rs
+  use charybdis::macros::charybdis_view_model;
+  use charybdis::types::{Text, Timestamp, Uuid};
+  
+  #[charybdis_view_model(
+      table_name=users_by_username,
+      base_table=users,
+      partition_keys=[username],
+      clustering_keys=[id]
+  )]
+  pub struct UsersByUsername {
+      pub username: Text,
+      pub id: Uuid,
+      pub email: Text,
+      pub created_at: Timestamp,
+      pub updated_at: Timestamp,
+  }
+  
+  ```
 
-```
-Resulting auto-generated migration query will be:
-```sql
-CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_email
-AS SELECT created_at, updated_at, username, email, id
-FROM users
-WHERE email IS NOT NULL AND id IS NOT NULL
-PRIMARY KEY (email, id)
-```
+  Resulting auto-generated migration query will be:
 
+  ```sql
+  CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_email
+  AS SELECT created_at, updated_at, username, email, id
+  FROM users
+  WHERE email IS NOT NULL AND id IS NOT NULL
+  PRIMARY KEY (email, id)
+  ```
 
 ## Automatic migration
-<a name="automatic-migration"></a>
-`charybdis-migrate` tool that enables automatic migration to database without need to write migrations by hand.
-It expects `src/models` files and generates migrations based on differences between model definitions and database.
 
-It supports following operations:
-- Create new tables
-- Create new columns
-- Drop columns
-- Change field types (drop and recreate column `--drop-and-replace` flag)
-- Create secondary indexes
-- Drop secondary indexes
-- Create UDTs (`src/models/udts`)
-- Create materialized views (`src/models/materialized_views`)
-- Table options
+* <a name="automatic-migration"></a>
+  `charybdis-migrate` enables automatic migration to database without need to write migrations by hand.
+  It expects `src/models` files and generates migrations based on differences between model definitions and database.
+  It supports following operations:
+    - Create new tables
+    - Create new columns
+    - Drop columns
+    - Change field types (drop and recreate column `--drop-and-replace` flag)
+    - Create secondary indexes
+    - Drop secondary indexes
+    - Create UDTs (`src/models/udts`)
+    - Create materialized views (`src/models/materialized_views`)
+    - Table options
+      ```rust
+        #[charybdis_model(
+            table_name = commits,
+            partition_keys = [object_id],
+            clustering_keys = [created_at, id],
+            global_secondary_indexes = [],
+            local_secondary_indexes = [],
+            table_options = #r"
+                WITH CLUSTERING ORDER BY (created_at DESC) 
+                AND gc_grace_seconds = 86400
+            ";
+        )]
+        #[derive(Serialize, Deserialize, Default)]
+        pub struct Commit {...}
+        ```
+      ⚠️ If table exists, table options will result in alter table query that without
+      `CLUSTERING ORDER` and `COMPACT STORAGE` options.
+
+      Model dropping is not added. If you don't define model within `src/model` dir
+      it will leave db structure as it is.
+
+* ### Running migration
+  ```bash
+  cargo install charybdis-migrate
+  
+  migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
+  ```
+
+  ⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model
+  **
+  definitions structure matches the database in respect to table names, column names, column types, partition keys,
+  clustering keys and secondary indexes so you don't alter structure accidentally.
+  If structure is matched, it will not run any migrations. As mentioned above,
+  in case there is no model definition for table, it will **not** drop it. In future,
+  we will add `modelize` command that will generate `src/models` files from existing data source.
+
+* ### Global secondary indexes
+  If we have model:
   ```rust
+  #[charybdis_model(
+      table_name = users,
+      partition_keys = [id],
+      clustering_keys = [],
+      global_secondary_indexes = [username]
+  )]
+  ```
+  resulting query will be: `CREATE INDEX ON users (username);`
+
+* ### Local secondary Indexes
+
+  Indexes that are scoped to the partition key
+    ```rust
     #[charybdis_model(
-        table_name = commits,
-        partition_keys = [object_id],
-        clustering_keys = [created_at, id],
+        table_name = menus,
+        partition_keys = [location],
+        clustering_keys = [name, price, dish_type],
         global_secondary_indexes = [],
-        local_secondary_indexes = [],
-        table_options = #r"
-            WITH CLUSTERING ORDER BY (created_at DESC) 
-            AND gc_grace_seconds = 86400
-        ";
+        local_secondary_indexes = [dish_type]
     )]
-    #[derive(Serialize, Deserialize, Default)]
-    pub struct Commit {...}
     ```
-  ⚠️ If table exists, table options will result in alter table query that without
-  `CLUSTERING ORDER` and `COMPACT STORAGE` options.
-
-Model dropping is not added. If you don't define model within `src/model` dir
-it will leave db structure as it is.
-```bash
-cargo install charybdis-migrate
-
-migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
-```
-
-⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model**
-definitions structure matches the database in respect to table names, column names, column types, partition keys,
-clustering keys and secondary indexes so you don't alter structure accidentally.
-If structure is matched, it will not run any migrations. As mentioned above,
-in case there is no model definition for table, it will **not** drop it. In future,
-we will add `modelize` command that will generate `src/models` files from existing data source.
-
-### Global secondary indexes
-```rust
-#[charybdis_model(
-    table_name = users,
-    partition_keys = [id],
-    clustering_keys = [],
-    global_secondary_indexes = [username]
-)]
-```
-### Local secondary Indexes
-
-They are defined as array of tuples
-- first element is array of partition keys
-- second element is array of clustering keys
-```rust
-#[charybdis_model(
-    table_name = menus,
-    partition_keys = [location],
-    clustering_keys = [name, price, dish_type],
-    global_secondary_indexes = [],
-    local_secondary_indexes = [
-        ([location], [dish_type])
-    ]
-)]
-```
-resulting query will be: `CREATE INDEX ON menus((location), dish_type);`
+  resulting query will be: `CREATE INDEX ON menus((location), dish_type);`
 
 ## Basic Operations:
+
 For each operation you need to bring respective trait into scope. They are defined
 in `charybdis::operations` module.
 
@@ -353,6 +370,7 @@ in `charybdis::operations` module.
     ```
 
 ## Update
+
 - ```rust
   let user = User::from_json(json);
   
@@ -362,54 +380,55 @@ in `charybdis::operations` module.
   user.update().execute(&session).await;
   ```
 - ### Collection:
-  - Let's use our `User` model as an example:
-    ```rust
-    #[charybdis_model(
-        table_name = users,
-        partition_keys = [id],
-        clustering_keys = [],
-    )]
-    pub struct User {
-        id: Uuid,
-        tags: Set<Text>,
-        post_ids: List<Uuid>,
-    }
-    ```
-  -  `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection field.
+    - Let's use our `User` model as an example:
       ```rust
-      let user: User;
-  
-      user.push_tags(vec![tag]).execute(&session).await;
-      user.pull_tags(vec![tag]).execute(&session).await;
-  
-      user.push_post_ids(vec![tag]).execute(&session).await;
-      user.pull_post_ids(vec![tag]).execute(&session).await;
+      #[charybdis_model(
+          table_name = users,
+          partition_keys = [id],
+          clustering_keys = [],
+      )]
+      pub struct User {
+          id: Uuid,
+          tags: Set<Text>,
+          post_ids: List<Uuid>,
+      }
       ```
+    - `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection field.
+       ```rust
+       let user: User;
+   
+       user.push_tags(vec![tag]).execute(&session).await;
+       user.pull_tags(vec![tag]).execute(&session).await;
+   
+       user.push_post_ids(vec![tag]).execute(&session).await;
+       user.pull_post_ids(vec![tag]).execute(&session).await;
+       ```
 - ### Counter
-  - Let's define post_counter model:
-    ```rust
-    #[charybdis_model(
-        table_name = post_counters,
-        partition_keys = [id],
-        clustering_keys = [],
-    )]
-    pub struct PostCounter {
-        id: Uuid,
-        likes: Counter,
-        comments: Counter,
-    }
-    ```
-  - We can use `increment_<field_name>` and `decrement_<field_name>` methods to update counter fields.
-    ```rust
-    let post_counter: PostCounter;
-    post_counter.increment_likes(1).execute(&session).await;
-    post_counter.decrement_likes(1).execute(&session).await;
-    
-    post_counter.increment_comments(1).execute(&session).await;
-    post_counter.decrement_comments(1).execute(&session).await;
-    ```
+    - Let's define post_counter model:
+      ```rust
+      #[charybdis_model(
+          table_name = post_counters,
+          partition_keys = [id],
+          clustering_keys = [],
+      )]
+      pub struct PostCounter {
+          id: Uuid,
+          likes: Counter,
+          comments: Counter,
+      }
+      ```
+    - We can use `increment_<field_name>` and `decrement_<field_name>` methods to update counter fields.
+      ```rust
+      let post_counter: PostCounter;
+      post_counter.increment_likes(1).execute(&session).await;
+      post_counter.decrement_likes(1).execute(&session).await;
+      
+      post_counter.increment_comments(1).execute(&session).await;
+      post_counter.decrement_comments(1).execute(&session).await;
+      ```
 
 ## Delete
+
 - ```rust 
   let user = User::from_json(json);
 
@@ -433,7 +452,7 @@ in `charybdis::operations` module.
       ...
   }
   ```
-  We have macro generated  functions for up to 3 fields from primary key.
+  We have macro generated functions for up to 3 fields from primary key.
 
   ```rust
   Post::delete_by_date(date: Date).execute(&session).await?;
@@ -442,7 +461,9 @@ in `charybdis::operations` module.
   ```
 
 ## Configuration
+
 Every operation returns `CharybdisQuery` that can be configured before execution with method chaining.
+
 ```rust
 let user: User = User::find_by_id(id)
     .consistency(Consistency::One)
@@ -452,7 +473,9 @@ let user: User = User::find_by_id(id)
     
 let result: QueryResult = user.update().consistency(Consistency::One).execute(&session).await?;
 ```
+
 Supported configuration options:
+
 - `consistency`
 - `serial_consistency`
 - `timestamp`
@@ -460,8 +483,8 @@ Supported configuration options:
 - `page_size`
 - `timestamp`
 
-
 ## Batch
+
 `CharybdisModelBatch` operations are used to perform multiple operations in a single batch.
 
 - ### Batch Operations
@@ -485,7 +508,7 @@ Supported configuration options:
 
 - ### Chunked Batch Operations
 
-  Chunked batch operations are used to operate on  large amount of data in chunks.
+  Chunked batch operations are used to operate on large amount of data in chunks.
   ```rust
     let users: Vec<User>;
     let chunk_size = 100;
@@ -518,8 +541,8 @@ Supported configuration options:
     batch.execute(&session).await;
     ```
 
-
 ## Partial Model:
+
 - Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.
   This macro generates a new struct with same structure as the original model, but only with provided fields.
   Macro is automatically generated by `#[charybdis_model]`.
@@ -529,7 +552,8 @@ Supported configuration options:
   // auto-generated macro - available in crate::models::user
   partial_user!(UpdateUsernameUser, id, username);
   ```
-  Now we have new struct `UpdateUsernameUser` that is equivalent to `User` model, but only with `id` and `username` fields.
+  Now we have new struct `UpdateUsernameUser` that is equivalent to `User` model, but only with `id` and `username`
+  fields.
   ```rust
   let mut update_user_username = UpdateUsernameUser {
       id,
@@ -539,11 +563,11 @@ Supported configuration options:
   update_user_username.update().execute(&session).await?;
   ```
 - ### Partial Model Considerations:
-  1) `partial_<model>` requires `#[derive(Default)]` on original model
-  2) `partial_<model>` require complete primary key in definition
-  3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
-  4) `partial_<model>` struct implements same field attributes as original model,
-     so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+    1) `partial_<model>` requires `#[derive(Default)]` on original model
+    2) `partial_<model>` require complete primary key in definition
+    3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
+    4) `partial_<model>` struct implements same field attributes as original model,
+       so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
 
 - ### As Native
   In case we need to run operations on native model, we can use `as_native` method:
@@ -557,15 +581,18 @@ Supported configuration options:
   For other fields it uses default values.
 
 
-- Recommended naming convention is `Purpose` + `Original Struct Name`. E.g: `UpdateAdresssUser`, `UpdateDescriptionPost`.
-
+- Recommended naming convention is `Purpose` + `Original Struct Name`.
+  E.g: `UpdateAdresssUser`, `UpdateDescriptionPost`.
 
 ## Callbacks
-Callbacks are  convenient way to run additional logic on model before or after certain operations. E.g.
+
+Callbacks are convenient way to run additional logic on model before or after certain operations. E.g.
+
 - we can use `before_insert` to set default values and/or validate model before insert.
 - we can use `after_update` to update other data sources, e.g. elastic search.
 
 ### Implementation:
+
 1) Let's say we define custom extension that will be used to
    update elastic document on every post update:
     ```rust
@@ -630,12 +657,12 @@ Callbacks are  convenient way to run additional logic on model before or after c
     ```
 
 - ### Possible Callbacks:
-  - `before_insert`
-  - `before_update`
-  - `before_delete`
-  - `after_insert`
-  - `after_update`
-  - `after_delete`
+    - `before_insert`
+    - `before_update`
+    - `before_delete`
+    - `after_insert`
+    - `after_update`
+    - `after_delete`
 - ### Triggering Callbacks
   In order to trigger callback we use `<operation>_cb`. method: `insert_cb`, `update_cb`, `delete_cb` according traits.
   This enables us to have clear distinction between `insert` and insert with callbacks (`insert_cb`).
@@ -649,15 +676,16 @@ Callbacks are  convenient way to run additional logic on model before or after c
   ```
 
 ## Collections
+
 - For each collection field that is defined as  `List<T>`  or `Set<T>`, we get following collection queries:
-  - `PUSH_<field_name>_QUERY` static str
-  - `PULL_<field_name>_QUERY` static str
-  - `push_<field_name>` method
-  - `pull_<field_name>` method
+    - `PUSH_<field_name>_QUERY` static str
+    - `PULL_<field_name>_QUERY` static str
+    - `push_<field_name>` method
+    - `pull_<field_name>` method
 
 
 -  ### Define Model:
-    ```rust
+    ```rustX
     #[charybdis_model(
       table_name = users,
       partition_keys = [id],
@@ -718,9 +746,10 @@ Callbacks are  convenient way to run additional logic on model before or after c
   user.pull_post_ids(vec![tag]).execute(&session).await;
   ```
 
-
 ## Ignored fields
+
 We can ignore fields by using `#[charybdis(ignore)]` attribute:
+
 ```rust
 #[charybdis_model(...)]
 pub struct User {
@@ -729,10 +758,12 @@ pub struct User {
     organization: Option<Organization>,
 }
 ```
+
 So field `organization` will be ignored in all operations and
 default value will be used when deserializing from other data sources.
 It can be used to hold data that is not persisted in database.
 
 ## Roadmap:
+
 - [ ] Add tests
 - [ ] Write `modelize` command to generate `src/models/*` structs from existing database

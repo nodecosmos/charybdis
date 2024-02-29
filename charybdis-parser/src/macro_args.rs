@@ -1,9 +1,8 @@
 mod array;
 mod hash;
 
-use crate::macro_args::array::{parse_arr_expr_from_literals, parse_loc_sec_idx_array_expr};
+use crate::macro_args::array::parse_arr_expr_from_literals;
 use crate::macro_args::hash::hash_expr_lit_to_hash;
-use crate::schema::secondary_indexes::LocalIndexTarget;
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 use std::collections::HashMap;
@@ -17,7 +16,7 @@ pub struct CharybdisMacroArgs {
     pub partition_keys: Option<Vec<String>>,
     pub clustering_keys: Option<Vec<String>>,
     pub global_secondary_indexes: Option<Vec<String>>,
-    pub local_secondary_indexes: Option<Vec<LocalIndexTarget>>,
+    pub local_secondary_indexes: Option<Vec<String>>,
     pub exclude_partial_model: Option<bool>,
     pub fields_names: Option<Vec<String>>,
     pub field_types_hash: Option<HashMap<String, TokenStream>>,
@@ -98,7 +97,7 @@ impl Parse for CharybdisMacroArgs {
                 }
                 "local_secondary_indexes" => {
                     let array: syn::ExprArray = input.parse()?;
-                    let parsed = parse_loc_sec_idx_array_expr(array);
+                    let parsed = parse_arr_expr_from_literals(array);
 
                     local_secondary_indexes = Some(parsed)
                 }

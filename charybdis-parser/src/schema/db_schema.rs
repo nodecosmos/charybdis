@@ -1,6 +1,5 @@
-mod errors;
-
-use crate::schema::secondary_indexes::{IndexTarget, Target};
+use crate::errors::DbSchemaParserError;
+use crate::schema::secondary_indexes::{IndexTarget, SecondaryIndex};
 use crate::schema::{SchemaObject, SchemaObjects};
 use colored::Colorize;
 use scylla::Session;
@@ -76,7 +75,7 @@ impl DbSchema {
         current_schema
     }
 
-    async fn get_tables_from_system_schema(&mut self, session: &Session) -> Result<(), errors::DbSchemaParserError> {
+    async fn get_tables_from_system_schema(&mut self, session: &Session) -> Result<(), DbSchemaParserError> {
         // get tables as a HashMap of column_name => column_type
         // Parse row as a single column containing an int value
         let cql = r#"
@@ -103,7 +102,7 @@ impl DbSchema {
         &mut self,
         table_name: &String,
         session: &Session,
-    ) -> Result<(), errors::DbSchemaParserError> {
+    ) -> Result<(), DbSchemaParserError> {
         // get columns and types for provided table
         let cql = r#"
             SELECT
@@ -131,7 +130,7 @@ impl DbSchema {
         &mut self,
         table_name: &String,
         session: &Session,
-    ) -> Result<(), errors::DbSchemaParserError> {
+    ) -> Result<(), DbSchemaParserError> {
         // get partition keys for provided table
         let cql = r#"
             SELECT column_name
@@ -159,7 +158,7 @@ impl DbSchema {
         &mut self,
         table_name: &String,
         session: &Session,
-    ) -> Result<(), errors::DbSchemaParserError> {
+    ) -> Result<(), DbSchemaParserError> {
         // get partition keys for provided table
         let cql = r#"
             SELECT column_name
@@ -187,7 +186,7 @@ impl DbSchema {
         &mut self,
         table_name: &String,
         session: &Session,
-    ) -> Result<(), errors::DbSchemaParserError> {
+    ) -> Result<(), DbSchemaParserError> {
         // get partition keys for provided table
         let cql = r#"
             SELECT index_name, options
@@ -198,17 +197,17 @@ impl DbSchema {
 
         if let Some(rows) = session.query(cql, (&self.keyspace_name, &table_name)).await?.rows {
             for row in rows {
-                let value: (String, IndexTarget) = row.into_typed()?;
+                let value: (String, SecondaryIndex) = row.into_typed()?;
                 let table_schema = self.tables.get_mut(table_name).unwrap();
 
                 let index_name = value.0;
                 let index_target = value.1;
 
                 match index_target.target {
-                    Target::GlobalSecondaryIndex(target) => {
+                    IndexTarget::GlobalSecondaryIndex(target) => {
                         table_schema.global_secondary_indexes.push((index_name, target));
                     }
-                    Target::LocalIndexTarget(target) => {
+                    IndexTarget::LocalSecondaryIndex(target) => {
                         table_schema.local_secondary_indexes.push((index_name, target));
                     }
                 }
@@ -218,7 +217,7 @@ impl DbSchema {
         Ok(())
     }
 
-    async fn get_udts_from_system_schema(&mut self, session: &Session) -> Result<(), errors::DbSchemaParserError> {
+    async fn get_udts_from_system_schema(&mut self, session: &Session) -> Result<(), DbSchemaParserError> {
         // get tables as a HashMap of column_name => column_type
         // Parse row as a single column containing an int value
         let cql = r#"
@@ -247,7 +246,7 @@ impl DbSchema {
         Ok(())
     }
 
-    async fn get_mvs_from_system_schema(&mut self, session: &Session) -> Result<(), errors::DbSchemaParserError> {
+    async fn get_mvs_from_system_schema(&mut self, session: &Session) -> Result<(), DbSchemaParserError> {
         // get tables as a HashMap of column_name => column_type
         let cql = r#"
             SELECT view_name
@@ -266,11 +265,7 @@ impl DbSchema {
         Ok(())
     }
 
-    async fn populate_mv_columns(
-        &mut self,
-        view_name: &String,
-        session: &Session,
-    ) -> Result<(), errors::DbSchemaParserError> {
+    async fn populate_mv_columns(&mut self, view_name: &String, session: &Session) -> Result<(), DbSchemaParserError> {
         // get columns and types for views
         let cql = r#"
             SELECT column_name, type
@@ -296,7 +291,7 @@ impl DbSchema {
         &mut self,
         view_name: &String,
         session: &Session,
-    ) -> Result<(), errors::DbSchemaParserError> {
+    ) -> Result<(), DbSchemaParserError> {
         let cql = r#"
             SELECT column_name
             FROM system_schema.columns
@@ -323,7 +318,7 @@ impl DbSchema {
         &mut self,
         view_name: &String,
         session: &Session,
-    ) -> Result<(), errors::DbSchemaParserError> {
+    ) -> Result<(), DbSchemaParserError> {
         let cql = r#"
             SELECT column_name
             FROM system_schema.columns
