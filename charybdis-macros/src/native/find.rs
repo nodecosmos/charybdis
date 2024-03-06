@@ -6,7 +6,22 @@ use quote::quote;
 
 const MAX_FIND_BY_FUNCTIONS: usize = 3;
 
-/// for up to 3 primary keys, generate find_by_primary_key functions
+/// for up to 3 primary keys, generate find_by_primary_key functions e.g.
+/// ```rust ignore
+///   #[charybdis_model(
+///         table_name = posts,
+///         partition_keys = [date],
+///         clustering_keys = [categogry_id, title],
+///         global_secondary_indexes = []
+///     )]
+///    pub struct Post {...}
+/// ```
+/// We will generate the following functions:
+/// ```rust ignore
+///   Post::find_by_date(date: Date)
+///   Post::find_by_date_and_category_id(date: Date, category_id: Uuid)
+///   Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text)
+/// ```
 pub(crate) fn find_by_primary_keys_functions(
     struct_name: &syn::Ident,
     ch_args: &CharybdisMacroArgs,

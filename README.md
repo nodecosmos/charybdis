@@ -308,8 +308,8 @@ in `charybdis::operations` module.
         table_name = posts,
         partition_keys = [date],
         clustering_keys = [categogry_id, title],
-        global_secondary_indexes = [])
-    ]
+        global_secondary_indexes = []
+    )]
     pub struct Post {
         date: Date,
         category_id: Uuid,

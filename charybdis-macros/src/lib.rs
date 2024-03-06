@@ -70,13 +70,13 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     // FromRow trait
     let from_row = from_row(struct_name, &fields);
 
-    // Current model rules
+    // Current model macro rules
     let find_model_query_rule = find_model_query_rule(struct_name, &args, &fields);
     let find_model_rule = find_model_rule(struct_name, &args, &fields);
     let find_first_model_rule = find_first_model_rule(struct_name, &args, &fields);
     let update_model_query_rule = update_model_query_rule(struct_name, &args, &fields);
 
-    // Associated functions for finding by primary key
+    // Associated functions
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(struct_name, &args, &fields);
 
@@ -165,7 +165,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     // Current model rules
     let find_model_query_rule = find_model_query_rule(struct_name, &args, &fields);
 
-    // Associated functions for finding by  primary key
+    // Associated functions
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
 
     let expanded = quote! {
