@@ -68,7 +68,7 @@ impl Display for Types {
 }
 
 #[derive(FromAttributes, Clone)]
-#[darling(attributes(charybdis, charybdis_model))]
+#[darling(attributes(charybdis))]
 pub struct FieldAttributes {
     #[darling(default)]
     pub ignore: Option<bool>,
@@ -255,9 +255,7 @@ impl CharybdisFields {
         if let Data::Struct(data_struct) = &mut input.data {
             if let Fields::Named(fields_named) = &mut data_struct.fields {
                 for field in &mut fields_named.named {
-                    field
-                        .attrs
-                        .retain(|attr| !attr.path().is_ident("charybdis") && !attr.path().is_ident("charybdis_model"));
+                    field.attrs.retain(|attr| !attr.path().is_ident("charybdis"));
                 }
             }
         }
