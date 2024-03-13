@@ -1,5 +1,5 @@
 use crate::model::BaseModel;
-use crate::query::{CharybdisQuery, ModelPaged, ModelRow, ModelStream, QueryValue};
+use crate::query::{CharybdisQuery, ModelPaged, ModelRow, ModelStream, OptionalModelRow, QueryValue};
 use crate::SerializeRow;
 use scylla::Bytes;
 
@@ -27,7 +27,20 @@ pub trait Find: BaseModel {
         CharybdisQuery::new(query, QueryValue::Owned(values))
     }
 
+    fn maybe_find_first<'a, Val: SerializeRow>(
+        query: &'static str,
+        values: Val,
+    ) -> CharybdisQuery<'a, Val, Self, OptionalModelRow<Self>> {
+        CharybdisQuery::new(query, QueryValue::Owned(values))
+    }
+
     fn find_by_primary_key_value(value: &Self::PrimaryKey) -> CharybdisQuery<Self::PrimaryKey, Self, ModelRow<Self>> {
+        CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, QueryValue::Ref(value))
+    }
+
+    fn maybe_find_by_primary_key_value(
+        value: &Self::PrimaryKey,
+    ) -> CharybdisQuery<Self::PrimaryKey, Self, OptionalModelRow<Self>> {
         CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, QueryValue::Ref(value))
     }
 
@@ -44,6 +57,13 @@ pub trait Find: BaseModel {
     }
 
     fn find_by_primary_key(&self) -> CharybdisQuery<Self::PrimaryKey, Self, ModelRow<Self>> {
+        CharybdisQuery::new(
+            Self::FIND_BY_PRIMARY_KEY_QUERY,
+            QueryValue::Owned(self.primary_key_values()),
+        )
+    }
+
+    fn maybe_find_by_primary_key(&self) -> CharybdisQuery<Self::PrimaryKey, Self, OptionalModelRow<Self>> {
         CharybdisQuery::new(
             Self::FIND_BY_PRIMARY_KEY_QUERY,
             QueryValue::Owned(self.primary_key_values()),

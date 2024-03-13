@@ -42,7 +42,7 @@ impl fmt::Display for CharybdisError {
                 write!(f, "FirstRowTypedError: {:?} \nin Model: {}", e, model)
             }
             CharybdisError::MaybeFirstRowTypedError(e, model) => {
-                write!(f, "FirstRowTypedError: {:?} \nin Model: {}", e, model)
+                write!(f, "MaybeFirstRowTypedError: {:?} \nin Model: {}", e, model)
             }
             CharybdisError::FromRowError(e, model) => {
                 write!(f, "FromRowError: {:?} \nin Model: {}", e, model)
@@ -102,6 +102,12 @@ impl From<FirstRowTypedError> for CharybdisError {
             FirstRowTypedError::RowsEmpty => CharybdisError::NotFoundError(e.to_string()),
             _ => CharybdisError::FirstRowTypedError(e, "unknown".to_string()),
         }
+    }
+}
+
+impl From<MaybeFirstRowTypedError> for CharybdisError {
+    fn from(e: MaybeFirstRowTypedError) -> Self {
+        CharybdisError::MaybeFirstRowTypedError(e, "unknown".to_string())
     }
 }
 

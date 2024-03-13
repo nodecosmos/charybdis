@@ -12,6 +12,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 pub struct ModelRow<M: BaseModel>(M);
+pub struct OptionalModelRow<M: BaseModel>(Option<M>);
 pub struct ModelStream<M: BaseModel>(CharybdisModelStream<M>);
 pub struct ModelPaged<M: BaseModel>(CharybdisModelIterator<M>, Option<Bytes>);
 pub struct ModelMutation(QueryResult);
@@ -22,6 +23,10 @@ pub trait QueryType {
 
 impl<M: BaseModel> QueryType for ModelRow<M> {
     type Output = M;
+}
+
+impl<M: BaseModel> QueryType for OptionalModelRow<M> {
+    type Output = Option<M>;
 }
 
 impl<M: BaseModel> QueryType for ModelStream<M> {
@@ -59,6 +64,23 @@ impl<Bm: BaseModel> QueryExecutor for ModelRow<Bm> {
     {
         let row = session.execute(query.inner, query.values).await?;
         let res = row.first_row_typed::<Bm>()?;
+
+        Ok(res)
+    }
+}
+
+impl<Bm: BaseModel> QueryExecutor for OptionalModelRow<Bm> {
+    async fn execute<Val, M, Qe>(
+        query: CharybdisQuery<'_, Val, M, Qe>,
+        session: &CachingSession,
+    ) -> Result<Self::Output, CharybdisError>
+    where
+        M: BaseModel,
+        Val: SerializeRow,
+        Qe: QueryExecutor,
+    {
+        let row = session.execute(query.inner, query.values).await?;
+        let res = row.maybe_first_row_typed::<Bm>()?;
 
         Ok(res)
     }
