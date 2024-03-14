@@ -8,9 +8,9 @@ mod utils;
 
 use crate::model::*;
 use crate::native::{
-    append_saga_field, decrement_counter_methods, delete_by_primary_key_functions, find_by_primary_keys_functions,
+    decrement_counter_methods, delete_by_primary_key_functions, find_by_primary_keys_functions,
     increment_counter_methods, pull_from_collection_consts, pull_from_collection_methods, push_to_collection_consts,
-    push_to_collection_methods, saga_method,
+    push_to_collection_methods,
 };
 use crate::rules::*;
 use crate::scylla::from_row;
@@ -27,8 +27,6 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
     let mut input: DeriveInput = parse_macro_input!(input);
     let fields = CharybdisFields::from_input(&input, &args);
-
-    append_saga_field(&mut input, &args);
 
     let partial_model_generator = partial_model_macro_generator(&args, &mut input);
 
@@ -69,9 +67,6 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let increment_counter_methods = increment_counter_methods(&args, &fields);
     let decrement_counter_methods = decrement_counter_methods(&args, &fields);
 
-    // Saga method
-    let saga_method = saga_method(&args);
-
     // FromRow trait
     let from_row = from_row(struct_name, &fields);
 
@@ -101,7 +96,6 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
             #pull_from_collection_methods
             #increment_counter_methods
             #decrement_counter_methods
-            #saga_method
         }
 
        impl charybdis::model::BaseModel for #struct_name {

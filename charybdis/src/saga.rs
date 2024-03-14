@@ -39,7 +39,7 @@ impl<M: Model + Callbacks> Saga<M> {
 
     pub fn add_step<F>(&mut self, action: F, compensating_action: Option<F>)
     where
-        F: Future<Output = Result<(), M::Error>> + 'static,
+        F: Future<Output = Result<(), M::Error>> + Send + 'static,
     {
         self.steps.push(SagaStep::new(action, compensating_action));
     }

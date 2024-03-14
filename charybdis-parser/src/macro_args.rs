@@ -22,7 +22,6 @@ pub struct CharybdisMacroArgs {
     pub field_types_hash: Option<HashMap<String, TokenStream>>,
     pub field_attributes_hash: Option<HashMap<String, TokenStream>>,
     pub table_options: Option<String>,
-    pub saga: Option<bool>,
 }
 
 impl CharybdisMacroArgs {
@@ -60,7 +59,6 @@ impl Parse for CharybdisMacroArgs {
         let mut field_attributes_hash = None;
         let mut table_options = None;
         let mut exclude_partial_model = None;
-        let mut saga = None;
 
         while !input.is_empty() {
             let key: syn::Ident = input.parse()?;
@@ -130,10 +128,6 @@ impl Parse for CharybdisMacroArgs {
                     let value: syn::LitStr = input.parse()?;
                     table_options = Option::from(value.value());
                 }
-                "saga" => {
-                    let value: syn::LitBool = input.parse()?;
-                    saga = Option::from(value.value());
-                }
                 _ => {}
             }
 
@@ -155,7 +149,6 @@ impl Parse for CharybdisMacroArgs {
             field_attributes_hash,
             table_options,
             exclude_partial_model,
-            saga,
         })
     }
 }
