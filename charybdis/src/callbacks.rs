@@ -5,20 +5,25 @@ use crate::saga::Saga;
 use crate::SerializeRow;
 use scylla::CachingSession;
 use std::fmt::Debug;
+use std::sync::Arc;
 
 pub struct CallbackContext<'a, M: Callbacks> {
-    pub session: &'a CachingSession,
-    pub extension: &'a M::Extension,
-    pub saga: &'a mut Saga<M>,
+    pub session: Arc<&'a CachingSession>,
+    pub extension: Arc<&'a M::Extension>,
+    pub saga: Option<Saga<M>>,
 }
 
 impl<'a, M: Callbacks> CallbackContext<'a, M> {
-    pub fn new(session: &'a CachingSession, extension: &'a M::Extension, saga: &'a mut Saga<M>) -> Self {
+    pub fn new(session: Arc<&'a CachingSession>, extension: Arc<&'a M::Extension>) -> Self {
         CallbackContext {
             session,
             extension,
-            saga,
+            saga: None,
         }
+    }
+
+    pub fn saga(&mut self) -> &mut Saga<M> {
+        self.saga.get_or_insert_with(|| Saga::new())
     }
 }
 
@@ -33,27 +38,27 @@ pub trait Callbacks: Model {
     type Extension;
     type Error: From<CharybdisError> + Debug;
 
-    async fn before_insert<'a>(&mut self, _ctx: &CallbackContext<'a, Self>) -> Result<(), Self::Error> {
+    async fn before_insert(&mut self, _ctx: &mut CallbackContext<'_, Self>) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    async fn after_insert<'a>(&mut self, _ctx: &CallbackContext<'a, Self>) -> Result<(), Self::Error> {
+    async fn after_insert(&mut self, _ctx: &mut CallbackContext<'_, Self>) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    async fn before_update<'a>(&mut self, _ctx: &CallbackContext<'a, Self>) -> Result<(), Self::Error> {
+    async fn before_update(&mut self, _ctx: &mut CallbackContext<'_, Self>) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    async fn after_update<'a>(&mut self, _ctx: &CallbackContext<'a, Self>) -> Result<(), Self::Error> {
+    async fn after_update(&mut self, _ctx: &mut CallbackContext<'_, Self>) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    async fn before_delete<'a>(&mut self, _ctx: &CallbackContext<'a, Self>) -> Result<(), Self::Error> {
+    async fn before_delete(&mut self, _ctx: &mut CallbackContext<'_, Self>) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    async fn after_delete<'a>(&mut self, _ctx: &CallbackContext<'a, Self>) -> Result<(), Self::Error> {
+    async fn after_delete(&mut self, _ctx: &mut CallbackContext<'_, Self>) -> Result<(), Self::Error> {
         Ok(())
     }
 }
@@ -69,9 +74,9 @@ pub struct DeleteAction<M: Callbacks>(M);
 pub trait CallbackAction<M: Callbacks> {
     fn query_value<Val: SerializeRow>(model: &M) -> QueryValue<Val, M>;
 
-    async fn before_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error>;
+    async fn before_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error>;
 
-    async fn after_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error>;
+    async fn after_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error>;
 }
 
 impl<M: Callbacks> CallbackAction<M> for InsertAction<M> {
@@ -79,11 +84,11 @@ impl<M: Callbacks> CallbackAction<M> for InsertAction<M> {
         QueryValue::Model(&model)
     }
 
-    async fn before_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error> {
+    async fn before_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error> {
         model.before_insert(ctx).await
     }
 
-    async fn after_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error> {
+    async fn after_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error> {
         model.after_insert(ctx).await
     }
 }
@@ -93,11 +98,11 @@ impl<M: Callbacks> CallbackAction<M> for UpdateAction<M> {
         QueryValue::Model(&model)
     }
 
-    async fn before_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error> {
+    async fn before_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error> {
         model.before_update(ctx).await
     }
 
-    async fn after_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error> {
+    async fn after_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error> {
         model.after_update(ctx).await
     }
 }
@@ -107,11 +112,11 @@ impl<M: Callbacks> CallbackAction<M> for DeleteAction<M> {
         QueryValue::PrimaryKey(model.primary_key_values())
     }
 
-    async fn before_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error> {
+    async fn before_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error> {
         model.before_delete(ctx).await
     }
 
-    async fn after_execute<'a>(model: &mut M, ctx: &CallbackContext<'a, M>) -> Result<(), M::Error> {
+    async fn after_execute(model: &mut M, ctx: &mut CallbackContext<'_, M>) -> Result<(), M::Error> {
         model.after_delete(ctx).await
     }
 }

@@ -15,7 +15,7 @@ pub trait Insert: Model {
 impl<M: Model> Insert for M {}
 
 pub trait InsertWithCallbacks<'a>: Callbacks {
-    fn insert_cb(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<'a, Self, InsertAction<Self>, Self> {
+    fn insert_cb(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<Self, InsertAction<Self>, Self> {
         CharybdisCbQuery::new(Self::INSERT_QUERY, self, extension)
     }
 }

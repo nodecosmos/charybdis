@@ -11,7 +11,7 @@ pub trait Update: Model {
 impl<M: Model> Update for M {}
 
 pub trait UpdateWithCallbacks<'a>: Callbacks {
-    fn update_cb(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<'a, Self, UpdateAction<Self>, Self> {
+    fn update_cb(&'a mut self, extension: &'a Self::Extension) -> CharybdisCbQuery<Self, UpdateAction<Self>, Self> {
         CharybdisCbQuery::new(Self::UPDATE_QUERY, self, extension)
     }
 }

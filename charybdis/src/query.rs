@@ -3,7 +3,6 @@ use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
 use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, RetryPolicy, SerialConsistency};
-use crate::saga::Saga;
 use crate::stream::CharybdisModelStream;
 use crate::SerializeRow;
 use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
@@ -314,35 +313,33 @@ impl<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> CharybdisCbQue
         profile_handle(profile_handle: Option<ExecutionProfileHandle>)
     }
 
-    pub async fn execute(mut self, session: &CachingSession) -> Result<QueryResult, M::Error> {
-        let mut saga = Saga::new();
-        let ctx = CallbackContext::new(session, self.extension, &mut saga);
+    pub async fn execute(self, session: &'a CachingSession) -> Result<QueryResult, M::Error> {
+        let mut ctx = CallbackContext::new(Arc::new(session), Arc::new(self.extension));
 
-        // initialize before_<action> saga steps
-        CbA::before_execute(&mut self.model, &ctx).await?;
+        CbA::before_execute(self.model, &mut ctx).await?;
 
-        // execute & drain before_<action> steps
-        ctx.saga.execute().await?;
-
-        // execute the query
-        let res = self.inner.values(CbA::query_value(self.model)).execute(session).await;
-
-        if let Err(e) = res {
-            // recover saga as main query failed
-            ctx.saga.execute_compensating_actions().await?;
-
-            return Err(M::Error::from(e));
+        // execute saga steps
+        if let Some(mut saga) = ctx.saga.take() {
+            saga.execute().await?;
         }
 
-        // initialize after_<action> saga steps
-        CbA::after_execute(&mut self.model, &ctx).await?;
+        // execute the main query
+        let res = self.inner.values(CbA::query_value(self.model)).execute(session).await;
 
-        // execute after_<action> steps
-        // if any of the after_<action> steps fail the compensating actions will be executed
-        // however, the main query has already been executed and cannot be rolled back, so
-        // ATM user has to rollback main query manually
-        ctx.saga.execute().await?;
+        return match res {
+            Ok(res) => {
+                CbA::after_execute(self.model, &mut ctx).await?;
 
-        Ok(res?)
+                Ok(res)
+            }
+            Err(e) => {
+                if let Some(mut saga) = ctx.saga.take() {
+                    // compensate saga as the main query failed
+                    saga.execute_compensating_actions().await?;
+                }
+
+                Err(M::Error::from(e))
+            }
+        };
     }
 }
