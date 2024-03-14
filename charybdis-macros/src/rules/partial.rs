@@ -146,6 +146,8 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
         .map(|s| syn::Ident::new(&s, proc_macro2::Span::call_site()))
         .collect();
 
+    let saga = args.saga.unwrap_or(false);
+
     // attributes that are not charybdis_model
     let other_attrs = &input
         .attrs
@@ -160,7 +162,8 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
                 #[charybdis::macros::char_model_field_attrs_gen(
                     fields_names=[$($field),*],
                     field_types_hash=#field_types_hash,
-                    field_attributes_hash=#field_attributes_hash
+                    field_attributes_hash=#field_attributes_hash,
+                    saga=#saga
                 )]
                 #[charybdis::macros::charybdis_model(
                     table_name=#table_name,

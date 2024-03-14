@@ -7,6 +7,7 @@ pub mod iterator;
 pub mod model;
 pub mod operations;
 pub mod query;
+pub mod saga;
 pub mod serializers;
 pub mod stream;
 pub mod types;

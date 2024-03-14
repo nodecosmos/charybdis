@@ -1,8 +1,9 @@
-use crate::callbacks::{CallbackAction, Callbacks};
+use crate::callbacks::{CallbackAction, CallbackContext, Callbacks};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
 use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, RetryPolicy, SerialConsistency};
+use crate::saga::Saga;
 use crate::stream::CharybdisModelStream;
 use crate::SerializeRow;
 use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
@@ -314,13 +315,34 @@ impl<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> CharybdisCbQue
     }
 
     pub async fn execute(mut self, session: &CachingSession) -> Result<QueryResult, M::Error> {
-        CbA::before_execute(&mut self.model, session, self.extension).await?;
+        let mut saga = Saga::new();
+        let ctx = CallbackContext::new(session, self.extension, &mut saga);
 
-        let query_value = CbA::query_value(self.model);
-        let res = self.inner.values(query_value).execute(session).await?;
+        // initialize before_<action> saga steps
+        CbA::before_execute(&mut self.model, &ctx).await?;
 
-        CbA::after_execute(&mut self.model, session, self.extension).await?;
+        // execute & drain before_<action> steps
+        ctx.saga.execute().await?;
 
-        Ok(res)
+        // execute the query
+        let res = self.inner.values(CbA::query_value(self.model)).execute(session).await;
+
+        if let Err(e) = res {
+            // recover saga as main query failed
+            ctx.saga.execute_compensating_actions().await?;
+
+            return Err(M::Error::from(e));
+        }
+
+        // initialize after_<action> saga steps
+        CbA::after_execute(&mut self.model, &ctx).await?;
+
+        // execute after_<action> steps
+        // if any of the after_<action> steps fail the compensating actions will be executed
+        // however, the main query has already been executed and cannot be rolled back, so
+        // ATM user has to rollback main query manually
+        ctx.saga.execute().await?;
+
+        Ok(res?)
     }
 }

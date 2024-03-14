@@ -23,6 +23,8 @@ pub enum CharybdisError {
     ExecutorError(String),
     NotFoundError(String),
     JsonError(serde_json::Error),
+    SagaError(String),
+    SagaRecoveryError(String),
 }
 
 impl fmt::Display for CharybdisError {
@@ -56,6 +58,8 @@ impl fmt::Display for CharybdisError {
             CharybdisError::NotFoundError(e) => write!(f, "Records not found for query: {}", e),
             CharybdisError::JsonError(e) => write!(f, "JsonError: {}", e),
             CharybdisError::ExecutorError(e) => write!(f, "ExecutorError: {}", e),
+            CharybdisError::SagaError(e) => write!(f, "SagaError: {}", e),
+            CharybdisError::SagaRecoveryError(e) => write!(f, "SagaRecoveryError: {}", e),
         }
     }
 }
@@ -74,6 +78,8 @@ impl Error for CharybdisError {
             CharybdisError::SerializeValuesError(e, _) => Some(e),
             CharybdisError::JsonError(e) => Some(e),
             CharybdisError::ExecutorError(_) => None,
+            CharybdisError::SagaError(_) => None,
+            CharybdisError::SagaRecoveryError(_) => None,
         }
     }
 }
