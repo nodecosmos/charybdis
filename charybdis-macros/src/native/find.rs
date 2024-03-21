@@ -126,6 +126,86 @@ pub(crate) fn find_first_by_primary_keys_functions(
     generated
 }
 
+pub(crate) fn find_by_local_secondary_index(
+    struct_name: &syn::Ident,
+    ch_args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
+) -> TokenStream {
+    let table_name = ch_args.table_name();
+    let comma_sep_cols = comma_sep_cols(&fields.db_fields);
+    let partition_keys = &fields.partition_key_fields;
+    let lsi_fields = &fields.local_secondary_index_fields;
+
+    let mut generated = quote! {};
+
+    lsi_fields.iter().for_each(|lsi| {
+        let lsi_name = lsi.name.clone();
+        let mut current_fields = partition_keys.clone();
+        current_fields.push(lsi.clone());
+        let current_field_names = current_fields
+            .iter()
+            .map(|field| field.name.clone())
+            .collect::<Vec<String>>();
+        let query_str = format!(
+            "SELECT {} FROM {} WHERE {}",
+            comma_sep_cols,
+            table_name,
+            where_placeholders(&current_fields)
+        );
+        let find_by_fun_name_str = format!("find_by_{}", current_field_names.join("_and_"));
+        let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
+        let arguments = struct_fields_to_fn_args(struct_name.to_string(), fields.db_fields.clone(), vec![lsi_name]);
+        let generated_func = find_many_generated_fn(&find_by_fun_name, &arguments, struct_name, &query_str);
+
+        generated.extend(generated_func);
+    });
+
+    generated
+}
+
+pub(crate) fn find_first_by_local_secondary_index(
+    struct_name: &syn::Ident,
+    ch_args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
+) -> TokenStream {
+    let table_name = ch_args.table_name();
+    let comma_sep_cols = comma_sep_cols(&fields.db_fields);
+    let partition_keys = &fields.partition_key_fields;
+    let lsi_fields = &fields.local_secondary_index_fields;
+
+    let mut generated = quote! {};
+
+    lsi_fields.iter().for_each(|lsi| {
+        let lsi_name = lsi.name.clone();
+        let mut current_fields = partition_keys.clone();
+        current_fields.push(lsi.clone());
+        let current_field_names = current_fields
+            .iter()
+            .map(|field| field.name.clone())
+            .collect::<Vec<String>>();
+        let query_str = format!(
+            "SELECT {} FROM {} WHERE {}",
+            comma_sep_cols,
+            table_name,
+            where_placeholders(&current_fields)
+        );
+        let find_by_fun_name_str = format!("find_first_by_{}", current_field_names.join("_and_"));
+        let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
+        let arguments = struct_fields_to_fn_args(struct_name.to_string(), fields.db_fields.clone(), vec![lsi_name]);
+        let generated_func = find_one_generated_fn(&find_by_fun_name, &arguments, struct_name, &query_str);
+
+        let maybe_find_by_fun_name_str = format!("maybe_find_first_by_{}", current_field_names.join("_and_"));
+        let maybe_find_by_fun_name = syn::Ident::new(&maybe_find_by_fun_name_str, proc_macro2::Span::call_site());
+        let maybe_generated_func =
+            maybe_find_one_generated_fn(&maybe_find_by_fun_name, &arguments, struct_name, &query_str);
+
+        generated.extend(generated_func);
+        generated.extend(maybe_generated_func);
+    });
+
+    generated
+}
+
 fn find_one_generated_fn(
     find_by_fun_name: &syn::Ident,
     arguments: &Vec<syn::FnArg>,

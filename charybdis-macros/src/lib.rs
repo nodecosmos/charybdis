@@ -8,9 +8,10 @@ mod utils;
 
 use crate::model::*;
 use crate::native::{
-    decrement_counter_methods, delete_by_primary_key_functions, find_by_primary_keys_functions,
-    find_first_by_primary_keys_functions, increment_counter_methods, pull_from_collection_consts,
-    pull_from_collection_methods, push_to_collection_consts, push_to_collection_methods,
+    decrement_counter_methods, delete_by_primary_key_functions, find_by_local_secondary_index,
+    find_by_primary_keys_functions, find_first_by_local_secondary_index, find_first_by_primary_keys_functions,
+    increment_counter_methods, pull_from_collection_consts, pull_from_collection_methods, push_to_collection_consts,
+    push_to_collection_methods,
 };
 use crate::rules::*;
 use crate::scylla::from_row;
@@ -21,7 +22,6 @@ use quote::quote;
 use syn::DeriveInput;
 use syn::{parse_macro_input, Data, Fields};
 
-/// This macro generates the implementation of the [Model] trait for the given struct.
 #[proc_macro_attribute]
 pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
@@ -79,6 +79,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     // Associated functions
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
     let find_first_by_key_funs = find_first_by_primary_keys_functions(struct_name, &args, &fields);
+    let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, &fields);
+    let find_first_by_local_secondary_index_funs = find_first_by_local_secondary_index(struct_name, &args, &fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(struct_name, &args, &fields);
 
     let expanded = quote! {
@@ -88,6 +90,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
         impl #struct_name {
             #find_by_key_funs
             #find_first_by_key_funs
+            #find_by_local_secondary_index_funs
+            #find_first_by_local_secondary_index_funs
             #delete_by_cks_funs
 
             #push_to_collection_consts
@@ -139,8 +143,6 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// Generates the implementation of the MaterializedView trait
-/// for the given struct.
 #[proc_macro_attribute]
 pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
