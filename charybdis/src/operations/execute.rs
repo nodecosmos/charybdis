@@ -8,6 +8,11 @@ pub async fn execute(
     query: impl Into<Query>,
     values: impl SerializeRow,
 ) -> Result<QueryResult, CharybdisError> {
-    let res = session.execute(query, values).await?;
+    let contents = query.into().contents;
+
+    let res = session
+        .execute(contents.clone(), values)
+        .await
+        .map_err(|e| CharybdisError::QueryError(contents, e))?;
     Ok(res)
 }

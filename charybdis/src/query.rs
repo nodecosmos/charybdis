@@ -7,6 +7,7 @@ use crate::stream::CharybdisModelStream;
 use crate::SerializeRow;
 use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
 use scylla::query::Query;
+use scylla::transport::query_result::FirstRowTypedError;
 use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
 use std::sync::Arc;
 use std::time::Duration;
@@ -62,8 +63,14 @@ impl<Bm: BaseModel> QueryExecutor for ModelRow<Bm> {
         Val: SerializeRow,
         Qe: QueryExecutor,
     {
-        let row = session.execute(query.inner, query.values).await?;
-        let res = row.first_row_typed::<Bm>()?;
+        let row = session
+            .execute(query.inner, query.values)
+            .await
+            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?;
+        let res = row.first_row_typed::<Bm>().map_err(|e| match e {
+            FirstRowTypedError::RowsEmpty => CharybdisError::NotFoundError(query.query_string.clone()),
+            _ => CharybdisError::FirstRowTypedError(query.query_string.clone(), e),
+        })?;
 
         Ok(res)
     }
@@ -79,8 +86,13 @@ impl<Bm: BaseModel> QueryExecutor for OptionalModelRow<Bm> {
         Val: SerializeRow,
         Qe: QueryExecutor,
     {
-        let row = session.execute(query.inner, query.values).await?;
-        let res = row.maybe_first_row_typed::<Bm>()?;
+        let row = session
+            .execute(query.inner, query.values)
+            .await
+            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?;
+        let res = row
+            .maybe_first_row_typed::<Bm>()
+            .map_err(|e| CharybdisError::MaybeFirstRowTypedError(query.query_string, e))?;
 
         Ok(res)
     }
@@ -98,10 +110,15 @@ impl<Bm: BaseModel> QueryExecutor for ModelStream<Bm> {
     {
         let rows = session
             .execute_iter(query.inner, query.values)
-            .await?
+            .await
+            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?
             .into_typed::<Bm>();
 
-        Ok(CharybdisModelStream::from(rows))
+        let mut stream = CharybdisModelStream::from(rows);
+
+        stream.query_string(query.query_string.clone());
+
+        Ok(stream)
     }
 }
 
@@ -117,10 +134,14 @@ impl<Bm: BaseModel> QueryExecutor for ModelPaged<Bm> {
     {
         let res = session
             .execute_paged(query.inner, query.values, query.paging_state)
-            .await?;
+            .await
+            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?;
         let paging_state = res.paging_state.clone();
-        let rows = res.rows()?;
-        let typed_rows = CharybdisModelIterator::from(rows.into_typed());
+        let rows = res
+            .rows()
+            .map_err(|e| CharybdisError::RowsExpectedError(query.query_string.clone(), e))?;
+        let mut typed_rows = CharybdisModelIterator::from(rows.into_typed());
+        typed_rows.query_string(query.query_string.clone());
 
         Ok((typed_rows, paging_state))
     }
@@ -139,7 +160,7 @@ impl QueryExecutor for ModelMutation {
         session
             .execute(query.inner, query.values)
             .await
-            .map_err(CharybdisError::from)
+            .map_err(|e| CharybdisError::QueryError(query.query_string, e))
     }
 }
 
@@ -180,6 +201,7 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
 
 pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> {
     inner: Query,
+    query_string: String,
     paging_state: Option<Bytes>,
     pub(crate) values: QueryValue<'a, Val, M>,
     _phantom: std::marker::PhantomData<Qe>,
@@ -187,8 +209,11 @@ pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor
 
 impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> CharybdisQuery<'a, Val, M, Qe> {
     pub fn new(query: impl Into<String>, values: QueryValue<'a, Val, M>) -> Self {
+        let query_string = query.into();
+
         Self {
-            inner: Query::new(query),
+            inner: Query::new(&query_string),
+            query_string,
             paging_state: None,
             values,
             _phantom: Default::default(),

@@ -11,16 +11,14 @@ use std::fmt;
 #[derive(Debug)]
 pub enum CharybdisError {
     // scylla
-    QueryError(QueryError),
-    RowsExpectedError(RowsExpectedError, String),
-    SingleRowTypedError(SingleRowTypedError, String),
-    SerializeValuesError(SerializeValuesError, String),
-    FirstRowTypedError(FirstRowTypedError, String),
-    MaybeFirstRowTypedError(MaybeFirstRowTypedError, String),
-    FromRowError(FromRowError, String),
-    NextRowError(NextRowError),
-    // charybdis
-    ExecutorError(String),
+    QueryError(String, QueryError),
+    RowsExpectedError(String, RowsExpectedError),
+    SingleRowTypedError(String, SingleRowTypedError),
+    SerializeValuesError(String, SerializeValuesError),
+    FirstRowTypedError(String, FirstRowTypedError),
+    MaybeFirstRowTypedError(String, MaybeFirstRowTypedError),
+    FromRowError(String, FromRowError),
+    NextRowError(String, NextRowError),
     NotFoundError(String),
     JsonError(serde_json::Error),
 }
@@ -29,33 +27,33 @@ impl fmt::Display for CharybdisError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             // scylla errors
-            CharybdisError::QueryError(e) => write!(f, "QueryError: {}", e),
-            CharybdisError::RowsExpectedError(e, model_name) => {
-                write!(f, "RowsExpectedError: {:?} \nin Mode: {}", e, model_name)
+            CharybdisError::QueryError(query, e) => write!(f, "Query: {}\nQueryError: {}", query, e),
+            CharybdisError::RowsExpectedError(query, e) => {
+                write!(f, "Query: {}\nRowsExpectedError: {:?}", query, e)
             }
-            CharybdisError::SingleRowTypedError(e, model_name) => write!(
+            CharybdisError::SingleRowTypedError(query, e) => write!(
                 f,
-                "SingleRowTypedError: {:?} \n in Model: {}. Did you forget to provide complete primary key?",
-                e, model_name
+                "Query: {}\nSingleRowTypedError: {:?}. Did you forget to provide complete primary key?",
+                query, e
             ),
-            CharybdisError::FirstRowTypedError(e, model) => {
-                write!(f, "FirstRowTypedError: {:?} \nin Model: {}", e, model)
+            CharybdisError::FirstRowTypedError(query, e) => {
+                write!(f, "Query: {}\nFirstRowTypedError: {:?}", query, e)
             }
-            CharybdisError::MaybeFirstRowTypedError(e, model) => {
-                write!(f, "MaybeFirstRowTypedError: {:?} \nin Model: {}", e, model)
+            CharybdisError::MaybeFirstRowTypedError(query, e) => {
+                write!(f, "Query: {}\nMaybeFirstRowTypedError: {:?}", query, e)
             }
-            CharybdisError::FromRowError(e, model) => {
-                write!(f, "FromRowError: {:?} \nin Model: {}", e, model)
+            CharybdisError::FromRowError(query, e) => {
+                write!(f, "Query: {}\nFromRowError: {:?}", query, e)
             }
-            CharybdisError::SerializeValuesError(e, model) => {
-                write!(f, "SerializeValuesError: {}\n{}", e, model)
-            }
-            CharybdisError::NextRowError(e) => write!(f, "NextRowError: {}", e),
 
-            // charybdis
-            CharybdisError::NotFoundError(e) => write!(f, "Records not found for query: {}", e),
-            CharybdisError::JsonError(e) => write!(f, "JsonError: {}", e),
-            CharybdisError::ExecutorError(e) => write!(f, "ExecutorError: {}", e),
+            CharybdisError::SerializeValuesError(query, e) => {
+                write!(f, "Query: {}\nSerializeValuesError: {:?}", query, e)
+            }
+            CharybdisError::NotFoundError(query) => {
+                write!(f, "Records not found for query: {}", query)
+            }
+            CharybdisError::NextRowError(query, e) => write!(f, "Query: {}\nNextRowError: {:?}", query, e),
+            CharybdisError::JsonError(e) => write!(f, "JsonError: {:?}", e),
         }
     }
 }
@@ -63,68 +61,16 @@ impl fmt::Display for CharybdisError {
 impl Error for CharybdisError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            CharybdisError::QueryError(e) => Some(e),
-            CharybdisError::RowsExpectedError(e, _) => Some(e),
-            CharybdisError::NotFoundError(_) => None,
-            CharybdisError::SingleRowTypedError(e, _) => Some(e),
-            CharybdisError::FirstRowTypedError(e, _) => Some(e),
-            CharybdisError::MaybeFirstRowTypedError(e, _) => Some(e),
-            CharybdisError::FromRowError(e, _) => Some(e),
-            CharybdisError::NextRowError(e) => Some(e),
-            CharybdisError::SerializeValuesError(e, _) => Some(e),
+            CharybdisError::QueryError(_, e) => Some(e),
+            CharybdisError::RowsExpectedError(_, e) => Some(e),
+            CharybdisError::SingleRowTypedError(_, e) => Some(e),
+            CharybdisError::FirstRowTypedError(_, e) => Some(e),
+            CharybdisError::MaybeFirstRowTypedError(_, e) => Some(e),
+            CharybdisError::FromRowError(_, e) => Some(e),
+            CharybdisError::NextRowError(_, e) => Some(e),
+            CharybdisError::SerializeValuesError(_, e) => Some(e),
             CharybdisError::JsonError(e) => Some(e),
-            CharybdisError::ExecutorError(_) => None,
+            _ => None,
         }
-    }
-}
-
-impl From<QueryError> for CharybdisError {
-    fn from(e: QueryError) -> Self {
-        CharybdisError::QueryError(e)
-    }
-}
-
-impl From<RowsExpectedError> for CharybdisError {
-    fn from(e: RowsExpectedError) -> Self {
-        CharybdisError::RowsExpectedError(e, "unknown".to_string())
-    }
-}
-
-impl From<SingleRowTypedError> for CharybdisError {
-    fn from(e: SingleRowTypedError) -> Self {
-        CharybdisError::SingleRowTypedError(e, "unknown".to_string())
-    }
-}
-
-impl From<FirstRowTypedError> for CharybdisError {
-    fn from(e: FirstRowTypedError) -> Self {
-        match e {
-            FirstRowTypedError::RowsEmpty => CharybdisError::NotFoundError(e.to_string()),
-            _ => CharybdisError::FirstRowTypedError(e, "unknown".to_string()),
-        }
-    }
-}
-
-impl From<MaybeFirstRowTypedError> for CharybdisError {
-    fn from(e: MaybeFirstRowTypedError) -> Self {
-        CharybdisError::MaybeFirstRowTypedError(e, "unknown".to_string())
-    }
-}
-
-impl From<FromRowError> for CharybdisError {
-    fn from(e: FromRowError) -> Self {
-        CharybdisError::FromRowError(e, "unknown".to_string())
-    }
-}
-
-impl From<SerializeValuesError> for CharybdisError {
-    fn from(e: SerializeValuesError) -> Self {
-        CharybdisError::SerializeValuesError(e, "unknown".to_string())
-    }
-}
-
-impl From<NextRowError> for CharybdisError {
-    fn from(e: NextRowError) -> Self {
-        CharybdisError::NextRowError(e)
     }
 }
