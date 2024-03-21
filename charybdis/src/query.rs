@@ -66,10 +66,10 @@ impl<Bm: BaseModel> QueryExecutor for ModelRow<Bm> {
         let row = session
             .execute(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?;
+            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
         let res = row.first_row_typed::<Bm>().map_err(|e| match e {
-            FirstRowTypedError::RowsEmpty => CharybdisError::NotFoundError(query.query_string.clone()),
-            _ => CharybdisError::FirstRowTypedError(query.query_string.clone(), e),
+            FirstRowTypedError::RowsEmpty => CharybdisError::NotFoundError(query.query_string),
+            _ => CharybdisError::FirstRowTypedError(query.query_string, e),
         })?;
 
         Ok(res)
@@ -89,7 +89,7 @@ impl<Bm: BaseModel> QueryExecutor for OptionalModelRow<Bm> {
         let row = session
             .execute(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?;
+            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
         let res = row
             .maybe_first_row_typed::<Bm>()
             .map_err(|e| CharybdisError::MaybeFirstRowTypedError(query.query_string, e))?;
@@ -111,12 +111,12 @@ impl<Bm: BaseModel> QueryExecutor for ModelStream<Bm> {
         let rows = session
             .execute_iter(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?
+            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?
             .into_typed::<Bm>();
 
         let mut stream = CharybdisModelStream::from(rows);
 
-        stream.query_string(query.query_string.clone());
+        stream.query_string(query.query_string);
 
         Ok(stream)
     }
@@ -135,13 +135,15 @@ impl<Bm: BaseModel> QueryExecutor for ModelPaged<Bm> {
         let res = session
             .execute_paged(query.inner, query.values, query.paging_state)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string.clone(), e))?;
+            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
         let paging_state = res.paging_state.clone();
         let rows = res
             .rows()
-            .map_err(|e| CharybdisError::RowsExpectedError(query.query_string.clone(), e))?;
+            .map_err(|e| CharybdisError::RowsExpectedError(query.query_string, e))?;
+
         let mut typed_rows = CharybdisModelIterator::from(rows.into_typed());
-        typed_rows.query_string(query.query_string.clone());
+
+        typed_rows.query_string(query.query_string);
 
         Ok((typed_rows, paging_state))
     }
@@ -201,19 +203,17 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
 
 pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> {
     inner: Query,
-    query_string: String,
+    query_string: &'static str,
     paging_state: Option<Bytes>,
     pub(crate) values: QueryValue<'a, Val, M>,
     _phantom: std::marker::PhantomData<Qe>,
 }
 
 impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> CharybdisQuery<'a, Val, M, Qe> {
-    pub fn new(query: impl Into<String>, values: QueryValue<'a, Val, M>) -> Self {
-        let query_string = query.into();
-
+    pub fn new(query: &'static str, values: QueryValue<'a, Val, M>) -> Self {
         Self {
-            inner: Query::new(&query_string),
-            query_string,
+            inner: Query::new(query),
+            query_string: query,
             paging_state: None,
             values,
             _phantom: Default::default(),
@@ -314,7 +314,7 @@ pub struct CharybdisCbQuery<'a, M: Callbacks, CbA: CallbackAction<M>, Val: Seria
 }
 
 impl<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> CharybdisCbQuery<'a, M, CbA, Val> {
-    pub(crate) fn new(query: impl Into<String>, model: &'a mut M, extension: &'a M::Extension) -> Self {
+    pub(crate) fn new(query: &'static str, model: &'a mut M, extension: &'a M::Extension) -> Self {
         Self {
             inner: CharybdisQuery::new(query, QueryValue::default()),
             model,

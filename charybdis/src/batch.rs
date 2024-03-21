@@ -271,7 +271,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         let result = db_session
             .batch(&self.inner, &self.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(format!("CharybdisModelBatch: {}", M::DB_MODEL_NAME), e))?;
+            .map_err(|e| CharybdisError::BatchError(M::DB_MODEL_NAME, e))?;
 
         Ok(result)
     }

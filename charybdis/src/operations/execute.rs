@@ -1,18 +1,15 @@
 use crate::errors::CharybdisError;
 use crate::SerializeRow;
-use scylla::query::Query;
 use scylla::{CachingSession, QueryResult};
 
 pub async fn execute(
     session: &CachingSession,
-    query: impl Into<Query>,
+    query: &'static str,
     values: impl SerializeRow,
 ) -> Result<QueryResult, CharybdisError> {
-    let contents = query.into().contents;
-
     let res = session
-        .execute(contents.clone(), values)
+        .execute(query, values)
         .await
-        .map_err(|e| CharybdisError::QueryError(contents, e))?;
+        .map_err(|e| CharybdisError::QueryError(query, e))?;
     Ok(res)
 }

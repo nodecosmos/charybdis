@@ -12,15 +12,16 @@ use std::fmt;
 #[derive(Debug)]
 pub enum CharybdisError {
     // scylla
-    QueryError(String, QueryError),
-    RowsExpectedError(String, RowsExpectedError),
-    SingleRowTypedError(String, SingleRowTypedError),
-    SerializeValuesError(String, SerializeValuesError),
-    FirstRowTypedError(String, FirstRowTypedError),
-    MaybeFirstRowTypedError(String, MaybeFirstRowTypedError),
-    FromRowError(String, FromRowError),
-    NextRowError(String, NextRowError),
-    NotFoundError(String),
+    QueryError(&'static str, QueryError),
+    BatchError(&'static str, QueryError),
+    RowsExpectedError(&'static str, RowsExpectedError),
+    SingleRowTypedError(&'static str, SingleRowTypedError),
+    SerializeValuesError(&'static str, SerializeValuesError),
+    FirstRowTypedError(&'static str, FirstRowTypedError),
+    MaybeFirstRowTypedError(&'static str, MaybeFirstRowTypedError),
+    FromRowError(&'static str, FromRowError),
+    NextRowError(&'static str, NextRowError),
+    NotFoundError(&'static str),
     JsonError(serde_json::Error),
 }
 
@@ -29,6 +30,7 @@ impl fmt::Display for CharybdisError {
         match self {
             // scylla errors
             CharybdisError::QueryError(query, e) => write!(f, "Query: {}\nQueryError: {}", query.bright_purple(), e),
+            CharybdisError::BatchError(query, e) => write!(f, "Model: {}\nBatchError: {}", query.bright_purple(), e),
             CharybdisError::RowsExpectedError(query, e) => {
                 write!(f, "Query: {}\nRowsExpectedError: {:?}", query.bright_purple(), e)
             }
