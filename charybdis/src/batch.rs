@@ -268,7 +268,10 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 
     pub async fn execute(&self, db_session: &CachingSession) -> Result<QueryResult, CharybdisError> {
-        let result = db_session.batch(&self.inner, &self.values).await?;
+        let result = db_session
+            .batch(&self.inner, &self.values)
+            .await
+            .map_err(|e| CharybdisError::QueryError(format!("CharybdisModelBatch: {}", M::DB_MODEL_NAME), e))?;
 
         Ok(result)
     }
