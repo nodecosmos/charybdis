@@ -11,11 +11,11 @@ use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
 use std::sync::Arc;
 use std::time::Duration;
 
-pub struct ModelRow<M: BaseModel>(M);
-pub struct OptionalModelRow<M: BaseModel>(Option<M>);
-pub struct ModelStream<M: BaseModel>(CharybdisModelStream<M>);
-pub struct ModelPaged<M: BaseModel>(CharybdisModelIterator<M>, Option<Bytes>);
-pub struct ModelMutation(QueryResult);
+pub struct ModelRow<M: BaseModel>(pub M);
+pub struct OptionalModelRow<M: BaseModel>(pub Option<M>);
+pub struct ModelStream<M: BaseModel>(pub CharybdisModelStream<M>);
+pub struct ModelPaged<M: BaseModel>(pub CharybdisModelIterator<M>, pub Option<Bytes>);
+pub struct ModelMutation(pub QueryResult);
 
 pub trait QueryType {
     type Output;
