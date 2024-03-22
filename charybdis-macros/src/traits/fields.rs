@@ -62,9 +62,8 @@ impl ToIdents for Vec<Field> {
     }
 }
 
-/// Generates string for hashmap of field names and types or attributes.
-/// It is used by partial model macro generator to associate field types and field attributes
-/// with field names for the generated partial model.
+/// It is used by `partial_model_macro_generator` to associate field **types**
+/// and field **attributes** with field names for the generated partial model.
 pub(crate) trait FieldHashMapString {
     /// key is field name and value is field type.
     fn field_types_hashmap_string(&self) -> String;

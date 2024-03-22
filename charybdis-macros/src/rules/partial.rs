@@ -21,8 +21,7 @@ use syn::{parse_str, Attribute, DeriveInput};
 /// #[charybdis_model(
 ///     table_name = "users",
 ///     partition_keys = ["id"],
-///     clustering_keys = []
-///     global_secondary_indexes = [])]
+///     clustering_keys = [])]
 /// pub struct User {
 ///     pub id: Uuid,
 ///     pub username: Text,
