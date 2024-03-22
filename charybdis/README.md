@@ -68,7 +68,7 @@
         - [Find by primary key](#find-by-primary-key)
         - [Find by partition key](#find-by-partition-key)
         - [Find by primary key associated](#find-by-primary-key-associated)
-        - [Macro generated find helpers](#macro-generated-find-helpers)
+        - [Available find functions](#available-find-functions)
         - [Custom filtering](#custom-filtering)
     - [Update](#update)
     - [Delete](#delete)
@@ -301,34 +301,52 @@ in `charybdis::operations` module.
   ```rust
   let users = User::find_by_primary_key_value(val: User::PrimaryKey).execute(&session).await;
   ```
-- ### Macro generated find helpers
-  Lets say we have model:
-    ```rust
-    #[charybdis_model(
-        table_name = posts,
-        partition_keys = [date],
-        clustering_keys = [categogry_id, title],
-        global_secondary_indexes = [])
-    ]
-    pub struct Post {
-        date: Date,
-        category_id: Uuid,
-        title: Text,
-        id: Uuid,
-        ...
-    }
-  ```
-  We have macro generated functions for up to 3 fields from primary key. Note that if **complete**
-  primary key is provided, we get single typed result.
+- ### Available find functions
   ```rust
-  Post::find_by_date(date: Date).execute(session) -> Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id(date: Date, category_id: Uuid).execute(session) ->  Result<CharybdisModelStream<Post>, CharybdisError>
-  Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text).execute(session) -> Result<Post, CharybdisError>
+  use scylla::CachingSession;
+  use charybdis::errors::CharybdisError;
+  use charybdis::macros::charybdis_model;
+  use charybdis::stream::CharybdisModelStream;
+  use charybdis::types::{Date, Text, Uuid};
+  
+  #[charybdis_model(
+      table_name = posts,
+      partition_keys = [date],
+      clustering_keys = [category_id, title],
+      local_secondary_indexes = [title]
+  )]
+  pub struct Post {
+      pub date: Date,
+      pub category_id: Uuid,
+      pub title: Text,
+  }
+  
+  impl Post {
+      async fn find_various(db_session: &CachingSession) -> Result<(), CharybdisError> {
+         let date = Date::default();
+         let category_id = Uuid::new_v4();
+         let title = Text::default();
+      
+         let posts: CharybdisModelStream<Post> = Post::find_by_date(date).execute(db_session).await?;
+         let posts: CharybdisModelStream<Post> = Post::find_by_date_and_category_id(date, category_id).execute(db_session).await?;
+         let posts: Post = Post::find_by_date_and_category_id_and_title(date, category_id, title.clone()).execute(db_session).await?;
+      
+         let post: Post = Post::find_first_by_date(date).execute(db_session).await?;
+         let post: Post = Post::find_first_by_date_and_category_id(date, category_id).execute(db_session).await?;
+      
+         let post: Option<Post> = Post::maybe_find_first_by_date(date).execute(db_session).await?;
+         let post: Option<Post> = Post::maybe_find_first_by_date_and_category_id(date, category_id).execute(db_session).await?;
+         let post: Option<Post> = Post::maybe_find_first_by_date_and_category_id_and_title(date, category_id, title.clone()).execute(db_session).await?;
+      
+         // find by local secondary index
+         let posts: CharybdisModelStream<Post> = Post::find_by_date_and_title(date, title.clone()).execute(db_session).await?;
+         let post: Post = Post::find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
+         let post: Option<Post> = Post::maybe_find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
+      
+        Ok(())
+      }
+  }
   ```
-  And for our user model we would have
-    ```rust
-    User::find_by_id(id: Uuid).execute(session) -> Result<User, CharybdisError>
-    ```
 
 - ### Custom filtering:
   Lets use our `Post` model as an example:

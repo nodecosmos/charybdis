@@ -16,3 +16,7 @@ proc-macro2 = "1.0.79"
 syn = { version = "2.0.53", features = ["full"] }
 quote = "1.0.35"
 darling = "0.20.8"
+
+[dev-dependencies]
+charybdis = { version = "0.4.8", path = "../charybdis" }
+scylla = "0.12.0"

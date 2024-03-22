@@ -7,20 +7,49 @@ use quote::quote;
 const MAX_FIND_BY_FIELDS: usize = 3;
 
 /// for up to 3 primary keys, generate find_by_primary_key functions e.g.
-/// ```rust ignore
-///   #[charybdis_model(
+/// ```rust
+/// use scylla::CachingSession;
+/// use charybdis::errors::CharybdisError;
+/// use charybdis::macros::charybdis_model;
+/// use charybdis::stream::CharybdisModelStream;
+/// use charybdis::types::{Date, Text, Uuid};
+/// #[charybdis_model(
 ///         table_name = posts,
 ///         partition_keys = [date],
 ///         clustering_keys = [category_id, title],
-///         global_secondary_indexes = []
-///     )]
-///    pub struct Post {...}
-/// ```
-/// We will generate the following functions:
-/// ```rust ignore
-///   Post::find_by_date(date: Date)
-///   Post::find_by_date_and_category_id(date: Date, category_id: Uuid)
-///   Post::find_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text)
+///         local_secondary_indexes = [title]
+/// )]
+/// pub struct Post {
+///     pub date: Date,
+///     pub category_id: Uuid,
+///     pub title: Text,
+/// }
+///
+/// impl Post {
+///     async fn find_various(db_session: &CachingSession) -> Result<(), CharybdisError> {
+///         let date = Date::default();
+///         let category_id = Uuid::new_v4();
+///         let title = Text::default();
+///
+///         let posts: CharybdisModelStream<Post> = Post::find_by_date(date).execute(db_session).await?;
+///         let posts: CharybdisModelStream<Post> = Post::find_by_date_and_category_id(date, category_id).execute(db_session).await?;
+///         let posts: Post = Post::find_by_date_and_category_id_and_title(date, category_id, title.clone()).execute(db_session).await?;
+///
+///         let post: Post = Post::find_first_by_date(date).execute(db_session).await?;
+///         let post: Post = Post::find_first_by_date_and_category_id(date, category_id).execute(db_session).await?;
+///
+///         let post: Option<Post> = Post::maybe_find_first_by_date(date).execute(db_session).await?;
+///         let post: Option<Post> = Post::maybe_find_first_by_date_and_category_id(date, category_id).execute(db_session).await?;
+///         let post: Option<Post> = Post::maybe_find_first_by_date_and_category_id_and_title(date, category_id, title.clone()).execute(db_session).await?;
+///
+///         // find by local secondary index
+///         let posts: CharybdisModelStream<Post> = Post::find_by_date_and_title(date, title.clone()).execute(db_session).await?;
+///         let post: Post = Post::find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
+///         let post: Option<Post> = Post::maybe_find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
+///
+///        Ok(())
+///     }
+/// }
 /// ```
 pub(crate) fn find_by_primary_keys_functions(
     struct_name: &syn::Ident,
@@ -29,7 +58,6 @@ pub(crate) fn find_by_primary_keys_functions(
 ) -> TokenStream {
     let table_name = ch_args.table_name();
     let comma_sep_cols = fields.db_fields.comma_sep_cols();
-
     let primary_key_stack = &fields.primary_key_fields;
     let mut generated = quote! {};
 

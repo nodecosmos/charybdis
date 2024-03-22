@@ -214,10 +214,12 @@ dependencies = [
 name = "charybdis_macros"
 version = "0.4.8"
 dependencies = [
+ "charybdis",
  "charybdis_parser",
  "darling",
  "proc-macro2",
  "quote",
+ "scylla",
  "syn 2.0.53",
 ]
 
