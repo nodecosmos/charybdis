@@ -1,4 +1,6 @@
-use crate::utils::{struct_fields_to_fn_args, where_placeholders, Tuple};
+use crate::traits::fields::QueryFields;
+use crate::traits::tuple::Tuple;
+use crate::utils::struct_fields_to_fn_args;
 use charybdis_parser::fields::{CharybdisFields, Field};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
@@ -43,7 +45,7 @@ pub(crate) fn delete_by_primary_key_functions(
         let query_str = format!(
             "DELETE FROM {} WHERE {}",
             table_name,
-            where_placeholders(&current_fields)
+            current_fields.where_placeholders()
         );
         let find_by_fun_name_str = format!("delete_by_{}", current_field_names.join("_and_"));
         let delete_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());

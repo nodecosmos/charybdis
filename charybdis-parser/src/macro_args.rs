@@ -37,6 +37,14 @@ impl CharybdisMacroArgs {
         self.clustering_keys.clone().expect("clustering_keys is required")
     }
 
+    pub fn global_secondary_indexes(&self) -> Vec<String> {
+        self.global_secondary_indexes.clone().unwrap_or_default()
+    }
+
+    pub fn local_secondary_indexes(&self) -> Vec<String> {
+        self.local_secondary_indexes.clone().unwrap_or_default()
+    }
+
     pub fn primary_key(&self) -> Vec<String> {
         let mut primary_key = self.partition_keys();
         primary_key.extend(self.clustering_keys());

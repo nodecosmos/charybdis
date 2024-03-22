@@ -1,5 +1,6 @@
-use crate::utils::camel_to_snake_case;
-use charybdis_parser::fields::{CharybdisFields, Field};
+use crate::traits::fields::{FieldHashMapString, ToIdents};
+use crate::traits::string::ToSnakeCase;
+use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
@@ -20,8 +21,7 @@ use syn::{parse_str, Attribute, DeriveInput};
 /// #[charybdis_model(
 ///     table_name = "users",
 ///     partition_keys = ["id"],
-///     clustering_keys = []
-///     global_secondary_indexes = [])]
+///     clustering_keys = [])]
 /// pub struct User {
 ///     pub id: Uuid,
 ///     pub username: Text,
@@ -117,34 +117,30 @@ use syn::{parse_str, Attribute, DeriveInput};
 /// keys.
 ///
 
-pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &DeriveInput) -> TokenStream {
-    let all_fields = CharybdisFields::from_input(&input, &args).all_fields;
+pub(crate) fn partial_model_macro_generator(
+    input: &DeriveInput,
+    args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
+) -> TokenStream {
+    let struct_name = &input.ident;
 
     if args.exclude_partial_model.unwrap_or(false) {
         return TokenStream::new();
     }
 
     // macro names (avoiding name collisions)
-    let native_struct = &input.ident;
-    let macro_name_str = format!("partial_{}", camel_to_snake_case(&native_struct.to_string()));
+    let macro_name_str = format!("partial_{}", struct_name.to_string().to_snake_case());
     let macro_name = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
-    let field_types_hash = build_field_types_hash(&all_fields);
-    let field_attributes_hash = build_field_attributes_hash(&all_fields);
+    let field_types_hash = fields.all_fields.field_types_hashmap_string();
+    let field_attributes_hash = fields.all_fields.field_attributes_hashmap_string();
 
     let table_name = args.table_name().to_token_stream();
 
-    let partition_keys: Vec<syn::Ident> = args
-        .partition_keys()
-        .into_iter()
-        .map(|s| syn::Ident::new(&s, proc_macro2::Span::call_site()))
-        .collect();
-
-    let clustering_keys: Vec<syn::Ident> = args
-        .clustering_keys()
-        .into_iter()
-        .map(|s| syn::Ident::new(&s, proc_macro2::Span::call_site()))
-        .collect();
+    let partition_keys: Vec<syn::Ident> = fields.partition_key_fields.to_idents();
+    let clustering_keys: Vec<syn::Ident> = fields.clustering_key_fields.to_idents();
+    let global_secondary_indexes: Vec<syn::Ident> = fields.global_secondary_index_fields.to_idents();
+    let local_secondary_indexes: Vec<syn::Ident> = fields.local_secondary_index_fields.to_idents();
 
     // attributes that are not charybdis_model
     let other_attrs = &input
@@ -166,16 +162,18 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
                     table_name=#table_name,
                     partition_keys=[ #(#partition_keys),* ],
                     clustering_keys=[ #(#clustering_keys),* ],
+                    global_secondary_indexes=[ #(#global_secondary_indexes),* ],
+                    local_secondary_indexes=[ #(#local_secondary_indexes),* ],
                     exclude_partial_model=true
                 )]
                 #(#other_attrs)*
                 pub struct $struct_name {}
 
-                impl charybdis::model::AsNative<#native_struct> for $struct_name {
-                    fn as_native(&self) -> #native_struct {
+                impl charybdis::model::AsNative<#struct_name> for $struct_name {
+                    fn as_native(&self) -> #struct_name {
                         use charybdis::operations::New;
 
-                        let mut new_model = #native_struct::new();
+                        let mut new_model = #struct_name::new();
 
                         $(
                             new_model.$field = self.$field.clone();
@@ -190,35 +188,6 @@ pub(crate) fn partial_model_macro_generator(args: &CharybdisMacroArgs, input: &D
     };
 
     expanded
-}
-
-/// field_types_hash -> key is field name and value is field attributes.
-fn build_field_types_hash(fields: &Vec<Field>) -> String {
-    let mut field_types = quote! {};
-
-    for field in fields.iter() {
-        let field_ident = &field.ident;
-        let ty = &field.ty;
-
-        field_types.extend(quote! { #field_ident => #ty; });
-    }
-
-    field_types.to_string().replace('\n', "")
-}
-
-/// field_attributes_hash -> key is field name and value is field attributes.
-fn build_field_attributes_hash(fields: &Vec<Field>) -> String {
-    let mut field_attributes = quote! {};
-
-    for field in fields.iter() {
-        let field_ident = &field.ident;
-        let attrs: &Vec<Attribute> = &field.attrs;
-
-        field_attributes.extend(quote! { #field_ident => #(#attrs)*; });
-    }
-
-    // strip newlines
-    field_attributes.to_string().replace('\n', "")
 }
 
 /// Used to append subset of fields to model struct.

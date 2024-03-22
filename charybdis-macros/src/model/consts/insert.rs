@@ -1,16 +1,16 @@
+use crate::traits::fields::QueryFields;
+
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use quote::quote;
 use syn::ImplItem;
 
-use crate::utils::{comma_sep_cols, insert_bind_markers};
-
 pub(crate) fn insert_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str: String = format!(
         "INSERT INTO {} ({}) VALUES ({})",
         ch_args.table_name(),
-        comma_sep_cols(&fields.db_fields),
-        insert_bind_markers(&fields.db_fields),
+        fields.db_fields.comma_sep_cols(),
+        fields.db_fields.insert_bind_markers(),
     );
 
     let generated = quote! {
@@ -24,8 +24,8 @@ pub(crate) fn insert_if_not_exists_query_const(ch_args: &CharybdisMacroArgs, fie
     let query_str: String = format!(
         "INSERT INTO {} ({}) VALUES ({}) IF NOT EXISTS",
         ch_args.table_name(),
-        comma_sep_cols(&fields.db_fields),
-        insert_bind_markers(&fields.db_fields),
+        fields.db_fields.comma_sep_cols(),
+        fields.db_fields.insert_bind_markers(),
     );
 
     let generated = quote! {

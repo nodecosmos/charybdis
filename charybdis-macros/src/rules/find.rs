@@ -1,4 +1,6 @@
-use crate::utils::{camel_to_snake_case, comma_sep_cols};
+use crate::traits::string::ToSnakeCase;
+
+use crate::traits::fields::QueryFields;
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::{Ident, TokenStream};
@@ -10,12 +12,12 @@ pub(crate) fn find_model_query_rule(
     args: &CharybdisMacroArgs,
     fields: &CharybdisFields,
 ) -> TokenStream {
-    let macro_name_str: String = format!("find_{}_query", camel_to_snake_case(&struct_name.to_string()));
+    let macro_name_str: String = format!("find_{}_query", struct_name.to_string().to_snake_case());
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
     let query_str = format!(
         "SELECT {} FROM {} WHERE ",
-        comma_sep_cols(&fields.db_fields),
+        fields.db_fields.comma_sep_cols(),
         args.table_name()
     );
 
@@ -34,12 +36,12 @@ pub(crate) fn find_model_query_rule(
 }
 
 pub(crate) fn find_model_rule(struct_name: &Ident, args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
-    let macro_name_str: String = format!("find_{}", camel_to_snake_case(&struct_name.to_string()));
+    let macro_name_str: String = format!("find_{}", struct_name.to_string().to_snake_case());
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
     let query_str = format!(
         "SELECT {} FROM {} WHERE ",
-        crate::utils::comma_sep_cols(&fields.db_fields),
+        fields.db_fields.comma_sep_cols(),
         args.table_name()
     );
 
@@ -62,12 +64,12 @@ pub(crate) fn find_first_model_rule(
     args: &CharybdisMacroArgs,
     fields: &CharybdisFields,
 ) -> TokenStream {
-    let macro_name_str: String = format!("find_first_{}", camel_to_snake_case(&struct_name.to_string()));
+    let macro_name_str: String = format!("find_first_{}", struct_name.to_string().to_snake_case());
     let macro_name: TokenStream = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
     let query_str = format!(
         "SELECT {} FROM {} WHERE ",
-        comma_sep_cols(&fields.db_fields),
+        fields.db_fields.comma_sep_cols(),
         args.table_name()
     );
 

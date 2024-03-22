@@ -1,4 +1,4 @@
-use crate::utils::Tuple;
+use crate::traits::tuple::Tuple;
 use charybdis_parser::fields::CharybdisFields;
 use quote::quote;
 use syn::ImplItem;
