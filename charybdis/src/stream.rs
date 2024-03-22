@@ -31,7 +31,7 @@ impl<T: BaseModel> Stream for CharybdisModelStream<T> {
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.inner
             .poll_next_unpin(cx)
-            .map_err(|e| CharybdisError::NextRowError("StreamError:", e))
+            .map_err(|e| CharybdisError::NextRowError(self.query_string, e))
     }
 }
 
