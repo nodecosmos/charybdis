@@ -1,6 +1,6 @@
 use crate::traits::string::ToSnakeCase;
 
-use crate::traits::fields::QueryFields;
+use crate::traits::fields::FieldsQuery;
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::{Ident, TokenStream};

@@ -1,11 +1,10 @@
-use crate::traits::fields::{FieldsToArguments, Names, QueryFields};
-use crate::traits::tuple::Tuple;
+use crate::traits::fields::{FieldsFindFirstFns, FieldsFindFn, FieldsQuery};
 use charybdis_parser::fields::{CharybdisFields, Field};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-const MAX_FIND_BY_FUNCTIONS: usize = 3;
+const MAX_FIND_BY_FIELDS: usize = 3;
 
 /// for up to 3 primary keys, generate find_by_primary_key functions e.g.
 /// ```rust ignore
@@ -35,7 +34,7 @@ pub(crate) fn find_by_primary_keys_functions(
     let mut generated = quote! {};
 
     for i in 0..primary_key_stack.len() {
-        if i == MAX_FIND_BY_FUNCTIONS {
+        if i == MAX_FIND_BY_FIELDS {
             break;
         }
 
@@ -46,65 +45,18 @@ pub(crate) fn find_by_primary_keys_functions(
             table_name,
             current_fields.where_placeholders()
         );
-        let find_by_fun_name_str = format!("find_by_{}", current_fields.names().join("_and_"));
-        let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
-        let is_complete_pk = current_fields.len() == primary_key_stack.len();
-        let arguments = current_fields.to_fn_args();
 
-        let generated_func;
-
-        if is_complete_pk {
-            // for complete pk we get single row
-            generated_func = find_one_generated_fn(&find_by_fun_name, &arguments, struct_name, &query_str);
+        if current_fields.len() == primary_key_stack.len() {
+            // for complete primary key we get single row
+            generated.extend(current_fields.find_one_fn(struct_name, &query_str));
         } else {
-            // for partial pk we get a stream
-            generated_func = find_many_generated_fn(&find_by_fun_name, &arguments, struct_name, &query_str);
+            // for partial primary key we get a stream
+            generated.extend(current_fields.find_fn(struct_name, &query_str));
         }
 
-        generated.extend(generated_func);
-    }
-
-    generated
-}
-
-/// Same as above but for single record
-pub(crate) fn find_first_by_primary_keys_functions(
-    struct_name: &syn::Ident,
-    ch_args: &CharybdisMacroArgs,
-    fields: &CharybdisFields,
-) -> TokenStream {
-    let table_name = ch_args.table_name();
-    let comma_sep_cols = fields.db_fields.comma_sep_cols();
-
-    let primary_key_stack = &fields.primary_key_fields;
-    let mut generated = quote! {};
-
-    for i in 0..primary_key_stack.len() {
-        if i == MAX_FIND_BY_FUNCTIONS {
-            break;
-        }
-
-        let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<Field>>();
-        let query_str = format!(
-            "SELECT {} FROM {} WHERE {}",
-            comma_sep_cols,
-            table_name,
-            current_fields.where_placeholders()
-        );
-        // find first
-        let find_by_fun_name_str = format!("find_first_by_{}", current_fields.names().join("_and_"));
-        let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
-        let arguments = current_fields.to_fn_args();
-        let generated_func = find_one_generated_fn(&find_by_fun_name, &arguments, struct_name, &query_str);
-
-        // maybe find first
-        let maybe_find_by_fun_name_str = format!("maybe_find_first_by_{}", current_fields.names().join("_and_"));
-        let maybe_find_by_fun_name = syn::Ident::new(&maybe_find_by_fun_name_str, proc_macro2::Span::call_site());
-        let maybe_generated_func =
-            maybe_find_one_generated_fn(&maybe_find_by_fun_name, &arguments, struct_name, &query_str);
-
-        generated.extend(generated_func);
-        generated.extend(maybe_generated_func);
+        // query one row
+        generated.extend(current_fields.find_first_fn(struct_name, &query_str));
+        generated.extend(current_fields.maybe_find_first_fn(struct_name, &query_str));
     }
 
     generated
@@ -125,38 +77,6 @@ pub(crate) fn find_by_local_secondary_index(
     lsi_fields.iter().for_each(|lsi| {
         let mut current_fields = partition_keys.clone();
         current_fields.push(lsi.clone());
-        let query_str = format!(
-            "SELECT {} FROM {} WHERE {}",
-            comma_sep_cols,
-            table_name,
-            current_fields.where_placeholders()
-        );
-        let find_by_fun_name_str = format!("find_by_{}", current_fields.names().join("_and_"));
-        let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
-        let arguments = current_fields.to_fn_args();
-        let generated_func = find_many_generated_fn(&find_by_fun_name, &arguments, struct_name, &query_str);
-
-        generated.extend(generated_func);
-    });
-
-    generated
-}
-
-pub(crate) fn find_first_by_local_secondary_index(
-    struct_name: &syn::Ident,
-    ch_args: &CharybdisMacroArgs,
-    fields: &CharybdisFields,
-) -> TokenStream {
-    let table_name = ch_args.table_name();
-    let comma_sep_cols = fields.db_fields.comma_sep_cols();
-    let partition_keys = &fields.partition_key_fields;
-    let lsi_fields = &fields.local_secondary_index_fields;
-
-    let mut generated = quote! {};
-
-    lsi_fields.iter().for_each(|lsi| {
-        let mut current_fields = partition_keys.clone();
-        current_fields.push(lsi.clone());
 
         let query_str = format!(
             "SELECT {} FROM {} WHERE {}",
@@ -164,78 +84,14 @@ pub(crate) fn find_first_by_local_secondary_index(
             table_name,
             current_fields.where_placeholders()
         );
+        let find_fn = current_fields.find_fn(struct_name, &query_str);
+        let find_first_fn = current_fields.find_first_fn(struct_name, &query_str);
+        let maybe_find_first_fn = current_fields.maybe_find_first_fn(struct_name, &query_str);
 
-        // find first
-        let find_by_fun_name_str = format!("find_first_by_{}", current_fields.names().join("_and_"));
-        let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
-
-        // maybe find first
-        let maybe_find_by_fun_name_str = format!("maybe_find_first_by_{}", current_fields.names().join("_and_"));
-        let maybe_find_by_fun_name = syn::Ident::new(&maybe_find_by_fun_name_str, proc_macro2::Span::call_site());
-
-        let arguments = current_fields.to_fn_args();
-
-        let find_one_generated_func = find_one_generated_fn(&find_by_fun_name, &arguments, struct_name, &query_str);
-        let maybe_find_one_generated_func =
-            maybe_find_one_generated_fn(&maybe_find_by_fun_name, &arguments, struct_name, &query_str);
-
-        generated.extend(find_one_generated_func);
-        generated.extend(maybe_find_one_generated_func);
+        generated.extend(find_fn);
+        generated.extend(find_first_fn);
+        generated.extend(maybe_find_first_fn);
     });
 
     generated
-}
-
-fn find_one_generated_fn(
-    find_by_fun_name: &syn::Ident,
-    arguments: &Vec<syn::FnArg>,
-    struct_name: &syn::Ident,
-    query_str: &String,
-) -> TokenStream {
-    let types_tp = arguments.types_tp();
-    let values_tp = arguments.values_tp();
-
-    quote! {
-        pub fn #find_by_fun_name<'a>(
-            #(#arguments),*
-        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelRow<Self>> {
-            <#struct_name as charybdis::operations::Find>::find_first(#query_str, #values_tp)
-        }
-    }
-}
-
-fn maybe_find_one_generated_fn(
-    find_by_fun_name: &syn::Ident,
-    arguments: &Vec<syn::FnArg>,
-    struct_name: &syn::Ident,
-    query_str: &String,
-) -> TokenStream {
-    let types_tp = arguments.types_tp();
-    let values_tp = arguments.values_tp();
-
-    quote! {
-        pub fn #find_by_fun_name<'a>(
-            #(#arguments),*
-        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::OptionalModelRow<Self>> {
-            <#struct_name as charybdis::operations::Find>::maybe_find_first(#query_str, #values_tp)
-        }
-    }
-}
-
-fn find_many_generated_fn(
-    find_by_fun_name: &syn::Ident,
-    arguments: &Vec<syn::FnArg>,
-    struct_name: &syn::Ident,
-    query_str: &String,
-) -> TokenStream {
-    let types_tp = arguments.types_tp();
-    let values_tp = arguments.values_tp();
-
-    quote! {
-        pub fn #find_by_fun_name<'a>(
-            #(#arguments),*
-        ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelStream<Self>> {
-            <#struct_name as charybdis::operations::Find>::find(#query_str, #values_tp)
-        }
-    }
 }

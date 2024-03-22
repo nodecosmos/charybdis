@@ -9,9 +9,8 @@ mod traits;
 use crate::model::*;
 use crate::native::{
     decrement_counter_methods, delete_by_primary_key_functions, find_by_local_secondary_index,
-    find_by_primary_keys_functions, find_first_by_local_secondary_index, find_first_by_primary_keys_functions,
-    increment_counter_methods, pull_from_collection_consts, pull_from_collection_methods, push_to_collection_consts,
-    push_to_collection_methods,
+    find_by_primary_keys_functions, increment_counter_methods, pull_from_collection_consts,
+    pull_from_collection_methods, push_to_collection_consts, push_to_collection_methods,
 };
 use crate::rules::*;
 use crate::scylla::from_row;
@@ -77,9 +76,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
     // Associated functions
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
-    let find_first_by_key_funs = find_first_by_primary_keys_functions(struct_name, &args, &fields);
     let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, &fields);
-    let find_first_by_local_secondary_index_funs = find_first_by_local_secondary_index(struct_name, &args, &fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(&args, &fields);
 
     let expanded = quote! {
@@ -88,9 +85,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
         impl #struct_name {
             #find_by_key_funs
-            #find_first_by_key_funs
             #find_by_local_secondary_index_funs
-            #find_first_by_local_secondary_index_funs
             #delete_by_cks_funs
 
             #push_to_collection_consts

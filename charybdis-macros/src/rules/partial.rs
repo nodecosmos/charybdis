@@ -132,8 +132,8 @@ pub(crate) fn partial_model_macro_generator(
     let macro_name_str = format!("partial_{}", struct_name.to_string().to_snake_case());
     let macro_name = parse_str::<TokenStream>(&macro_name_str).unwrap();
 
-    let field_types_hash = fields.all_fields.field_types_hashmap_string();
-    let field_attributes_hash = fields.all_fields.field_attributes_hashmap_string();
+    let field_types_hash = fields.all_fields.field_types_hash_map_string();
+    let field_attributes_hash = fields.all_fields.field_attributes_hash_map_string();
 
     let table_name = args.table_name().to_token_stream();
 

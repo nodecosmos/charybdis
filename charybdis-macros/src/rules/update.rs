@@ -1,4 +1,4 @@
-use crate::traits::fields::QueryFields;
+use crate::traits::fields::FieldsQuery;
 use crate::traits::string::ToSnakeCase;
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;

@@ -1,4 +1,4 @@
-use crate::traits::fields::{FieldsToArguments, Names, QueryFields};
+use crate::traits::fields::{FieldsNames, FieldsQuery, FieldsToArguments};
 use crate::traits::tuple::Tuple;
 use charybdis_parser::fields::{CharybdisFields, Field};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
