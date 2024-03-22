@@ -1,4 +1,5 @@
-use crate::utils::{comma_sep_cols, where_placeholders};
+use crate::traits::fields::QueryFields;
+
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use quote::quote;
@@ -7,9 +8,9 @@ use syn::ImplItem;
 pub(crate) fn find_by_primary_key_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str = format!(
         "SELECT {} FROM {} WHERE {}",
-        comma_sep_cols(&fields.db_fields),
+        fields.db_fields.comma_sep_cols(),
         ch_args.table_name(),
-        where_placeholders(&fields.primary_key_fields),
+        fields.primary_key_fields.where_placeholders(),
     );
 
     let generated = quote! {
@@ -22,9 +23,9 @@ pub(crate) fn find_by_primary_key_query_const(ch_args: &CharybdisMacroArgs, fiel
 pub(crate) fn find_by_partition_key_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str = format!(
         "SELECT {} FROM {} WHERE {}",
-        comma_sep_cols(&fields.db_fields),
+        fields.db_fields.comma_sep_cols(),
         ch_args.table_name(),
-        where_placeholders(&fields.partition_key_fields)
+        fields.partition_key_fields.where_placeholders(),
     );
 
     let generated = quote! {

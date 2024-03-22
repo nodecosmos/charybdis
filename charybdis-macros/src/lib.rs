@@ -4,6 +4,7 @@ mod model;
 mod native;
 mod rules;
 mod scylla;
+mod traits;
 mod utils;
 
 use crate::model::*;
@@ -27,13 +28,12 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
     let mut input: DeriveInput = parse_macro_input!(input);
     let fields = CharybdisFields::from_input(&input, &args);
+    let struct_name = &input.ident.clone();
 
-    let partial_model_generator = partial_model_macro_generator(&args, &mut input);
+    let partial_model_generator = partial_model_macro_generator(&input, &args, &fields);
 
     CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
     CharybdisFields::strip_charybdis_attributes(&mut input);
-
-    let struct_name = &input.ident;
 
     // Charybdis::BaseModel types
     let primary_key_type = primary_key_type(&fields);

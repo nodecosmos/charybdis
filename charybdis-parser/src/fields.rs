@@ -169,18 +169,7 @@ impl CharybdisFields {
         let mut global_secondary_index_fields = vec![];
         let mut local_secondary_index_fields = vec![];
 
-        let partition_keys = args.partition_keys.clone().unwrap_or(vec![]);
-        let clustering_keys = args.clustering_keys.clone().unwrap_or(vec![]);
-        let primary_keys = partition_keys
-            .clone()
-            .iter()
-            .chain(clustering_keys.clone().iter())
-            .cloned()
-            .collect::<Vec<String>>();
-        let global_secondary_indexes = args.global_secondary_indexes.clone().unwrap_or(vec![]);
-        let local_secondary_indexes = args.local_secondary_indexes.clone().unwrap_or(vec![]);
-
-        for key in partition_keys {
+        for key in args.partition_keys() {
             let field = named_fields
                 .named
                 .iter()
@@ -195,7 +184,7 @@ impl CharybdisFields {
             db_fields.push(field.clone());
         }
 
-        for key in clustering_keys {
+        for key in args.clustering_keys() {
             let field = named_fields
                 .named
                 .iter()
@@ -209,6 +198,10 @@ impl CharybdisFields {
             all_fields.push(field.clone());
             db_fields.push(field.clone());
         }
+
+        let primary_keys = args.primary_key();
+        let global_secondary_indexes = args.global_secondary_indexes();
+        let local_secondary_indexes = args.local_secondary_indexes();
 
         for field in &named_fields.named {
             let field_name = field.ident.clone().unwrap().to_string();

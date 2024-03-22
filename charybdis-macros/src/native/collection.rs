@@ -1,4 +1,5 @@
-use crate::utils::{where_placeholders, FieldsAsTuple};
+use crate::traits::fields::QueryFields;
+use crate::traits::tuple::FieldsAsTuple;
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
@@ -19,7 +20,7 @@ pub(crate) fn push_to_collection_consts(ch_args: &CharybdisMacroArgs, fields: &C
                 ch_args.table_name(),
                 field.name,
                 field.name,
-                where_placeholders(&fields.primary_key_fields),
+                fields.primary_key_fields.where_placeholders(),
             );
 
             let const_name = format!("PUSH_{}_QUERY", field.name.to_uppercase());
@@ -54,7 +55,7 @@ pub(crate) fn pull_from_collection_consts(ch_args: &CharybdisMacroArgs, fields: 
                 ch_args.table_name(),
                 field.name,
                 field.name,
-                where_placeholders(&fields.primary_key_fields),
+                fields.primary_key_fields.where_placeholders(),
             );
 
             let const_name = format!("PULL_{}_QUERY", field.name.to_uppercase());

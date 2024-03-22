@@ -1,4 +1,4 @@
-use crate::utils::type_without_options;
+use crate::traits::r#type::TypeWithoutOptions;
 use charybdis_parser::fields::Field;
 use syn::parse_str;
 
@@ -21,7 +21,7 @@ pub(crate) fn struct_fields_to_fn_args(
                 .ty
                 .clone();
 
-            let type_wo_options = type_without_options(&key_type);
+            let type_wo_options = key_type.type_without_options();
             parse_str::<syn::FnArg>(&format!("{}: {}", key, type_wo_options)).unwrap()
         })
         .collect::<Vec<syn::FnArg>>()

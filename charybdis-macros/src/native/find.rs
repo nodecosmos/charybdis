@@ -1,4 +1,6 @@
-use crate::utils::{comma_sep_cols, struct_fields_to_fn_args, where_placeholders, Tuple};
+use crate::traits::fields::QueryFields;
+use crate::traits::tuple::Tuple;
+use crate::utils::struct_fields_to_fn_args;
 use charybdis_parser::fields::{CharybdisFields, Field};
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
@@ -28,7 +30,7 @@ pub(crate) fn find_by_primary_keys_functions(
     fields: &CharybdisFields,
 ) -> TokenStream {
     let table_name = ch_args.table_name();
-    let comma_sep_cols = comma_sep_cols(&fields.db_fields);
+    let comma_sep_cols = fields.db_fields.comma_sep_cols();
 
     let primary_key_stack = &fields.primary_key_fields;
     let mut generated = quote! {};
@@ -48,7 +50,7 @@ pub(crate) fn find_by_primary_keys_functions(
             "SELECT {} FROM {} WHERE {}",
             comma_sep_cols,
             table_name,
-            where_placeholders(&current_fields)
+            current_fields.where_placeholders()
         );
         let find_by_fun_name_str = format!("find_by_{}", current_field_names.join("_and_"));
         let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
@@ -82,7 +84,7 @@ pub(crate) fn find_first_by_primary_keys_functions(
     fields: &CharybdisFields,
 ) -> TokenStream {
     let table_name = ch_args.table_name();
-    let comma_sep_cols = comma_sep_cols(&fields.db_fields);
+    let comma_sep_cols = fields.db_fields.comma_sep_cols();
 
     let primary_key_stack = &fields.primary_key_fields;
     let mut generated = quote! {};
@@ -101,7 +103,7 @@ pub(crate) fn find_first_by_primary_keys_functions(
             "SELECT {} FROM {} WHERE {}",
             comma_sep_cols,
             table_name,
-            where_placeholders(&current_fields)
+            current_fields.where_placeholders()
         );
         // find first
         let find_by_fun_name_str = format!("find_first_by_{}", current_field_names.join("_and_"));
@@ -132,7 +134,7 @@ pub(crate) fn find_by_local_secondary_index(
     fields: &CharybdisFields,
 ) -> TokenStream {
     let table_name = ch_args.table_name();
-    let comma_sep_cols = comma_sep_cols(&fields.db_fields);
+    let comma_sep_cols = fields.db_fields.comma_sep_cols();
     let partition_keys = &fields.partition_key_fields;
     let lsi_fields = &fields.local_secondary_index_fields;
 
@@ -149,7 +151,7 @@ pub(crate) fn find_by_local_secondary_index(
             "SELECT {} FROM {} WHERE {}",
             comma_sep_cols,
             table_name,
-            where_placeholders(&current_fields)
+            current_fields.where_placeholders()
         );
         let find_by_fun_name_str = format!("find_by_{}", current_field_names.join("_and_"));
         let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
@@ -172,7 +174,7 @@ pub(crate) fn find_first_by_local_secondary_index(
     fields: &CharybdisFields,
 ) -> TokenStream {
     let table_name = ch_args.table_name();
-    let comma_sep_cols = comma_sep_cols(&fields.db_fields);
+    let comma_sep_cols = fields.db_fields.comma_sep_cols();
     let partition_keys = &fields.partition_key_fields;
     let lsi_fields = &fields.local_secondary_index_fields;
 
@@ -189,7 +191,7 @@ pub(crate) fn find_first_by_local_secondary_index(
             "SELECT {} FROM {} WHERE {}",
             comma_sep_cols,
             table_name,
-            where_placeholders(&current_fields)
+            current_fields.where_placeholders()
         );
         let find_by_fun_name_str = format!("find_first_by_{}", current_field_names.join("_and_"));
         let find_by_fun_name = syn::Ident::new(&find_by_fun_name_str, proc_macro2::Span::call_site());
