@@ -52,9 +52,9 @@ pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) ->
             }
 
             if let Fields::Named(fields_named) = item_struct.fields {
-                // we don't need charybdis macro attributes here
-                let fields = CharybdisFields::new(&fields_named, &CharybdisMacroArgs::default());
-                for field in fields.db_fields {
+                let db_fields = CharybdisFields::db_fields(&fields_named);
+
+                for field in db_fields {
                     let field_name = field.ident.to_string();
                     let field_type = type_with_arguments(&field.ty_path);
 

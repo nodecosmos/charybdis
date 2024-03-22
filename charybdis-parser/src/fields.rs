@@ -131,6 +131,7 @@ impl Field {
     }
 }
 
+#[derive(Default)]
 pub struct CharybdisFields {
     pub all_fields: Vec<Field>,
     pub partition_key_fields: Vec<Field>,
@@ -233,6 +234,23 @@ impl CharybdisFields {
             global_secondary_index_fields,
             local_secondary_index_fields,
         }
+    }
+
+    pub(crate) fn db_fields(named_fields: &FieldsNamed) -> Vec<Field> {
+        let mut all_fields = vec![];
+        let mut db_fields = vec![];
+
+        for field in &named_fields.named {
+            let field = Field::from_field(field, false, false);
+
+            all_fields.push(field.clone());
+
+            if !field.char_attrs.ignore.unwrap_or(false) {
+                db_fields.push(field.clone());
+            }
+        }
+
+        db_fields
     }
 
     pub fn from_input(input: &DeriveInput, args: &CharybdisMacroArgs) -> Self {
