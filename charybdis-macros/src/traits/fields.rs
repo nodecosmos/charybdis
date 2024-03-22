@@ -1,6 +1,7 @@
+use crate::traits::r#type::TypeWithoutOptions;
 use charybdis_parser::fields::Field;
 use quote::quote;
-use syn::Attribute;
+use syn::{parse_str, Attribute};
 
 pub(crate) trait QueryFields {
     fn comma_sep_cols(&self) -> String;
@@ -59,6 +60,31 @@ impl ToIdents for Vec<Field> {
         self.iter()
             .map(|field| syn::Ident::new(&field.name, proc_macro2::Span::call_site()))
             .collect()
+    }
+}
+
+pub(crate) trait Names {
+    fn names(&self) -> Vec<String>;
+}
+
+impl Names for Vec<Field> {
+    fn names(&self) -> Vec<String> {
+        self.iter().map(|field| field.name.clone()).collect()
+    }
+}
+
+pub(crate) trait FieldsToArguments {
+    fn to_fn_args(&self) -> Vec<syn::FnArg>;
+}
+
+impl FieldsToArguments for Vec<Field> {
+    fn to_fn_args(&self) -> Vec<syn::FnArg> {
+        self.iter()
+            .map(|field| {
+                let type_wo_options = field.ty.type_without_options();
+                parse_str::<syn::FnArg>(&format!("{}: {}", field.name, type_wo_options)).unwrap()
+            })
+            .collect::<Vec<syn::FnArg>>()
     }
 }
 

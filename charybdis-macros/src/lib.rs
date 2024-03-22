@@ -5,7 +5,6 @@ mod native;
 mod rules;
 mod scylla;
 mod traits;
-mod utils;
 
 use crate::model::*;
 use crate::native::{
@@ -81,7 +80,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let find_first_by_key_funs = find_first_by_primary_keys_functions(struct_name, &args, &fields);
     let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, &fields);
     let find_first_by_local_secondary_index_funs = find_first_by_local_secondary_index(struct_name, &args, &fields);
-    let delete_by_cks_funs = delete_by_primary_key_functions(struct_name, &args, &fields);
+    let delete_by_cks_funs = delete_by_primary_key_functions(&args, &fields);
 
     let expanded = quote! {
         #[derive(charybdis::SerializeRow)]
