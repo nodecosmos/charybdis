@@ -6,6 +6,7 @@ edition = "2021"
 description = "High-Performance ORM for ScyllaDB"
 repository = "https://github.com/nodecosmos/charybdis"
 license = "MIT"
+categories = ["database"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

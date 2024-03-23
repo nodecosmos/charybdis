@@ -6,6 +6,7 @@ edition = "2021"
 description = "Proc macro crate for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"
 license = "MIT"
+categories = ["database"]
 
 [lib]
 proc-macro = true

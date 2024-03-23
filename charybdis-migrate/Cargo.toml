@@ -6,6 +6,7 @@ edition = "2021"
 description = "Automatic Migration Tool for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"
 license = "MIT"
+categories = ["database"]
 
 [dependencies]
 charybdis_parser = { version = "0.4.9", path = "../charybdis-parser" }
