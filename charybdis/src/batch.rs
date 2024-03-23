@@ -103,6 +103,25 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         Ok(())
     }
 
+    pub async fn chunked_insert_if_not_exist(
+        self,
+        db_session: &CachingSession,
+        iter: &Vec<M>,
+        chunk_size: usize,
+    ) -> Result<(), CharybdisError> {
+        let chunks = iter.chunks(chunk_size);
+
+        for chunk in chunks {
+            let mut batch: CharybdisModelBatch<M, M> = CharybdisModelBatch::from_batch(&self.inner);
+
+            batch.append_inserts_if_not_exist(chunk)?;
+
+            batch.execute(db_session).await?;
+        }
+
+        Ok(())
+    }
+
     pub async fn chunked_update(
         self,
         db_session: &CachingSession,
@@ -202,6 +221,23 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     pub fn append_inserts(&mut self, iter: &'a [M]) -> Result<(), CharybdisError> {
         for model in iter {
             let result = self.append_insert(model);
+            result?
+        }
+
+        Ok(())
+    }
+
+    pub fn append_insert_if_not_exist(&mut self, model: &'a M) -> Result<(), CharybdisError> {
+        self.append_query_to_batch(M::INSERT_IF_NOT_EXIST_QUERY);
+
+        self.values.push(QueryValue::Model(model));
+
+        Ok(())
+    }
+
+    pub fn append_inserts_if_not_exist(&mut self, iter: &'a [M]) -> Result<(), CharybdisError> {
+        for model in iter {
+            let result = self.append_insert_if_not_exist(model);
             result?
         }
 
