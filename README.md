@@ -542,7 +542,7 @@ Supported configuration options:
   let batch = User::batch()
       .consistency(Consistency::One)
       .retry_policy(Some(Arc::new(DefaultRetryPolicy::new())))
-      .chunked_inserts(&session, users, 100).await?;
+      .chunked_inserts(&session, users, 100)
       .await?;
   ```
 
