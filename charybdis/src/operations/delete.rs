@@ -1,8 +1,16 @@
 use crate::callbacks::{Callbacks, DeleteAction};
 use crate::model::Model;
 use crate::query::{CharybdisCbQuery, CharybdisQuery, ModelMutation, QueryValue};
+use crate::SerializeRow;
 
 pub trait Delete: Model {
+    fn delete_by_query<Val: SerializeRow>(
+        query: &'static str,
+        values: Val,
+    ) -> CharybdisQuery<Val, Self, ModelMutation> {
+        CharybdisQuery::new(query, QueryValue::Owned(values))
+    }
+
     fn delete(&self) -> CharybdisQuery<Self::PrimaryKey, Self, ModelMutation> {
         CharybdisQuery::new(Self::DELETE_QUERY, QueryValue::Owned(self.primary_key_values()))
     }

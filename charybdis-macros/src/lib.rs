@@ -73,6 +73,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let find_model_rule = find_model_rule(struct_name, &args, &fields);
     let find_first_model_rule = find_first_model_rule(struct_name, &args, &fields);
     let update_model_query_rule = update_model_query_rule(struct_name, &args, &fields);
+    let delete_model_query_rule = delete_model_query_rule(struct_name, &args);
+    let delete_model_rule = delete_model_rule(struct_name, &args);
 
     // Associated functions
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
@@ -132,6 +134,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
         #find_first_model_rule
         #update_model_query_rule
         #partial_model_generator
+        #delete_model_query_rule
+        #delete_model_rule
     };
 
     TokenStream::from(expanded)
@@ -217,7 +221,7 @@ pub fn charybdis_udt_model(_: TokenStream, input: TokenStream) -> TokenStream {
     sorted_fields.sort_by(|a, b| a.ident.cmp(&b.ident));
 
     let gen = quote! {
-        #[derive(charybdis::FromUserType, Clone)]
+        #[derive(charybdis::FromUserType)]
         #[derive(charybdis::SerializeCql)]
         #[scylla(flavor = "enforce_order", skip_name_checks)]
         pub struct #struct_name {
