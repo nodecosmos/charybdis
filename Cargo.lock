@@ -181,7 +181,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "0.4.10"
+version = "0.4.11"
 dependencies = [
  "charybdis_macros",
  "chrono",
@@ -197,7 +197,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.4.10"
+version = "0.4.11"
 dependencies = [
  "charybdis_parser",
  "clap",
@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.4.10"
+version = "0.4.11"
 dependencies = [
  "charybdis",
  "charybdis_parser",
@@ -225,7 +225,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.4.10"
+version = "0.4.11"
 dependencies = [
  "colored",
  "darling",
