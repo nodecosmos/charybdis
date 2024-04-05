@@ -2,7 +2,8 @@
 
 ### Use monstrous tandem of scylla and charybdis for your next project
 
-⚠️ This project is currently in an early stage of development. Feedback and contributions are welcomed!
+⚠️ This project is currently in an early stage of development. Feedback and contributions are
+welcomed!
 
 [![Crates.io](https://img.shields.io/crates/v/charybdis)](https://crates.io/crates/charybdis)
 [![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
@@ -20,30 +21,38 @@
 - ### Queries are now configurable
   With `0.4.0` release we have provided users with ability to configure each query before execution
 - ### Breaking changes
-    1) **Operations**: `find`, `insert`, `update`, `delete` now return `CharybdisQuery` that can be configured before
+    1) **Operations**: `find`, `insert`, `update`, `delete` now return `CharybdisQuery` that can be
+       configured before
        execution.
         ```rust
         let mut user = user.find_by_primary_key().consistency(Consistency::One).execute(session);
         ```
 
-    2) **Callbacks**: We now have only single `Callbacks` trait that is used for all operation that can accept
+    2) **Callbacks**: We now have only single `Callbacks` trait that is used for all operation that
+       can accept
        extension.
-       In case extension is not needed, we can use `()` or Option<()> and provide `None` as extension argument.
+       In case extension is not needed, we can use `()` or Option<()> and provide `None` as
+       extension argument.
 
-    3) **Batch Operations**:  Batch is now coupled with Model and it's created by calling `Model::batch()` method. It
+    3) **Batch Operations**:  Batch is now coupled with Model and it's created by
+       calling `Model::batch()` method. It
        can also be configured before execution.
         ```rust
         let batch = User::batch().consistency(Consistency::One).chunked_insert(&session, users, 100).await?;
         ```
-    4) As of **0.4.3** version`local_secondary_indexes` are now defined as list of fields. Partition key part is derived
-       from `partition_keys` part of macro declaration and each element in array will result with new local index.
+    4) As of **0.4.3** version`local_secondary_indexes` are now defined as list of fields. Partition
+       key part is derived
+       from `partition_keys` part of macro declaration and each element in array will result with
+       new local index.
 
 ## Usage considerations:
 
 - Provide and expressive API for CRUD & Complex Query operations on model as a whole
-- Provide easy way to work with subset of model fields by using automatically generated `partial_<model>!` macro
+- Provide easy way to work with subset of model fields by using automatically
+  generated `partial_<model>!` macro
 - Provide easy way to run complex queries by using automatically generated `find_<model>!` macro
-- Automatic migration tool that analyzes the `src/model/*.rs` files and runs migrations according to differences between
+- Automatic migration tool that analyzes the `src/model/*.rs` files and runs migrations according to
+  differences between
   the model definition and database
 
 ## Performance consideration:
@@ -51,8 +60,10 @@
 - It uses prepared statements (shard/token aware) -> bind values
 - It expects `CachingSession` as a session arg for operations
 - Queries are macro generated str constants (no concatenation at runtime)
-- By using `find_<model>!` macro we can run complex queries that are generated at compile time as `&'static str`
-- Although it has expressive API it's thin layer on top of scylla_rust_driver, and it does not introduce any significant
+- By using `find_<model>!` macro we can run complex queries that are generated at compile time
+  as `&'static str`
+- Although it has expressive API it's thin layer on top of scylla_rust_driver, and it does not
+  introduce any significant
   overhead
 
 ## Table of Contents
@@ -73,6 +84,7 @@
     - [Update](#update)
     - [Delete](#delete)
         - [Macro generated delete helpers](#macro-generated-delete-helpers)
+        - [Custom delete queries](#custom-delete-queries)
 - [Configuration Options](#configuration)
 - [Batch Operations](#batch-operations)
     - [Chunked Batch Operations](#chunked-batch-operations)
@@ -174,8 +186,10 @@
 ## Automatic migration
 
 * <a name="automatic-migration"></a>
-  `charybdis-migrate` enables automatic migration to database without need to write migrations by hand.
-  It expects `src/models` files and generates migrations based on differences between model definitions and database.
+  `charybdis-migrate` enables automatic migration to database without need to write migrations by
+  hand.
+  It expects `src/models` files and generates migrations based on differences between model
+  definitions and database.
   It supports following operations:
     - Create new tables
     - Create new columns
@@ -214,9 +228,11 @@
   migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
   ```
 
-  ⚠️ If you are working with **existing** datasets, before running migration you need to make sure that your **model
+  ⚠️ If you are working with **existing** datasets, before running migration you need to make sure
+  that your **model
   **
-  definitions structure matches the database in respect to table names, column names, column types, partition keys,
+  definitions structure matches the database in respect to table names, column names, column types,
+  partition keys,
   clustering keys and secondary indexes so you don't alter structure accidentally.
   If structure is matched, it will not run any migrations. As mentioned above,
   in case there is no model definition for table, it will **not** drop it. In future,
@@ -362,7 +378,8 @@ in `charybdis::operations` module.
   We get automatically generated `find_post!` macro that follows convention `find_<struct_name>!`.
   It can be used to create custom queries.
 
-  Following will return stream of `Post` models, and query will be constructed at compile time as `&'static str`.
+  Following will return stream of `Post` models, and query will be constructed at compile time
+  as `&'static str`.
 
     ```rust
     // automatically generated macro rule
@@ -411,7 +428,8 @@ in `charybdis::operations` module.
           post_ids: List<Uuid>,
       }
       ```
-    - `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection field.
+    - `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection
+      field.
        ```rust
        let user: User;
    
@@ -435,7 +453,8 @@ in `charybdis::operations` module.
           comments: Counter,
       }
       ```
-    - We can use `increment_<field_name>` and `decrement_<field_name>` methods to update counter fields.
+    - We can use `increment_<field_name>` and `decrement_<field_name>` methods to update counter
+      fields.
       ```rust
       let post_counter: PostCounter;
       post_counter.increment_likes(1).execute(&session).await;
@@ -478,9 +497,16 @@ in `charybdis::operations` module.
   Post::delete_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text).execute(&session).await?;
   ```
 
+- ### Custom delete queries
+  We can use `delete_post!` macro to create custom delete queries.
+    ```rust
+    delete_post!("date = ? AND category_id in ?", (date, category_vec)).execute(&session).await?
+    ```
+
 ## Configuration
 
-Every operation returns `CharybdisQuery` that can be configured before execution with method chaining.
+Every operation returns `CharybdisQuery` that can be configured before execution with method
+chaining.
 
 ```rust
 let user: User = User::find_by_id(id)
@@ -542,7 +568,17 @@ Supported configuration options:
   let batch = User::batch()
       .consistency(Consistency::One)
       .retry_policy(Some(Arc::new(DefaultRetryPolicy::new())))
-      .chunked_inserts(&session, users, 100).await?;
+      .chunked_inserts(&session, users, 100)
+      .await?;
+  ```
+  We could also use method chaining to append operations to batch:
+  ```rust
+  let batch = User::batch()
+      .consistency(Consistency::One)
+      .retry_policy(Some(Arc::new(DefaultRetryPolicy::new())))
+      .append_update(&user_1)
+      .append_update(&user_2)
+      .execute(data.db_session())
       .await?;
   ```
 
@@ -562,7 +598,8 @@ Supported configuration options:
 ## Partial Model:
 
 - Use auto generated `partial_<model>!` macro to run operations on subset of the model fields.
-  This macro generates a new struct with same structure as the original model, but only with provided fields.
+  This macro generates a new struct with same structure as the original model, but only with
+  provided fields.
   Macro is automatically generated by `#[charybdis_model]`.
   It follows convention `partial_<struct_name>!`.
 
@@ -570,7 +607,8 @@ Supported configuration options:
   // auto-generated macro - available in crate::models::user
   partial_user!(UpdateUsernameUser, id, username);
   ```
-  Now we have new struct `UpdateUsernameUser` that is equivalent to `User` model, but only with `id` and `username`
+  Now we have new struct `UpdateUsernameUser` that is equivalent to `User` model, but only with `id`
+  and `username`
   fields.
   ```rust
   let mut update_user_username = UpdateUsernameUser {
@@ -583,9 +621,11 @@ Supported configuration options:
 - ### Partial Model Considerations:
     1) `partial_<model>` requires `#[derive(Default)]` on original model
     2) `partial_<model>` require complete primary key in definition
-    3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to partial model.
+    3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to
+       partial model.
     4) `partial_<model>` struct implements same field attributes as original model,
-       so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on partial model field.
+       so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on
+       partial model field.
 
 - ### As Native
   In case we need to run operations on native model, we can use `as_native` method:
@@ -604,7 +644,8 @@ Supported configuration options:
 
 ## Callbacks
 
-Callbacks are convenient way to run additional logic on model before or after certain operations. E.g.
+Callbacks are convenient way to run additional logic on model before or after certain operations.
+E.g.
 
 - we can use `before_insert` to set default values and/or validate model before insert.
 - we can use `after_update` to update other data sources, e.g. elastic search.
@@ -682,8 +723,10 @@ Callbacks are convenient way to run additional logic on model before or after ce
     - `after_update`
     - `after_delete`
 - ### Triggering Callbacks
-  In order to trigger callback we use `<operation>_cb`. method: `insert_cb`, `update_cb`, `delete_cb` according traits.
-  This enables us to have clear distinction between `insert` and insert with callbacks (`insert_cb`).
+  In order to trigger callback we use `<operation>_cb`.
+  method: `insert_cb`, `update_cb`, `delete_cb` according traits.
+  This enables us to have clear distinction between `insert` and insert with
+  callbacks (`insert_cb`).
   Just as on main operation, we can configure callback operation query before execution.
   ```rust
    use charybdis::operations::{DeleteWithCallbacks, InsertWithCallbacks, UpdateWithCallbacks};
@@ -695,7 +738,8 @@ Callbacks are convenient way to run additional logic on model before or after ce
 
 ## Collections
 
-- For each collection field that is defined as  `List<T>`  or `Set<T>`, we get following collection queries:
+- For each collection field that is defined as  `List<T>`  or `Set<T>`, we get following collection
+  queries:
     - `PUSH_<field_name>_QUERY` static str
     - `PULL_<field_name>_QUERY` static str
     - `push_<field_name>` method
@@ -753,7 +797,8 @@ Callbacks are convenient way to run additional logic on model before or after ce
   ```
 
 - ### Generated Collection Methods:
-  `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection field.
+  `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection
+  field.
   ```rust
   let user: User;
   
