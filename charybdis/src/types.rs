@@ -32,7 +32,8 @@ pub type Varint = BigInt;
 pub type Map<K, V> = HashMap<K, V>;
 pub type List<T> = Vec<T>;
 pub type Set<T> = HashSet<T>;
-pub type Tuple = Vec<Option<CqlValue>>;
+pub type Tuple<T1, T2> = (T1, T2);
+// TODO: Tuple with more than 2 elements
 
 pub type Frozen<T> = T;
 
