@@ -18,3 +18,5 @@ serde_json = "1.0.114"
 colored = { version = "2.1.0", features = [] }
 walkdir = "2.5.0"
 darling = "0.20.8"
+strum = "0.26"
+strum_macros = "0.26"

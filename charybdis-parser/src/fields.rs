@@ -1,10 +1,10 @@
 use crate::macro_args::CharybdisMacroArgs;
 use darling::FromAttributes;
-use std::fmt::{Display, Formatter};
 use syn::spanned::Spanned;
 use syn::{Data, DeriveInput, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
 
-pub enum Types {
+#[derive(Clone, PartialEq, strum_macros::Display, strum_macros::EnumString)]
+pub enum CqlType {
     Ascii,
     BigInt,
     Blob,
@@ -31,39 +31,10 @@ pub enum Types {
     Set,
     Tuple,
     Frozen,
-}
-
-impl Display for Types {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Types::Ascii => write!(f, "Ascii"),
-            Types::BigInt => write!(f, "BigInt"),
-            Types::Blob => write!(f, "Blob"),
-            Types::Boolean => write!(f, "Boolean"),
-            Types::Counter => write!(f, "Counter"),
-            Types::Date => write!(f, "Date"),
-            Types::Decimal => write!(f, "Decimal"),
-            Types::Double => write!(f, "Double"),
-            Types::Duration => write!(f, "Duration"),
-            Types::Float => write!(f, "Float"),
-            Types::Inet => write!(f, "Inet"),
-            Types::Int => write!(f, "Int"),
-            Types::SmallInt => write!(f, "SmallInt"),
-            Types::Text => write!(f, "Text"),
-            Types::Time => write!(f, "Time"),
-            Types::Timestamp => write!(f, "Timestamp"),
-            Types::Timeuuid => write!(f, "Timeuuid"),
-            Types::TinyInt => write!(f, "TinyInt"),
-            Types::Uuid => write!(f, "Uuid"),
-            Types::Varchar => write!(f, "Varchar"),
-            Types::Varint => write!(f, "Varint"),
-            Types::Map => write!(f, "Map"),
-            Types::List => write!(f, "List"),
-            Types::Set => write!(f, "Set"),
-            Types::Tuple => write!(f, "Tuple"),
-            Types::Frozen => write!(f, "Frozen"),
-        }
-    }
+    Ignored,
+    /// This is used when the type is not recognized. In future we might want to extend recognition to UDTs,
+    /// so we can panic if type is not recognized.
+    Unknown,
 }
 
 #[derive(FromAttributes, Clone)]
@@ -79,6 +50,7 @@ pub struct Field {
     pub ident: syn::Ident,
     pub ty: Type,
     pub ty_path: syn::TypePath,
+    pub outer_type: CqlType,
     pub char_attrs: FieldAttributes,
     pub attrs: Vec<syn::Attribute>,
     pub span: proc_macro2::Span,
@@ -87,9 +59,47 @@ pub struct Field {
 }
 
 impl Field {
+    pub fn outer_type(ty: &Type, ignore: bool) -> CqlType {
+        if ignore {
+            return CqlType::Ignored;
+        }
+
+        if let Type::Path(type_path) = ty {
+            // Handle the outer type being an Option
+            if let Some(last_segment) = type_path.path.segments.last() {
+                if last_segment.ident == "Option" {
+                    if let PathArguments::AngleBracketed(args) = &last_segment.arguments {
+                        if let Some(GenericArgument::Type(Type::Path(inner_type_path))) = args.args.first() {
+                            let inner = inner_type_path.path.segments.last().expect("No inner type found");
+
+                            return inner
+                                .ident
+                                .to_string()
+                                .parse::<CqlType>()
+                                .ok()
+                                .unwrap_or_else(|| CqlType::Unknown);
+                        }
+                    }
+                } else {
+                    return last_segment
+                        .ident
+                        .to_string()
+                        .parse::<CqlType>()
+                        .ok()
+                        .unwrap_or_else(|| CqlType::Unknown);
+                }
+            }
+
+            panic!("Unable to parse type for field: {:?}", ty);
+        }
+
+        panic!("Unable to parse type for field: {:?}", ty);
+    }
+
     pub fn from_field(field: &syn::Field, is_partition_key: bool, is_clustering_key: bool) -> Self {
         FieldAttributes::from_attributes(&field.attrs)
             .map(|char_attrs| {
+                let ignore = char_attrs.ignore.unwrap_or(false);
                 let ident = field.ident.clone().unwrap();
                 return Field {
                     name: ident.to_string(),
@@ -99,6 +109,7 @@ impl Field {
                         Type::Path(type_path) => type_path.clone(),
                         _ => panic!("Only type path is supported!"),
                     },
+                    outer_type: Field::outer_type(&field.ty, ignore),
                     char_attrs,
                     attrs: field.attrs.clone(),
                     span: field.span(),
@@ -109,46 +120,20 @@ impl Field {
             .unwrap()
     }
 
-    pub fn type_str(&self) -> String {
-        return match &self.ty {
-            Type::Path(type_path) => {
-                // Handle the outer type being an Option
-                if let Some(last_segment) = type_path.path.segments.last() {
-                    if last_segment.ident == "Option" {
-                        if let PathArguments::AngleBracketed(args) = &last_segment.arguments {
-                            if let Some(GenericArgument::Type(Type::Path(inner_type_path))) = args.args.first() {
-                                return inner_type_path
-                                    .path
-                                    .segments
-                                    .last()
-                                    .map_or("Unknown".to_string(), |segment| segment.ident.to_string());
-                            }
-                        }
-                    } else {
-                        return last_segment.ident.to_string();
-                    }
-                }
-
-                return "Unknown".to_string();
-            }
-            _ => "Unknown".to_string(),
-        };
-    }
-
     pub fn is_primary_key(&self) -> bool {
         self.is_partition_key || self.is_clustering_key
     }
 
     pub fn is_list(&self) -> bool {
-        self.check_type(Types::List.to_string().as_str())
+        self.outer_type == CqlType::List
     }
 
     pub fn is_set(&self) -> bool {
-        self.check_type(Types::Set.to_string().as_str())
+        self.outer_type == CqlType::Set
     }
 
     pub fn is_map(&self) -> bool {
-        self.check_type(Types::Map.to_string().as_str())
+        self.outer_type == CqlType::Map
     }
 
     pub fn is_collection(&self) -> bool {
@@ -156,32 +141,7 @@ impl Field {
     }
 
     pub fn is_counter(&self) -> bool {
-        self.check_type(Types::Counter.to_string().as_str())
-    }
-
-    fn check_type(&self, type_name: &str) -> bool {
-        match &self.ty {
-            Type::Path(type_path) => {
-                // Handle the outer type being an Option
-                if let Some(last_segment) = type_path.path.segments.last() {
-                    if last_segment.ident == "Option" {
-                        if let PathArguments::AngleBracketed(args) = &last_segment.arguments {
-                            if let Some(GenericArgument::Type(Type::Path(inner_type_path))) = args.args.first() {
-                                return inner_type_path
-                                    .path
-                                    .segments
-                                    .last()
-                                    .map_or(false, |segment| segment.ident == type_name);
-                            }
-                        }
-                    } else {
-                        return last_segment.ident == type_name;
-                    }
-                }
-            }
-            _ => {}
-        }
-        false
+        self.outer_type == CqlType::Counter
     }
 }
 
