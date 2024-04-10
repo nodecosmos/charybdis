@@ -11,7 +11,7 @@ pub(crate) fn push_to_collection_consts(ch_args: &CharybdisMacroArgs, fields: &C
         .db_fields
         .iter()
         .filter_map(|field| {
-            if !field.is_list() && !field.is_set() {
+            if !field.is_collection() {
                 return None;
             }
 
@@ -46,7 +46,7 @@ pub(crate) fn pull_from_collection_consts(ch_args: &CharybdisMacroArgs, fields: 
         .db_fields
         .iter()
         .filter_map(|field| {
-            if !field.is_list() && !field.is_set() {
+            if !field.is_collection() {
                 return None;
             }
 
@@ -81,7 +81,7 @@ pub(crate) fn push_to_collection_methods(fields: &CharybdisFields) -> TokenStrea
         .db_fields
         .iter()
         .filter_map(|field| {
-            if !field.is_list() && !field.is_set() {
+            if !field.is_collection() {
                 return None;
             }
 
@@ -120,7 +120,7 @@ pub(crate) fn pull_from_collection_methods(fields: &CharybdisFields) -> TokenStr
         .db_fields
         .iter()
         .filter_map(|field| {
-            if !field.is_list() && !field.is_set() {
+            if !field.is_collection() {
                 return None;
             }
 
