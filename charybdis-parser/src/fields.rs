@@ -1,9 +1,8 @@
 use crate::macro_args::CharybdisMacroArgs;
 use darling::FromAttributes;
-use quote::ToTokens;
 use std::fmt::{Display, Formatter};
 use syn::spanned::Spanned;
-use syn::{Data, DeriveInput, Fields, FieldsNamed};
+use syn::{Data, DeriveInput, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
 
 pub enum Types {
     Ascii,
@@ -78,7 +77,7 @@ pub struct FieldAttributes {
 pub struct Field {
     pub name: String,
     pub ident: syn::Ident,
-    pub ty: syn::Type,
+    pub ty: Type,
     pub ty_path: syn::TypePath,
     pub char_attrs: FieldAttributes,
     pub attrs: Vec<syn::Attribute>,
@@ -97,7 +96,7 @@ impl Field {
                     ident: ident.clone(),
                     ty: field.ty.clone(),
                     ty_path: match &field.ty {
-                        syn::Type::Path(type_path) => type_path.clone(),
+                        Type::Path(type_path) => type_path.clone(),
                         _ => panic!("Only type path is supported!"),
                     },
                     char_attrs,
@@ -110,8 +109,30 @@ impl Field {
             .unwrap()
     }
 
-    pub fn type_string(&self) -> String {
-        self.ty.to_token_stream().to_string()
+    pub fn type_str(&self) -> String {
+        return match &self.ty {
+            Type::Path(type_path) => {
+                // Handle the outer type being an Option
+                if let Some(last_segment) = type_path.path.segments.last() {
+                    if last_segment.ident == "Option" {
+                        if let PathArguments::AngleBracketed(args) = &last_segment.arguments {
+                            if let Some(GenericArgument::Type(Type::Path(inner_type_path))) = args.args.first() {
+                                return inner_type_path
+                                    .path
+                                    .segments
+                                    .last()
+                                    .map_or("Unknown".to_string(), |segment| segment.ident.to_string());
+                            }
+                        }
+                    } else {
+                        return last_segment.ident.to_string();
+                    }
+                }
+
+                return "Unknown".to_string();
+            }
+            _ => "Unknown".to_string(),
+        };
     }
 
     pub fn is_primary_key(&self) -> bool {
@@ -119,15 +140,48 @@ impl Field {
     }
 
     pub fn is_list(&self) -> bool {
-        self.type_string().contains(Types::List.to_string().as_str())
+        self.check_type(Types::List.to_string().as_str())
     }
 
     pub fn is_set(&self) -> bool {
-        self.type_string().contains(Types::Set.to_string().as_str())
+        self.check_type(Types::Set.to_string().as_str())
+    }
+
+    pub fn is_map(&self) -> bool {
+        self.check_type(Types::Map.to_string().as_str())
+    }
+
+    pub fn is_collection(&self) -> bool {
+        self.is_list() || self.is_set() || self.is_map()
     }
 
     pub fn is_counter(&self) -> bool {
-        self.type_string().contains(Types::Counter.to_string().as_str())
+        self.check_type(Types::Counter.to_string().as_str())
+    }
+
+    fn check_type(&self, type_name: &str) -> bool {
+        match &self.ty {
+            Type::Path(type_path) => {
+                // Handle the outer type being an Option
+                if let Some(last_segment) = type_path.path.segments.last() {
+                    if last_segment.ident == "Option" {
+                        if let PathArguments::AngleBracketed(args) = &last_segment.arguments {
+                            if let Some(GenericArgument::Type(Type::Path(inner_type_path))) = args.args.first() {
+                                return inner_type_path
+                                    .path
+                                    .segments
+                                    .last()
+                                    .map_or(false, |segment| segment.ident == type_name);
+                            }
+                        }
+                    } else {
+                        return last_segment.ident == type_name;
+                    }
+                }
+            }
+            _ => {}
+        }
+        false
     }
 }
 
