@@ -737,76 +737,81 @@ E.g.
 
 ## Collections
 
-- For each collection field that is defined as  `List<T>`  or `Set<T>`, we get following collection
-  queries:
-    - `PUSH_<field_name>_QUERY` static str
-    - `PULL_<field_name>_QUERY` static str
-    - `push_<field_name>` method
-    - `pull_<field_name>` method
+For each collection field, we get following:
 
+- `PUSH_<field_name>_QUERY` static str
+- `PULL_<field_name>_QUERY` static str
+- `push_<field_name>` method
+- `pull_<field_name>` method
 
--  ### Define Model:
-    ```rustX
+1) ### Model:
+    ```rust
     #[charybdis_model(
-      table_name = users,
-      partition_keys = [id],
-      clustering_keys = [],
-      global_secondary_indexes = [],
-      local_secondary_indexes = [],
+        table_name = users,
+        partition_keys = [id],
+        clustering_keys = []
     )]
     pub struct User {
-      id: Uuid,
-      tags: Set<Text>,
-      post_ids: List<Uuid>,
+        id: Uuid,
+        tags: Set<Text>,
+        post_ids: List<Uuid>,
+        books_by_genre: Map<Text, Frozen<List<Text>>>,
+    }
+    ```
+2) ### Generated Collection Queries:
+    ```rust
+    User::PUSH_TAGS_QUERY;
+    User::PULL_TAGS_QUERY;
+    
+    User::PUSH_POST_IDS_QUERY;
+    User::PULL_POST_IDS_QUERY;
+    ```
+
+   Generated query will expect value as first bind value and primary key fields as next bind values.
+
+    ```rust
+    impl User {
+      const PUSH_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ?";
+      const PULL_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags - ? WHERE id = ?";.
+       
+      const PUSH_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids + ? WHERE id = ?";
+      const PULL_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids - ? WHERE id = ?";
+    
+      const PUSH_BOOKS_BY_GENRE_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre + ? WHERE id = ?";
+      const PULL_BOOKS_BY_GENRE_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre - ? WHERE id = ?";
     }
     ```
 
-- ### Generated Collection Queries:
-  ```rust
-   User::PUSH_TAGS_QUERY;
-   User::PULL_TAGS_QUERY;
-   
-   User::PUSH_POST_IDS_QUERY;
-   User::PULL_POST_IDS_QUERY;
-  ```
+   Now we could use this constant within Batch operations.
 
-  Generated query will expect value as first bind value and primary key fields as next bind values.
-  ```rust
-  impl User {
-    const PUSH_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ?";
-    const PULL_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags - ? WHERE id = ?";
+    ```rust
+    let batch = User::batch();
+    let users: Vec<User>;
     
-    const PUSH_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids + ? WHERE id = ?";
-    const PULL_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids - ? WHERE id = ?";
-  }
-  
-  ```
-  Now we could use this constant within Batch operations.
+    for user in users {
+        batch.append_statement(User::PUSH_TAGS_QUERY, (vec![tag], user.id));
+    }
+    
+    batch.execute(&session).await;
+    ```
 
-  ```rust
-  let batch = User::batch();
-  let users: Vec<User>;
-  
-  for user in users {
-      batch.append_statement(User::PUSH_TAGS_QUERY, (vec![tag], user.id));
-  }
-  
-  batch.execute(&session).await;
-  
-  ```
+3) ### Generated Collection Methods:
+   `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection
+   field.
 
-- ### Generated Collection Methods:
-  `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection
-  field.
-  ```rust
-  let user: User;
-  
-  user.push_tags(vec![tag]).execute(&session).await;
-  user.pull_tags(vec![tag]).execute(&session).await;
-  
-  user.push_post_ids(vec![tag]).execute(&session).await;
-  user.pull_post_ids(vec![tag]).execute(&session).await;
-  ```
+    ```rust
+    let user: User::new();
+    
+    user.push_tags(tags: HashSet<T>).execute(&session).await;
+    user.pull_tags(tags: HashSet<T>).execute(&session).await;
+    
+    
+    user.push_post_ids(ids: Vec<T>).execute(&session).await;
+    user.pull_post_ids(ids: Vec<T>).execute(&session).await;
+    
+    user.push_books_by_genre(map: HashMap<K, V>).execute(&session).await;
+    user.pull_books_by_genre(map: HashMap<K, V>).execute(&session).await;
+    ```
 
 ## Ignored fields
 
@@ -824,8 +829,3 @@ pub struct User {
 So field `organization` will be ignored in all operations and
 default value will be used when deserializing from other data sources.
 It can be used to hold data that is not persisted in database.
-
-## Roadmap:
-
-- [ ] Add tests
-- [ ] Write `modelize` command to generate `src/models/*` structs from existing database
