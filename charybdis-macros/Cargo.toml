@@ -1,7 +1,7 @@
 [package]
 name = "charybdis_macros"
 rust-version = "1.75.0"
-version = "0.4.11"
+version = "0.4.12"
 edition = "2021"
 description = "Proc macro crate for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"
@@ -12,7 +12,7 @@ categories = ["database"]
 proc-macro = true
 
 [dependencies]
-charybdis_parser = { version = "0.4.11", path = "../charybdis-parser" }
+charybdis_parser = { version = "0.4.12", path = "../charybdis-parser" }
 proc-macro2 = "1.0.79"
 syn = { version = "2.0.53", features = ["full"] }
 quote = "1.0.35"
