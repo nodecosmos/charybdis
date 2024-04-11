@@ -37,7 +37,7 @@ impl<'a> Migration<'a> {
     }
 
     async fn run_udts(&self) {
-        let empty_udt = SchemaObject::new();
+        let empty_udt = SchemaObject::default();
 
         for (name, code_udt_schema) in self.current_code_schema.udts.iter() {
             let model_data = ModelData::new(
@@ -54,7 +54,7 @@ impl<'a> Migration<'a> {
     }
 
     async fn run_tables(&self) {
-        let empty_table = SchemaObject::new();
+        let empty_table = SchemaObject::default();
 
         for (name, code_table_schema) in self.current_code_schema.tables.iter() {
             let model_data = ModelData::new(
@@ -71,7 +71,7 @@ impl<'a> Migration<'a> {
     }
 
     async fn run_materialized_views(&self) {
-        let empty_mv = SchemaObject::new();
+        let empty_mv = SchemaObject::default();
 
         for (name, code_mv_schema) in self.current_code_schema.materialized_views.iter() {
             let model_data = ModelData::new(

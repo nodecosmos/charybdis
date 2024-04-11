@@ -44,13 +44,12 @@ pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) ->
 
     for item in ast.items {
         if let Item::Struct(item_struct) = item {
-            let is_charybdis_model = item_struct.attrs.iter().any(|attr| attr.path().is_ident(macro_name));
-
-            // If the struct doesn't have the required macro, continue to the next item
-            if !is_charybdis_model {
+            // If the struct doesn't have the required macro, continue to the next item.
+            if !item_struct.attrs.iter().any(|attr| attr.path().is_ident(macro_name)) {
                 continue;
             }
 
+            // parse struct fields
             if let Fields::Named(fields_named) = item_struct.fields {
                 let db_fields = CharybdisFields::db_fields(&fields_named);
 
@@ -58,7 +57,7 @@ pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) ->
                     let field_name = field.ident.to_string();
                     let field_type = type_with_arguments(&field.ty_path);
 
-                    schema_object.fields.insert(field_name, field_type);
+                    schema_object.push_field(field_name, field_type);
                 }
             }
 

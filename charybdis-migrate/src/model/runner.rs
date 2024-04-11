@@ -99,8 +99,9 @@ impl<'a> ModelRunner<'a> {
                     .data
                     .current_code_schema
                     .fields
-                    .keys()
-                    .cloned()
+                    .clone()
+                    .into_iter()
+                    .map(|[field_name, _]| field_name)
                     .collect::<Vec<String>>();
 
                 let materialized_view_select_clause = format!(

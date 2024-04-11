@@ -18,8 +18,8 @@ use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::macro_args::CharybdisMacroArgs;
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::parse_macro_input;
 use syn::DeriveInput;
-use syn::{parse_macro_input, Data, Fields};
 
 #[proc_macro_attribute]
 pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -205,28 +205,10 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
 #[proc_macro_attribute]
 pub fn charybdis_udt_model(_: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let fields = match &input.data {
-        Data::Struct(data) => match &data.fields {
-            Fields::Named(named_fields) => named_fields,
-            _ => panic!("#[charybdis_model] works only for structs with named fields!"),
-        },
-        _ => panic!("#[charybdis_model] works only on structs!"),
-    };
-
-    let struct_name = &input.ident;
-
-    // sort fields by name
-    // https://github.com/scylladb/scylla-rust-driver/issues/370
-    let mut sorted_fields: Vec<_> = fields.named.iter().collect();
-    sorted_fields.sort_by(|a, b| a.ident.cmp(&b.ident));
 
     let gen = quote! {
-        #[derive(charybdis::FromUserType)]
-        #[derive(charybdis::SerializeCql)]
-        #[scylla(flavor = "enforce_order", skip_name_checks)]
-        pub struct #struct_name {
-            #(#sorted_fields),*
-        }
+        #[derive(charybdis::FromUserType, charybdis::SerializeCql)]
+        #input
     };
 
     gen.into()

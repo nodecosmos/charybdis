@@ -184,58 +184,59 @@ impl CharybdisFields {
         let mut global_secondary_index_fields = vec![];
         let mut local_secondary_index_fields = vec![];
 
-        for key in args.partition_keys() {
-            let field = named_fields
-                .named
-                .iter()
-                .find(|f| f.ident.clone().unwrap().to_string() == key)
-                .expect(&format!("Partition key {} not found in struct fields", key));
-
-            let field = Field::from_field(field, true, false);
-
-            partition_key_fields.push(field.clone());
-            primary_key_fields.push(field.clone());
-            all_fields.push(field.clone());
-            db_fields.push(field.clone());
-        }
-
-        for key in args.clustering_keys() {
-            let field = named_fields
-                .named
-                .iter()
-                .find(|f| f.ident.clone().unwrap().to_string() == key)
-                .expect(&format!("Clustering key {} not found in struct fields", key));
-
-            let field = Field::from_field(field, false, true);
-
-            clustering_key_fields.push(field.clone());
-            primary_key_fields.push(field.clone());
-            all_fields.push(field.clone());
-            db_fields.push(field.clone());
-        }
-
-        let primary_keys = args.primary_key();
+        let partition_keys = args.partition_keys();
+        let clustering_keys = args.clustering_keys();
         let global_secondary_indexes = args.global_secondary_indexes();
         let local_secondary_indexes = args.local_secondary_indexes();
 
+        // make sure that all partition_keys are present in the struct fields
+        for key in &partition_keys {
+            named_fields
+                .named
+                .iter()
+                .find(|f| f.ident.as_ref().is_some_and(|i| &i.to_string() == key))
+                .expect(&format!("Partition key {} not found in struct fields", key));
+        }
+
+        // make sure that all clustering_keys are present in the struct fields
+        for key in &clustering_keys {
+            named_fields
+                .named
+                .iter()
+                .find(|f| f.ident.as_ref().is_some_and(|i| &i.to_string() == key))
+                .expect(&format!("Clustering key {} not found in struct fields", key));
+        }
+
         for field in &named_fields.named {
             let field_name = field.ident.clone().unwrap().to_string();
-            if !primary_keys.contains(&field_name) {
-                let field = Field::from_field(field, false, false);
+            let is_partition_key = partition_keys.contains(&field_name);
+            let is_clustering_key = clustering_keys.contains(&field_name);
+            let ch_field = Field::from_field(field, is_partition_key, is_clustering_key);
 
-                all_fields.push(field.clone());
+            if is_partition_key && is_clustering_key {
+                panic!("Field {} cannot be both partition and clustering key", field_name);
+            }
 
-                if !field.char_attrs.ignore.unwrap_or(false) {
-                    db_fields.push(field.clone());
-                }
+            all_fields.push(ch_field.clone());
+
+            if !ch_field.char_attrs.ignore.unwrap_or(false) {
+                db_fields.push(ch_field.clone());
             }
 
             if global_secondary_indexes.contains(&field_name) {
-                global_secondary_index_fields.push(Field::from_field(field, false, false));
+                global_secondary_index_fields.push(ch_field.clone());
             }
 
             if local_secondary_indexes.contains(&field_name) {
-                local_secondary_index_fields.push(Field::from_field(field, false, false));
+                local_secondary_index_fields.push(ch_field.clone());
+            }
+
+            if is_partition_key {
+                partition_key_fields.push(ch_field.clone());
+                primary_key_fields.push(ch_field);
+            } else if is_clustering_key {
+                clustering_key_fields.push(ch_field.clone());
+                primary_key_fields.push(ch_field);
             }
         }
 
