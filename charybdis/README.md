@@ -16,34 +16,12 @@ welcomed!
 
 #### Charybdis is a ORM layer on top of `scylla_rust_driver` focused on easy of use and performance
 
-## Announcements:
+## Breaking changes
 
-- ### Queries are now configurable
-  With `0.4.0` release we have provided users with ability to configure each query before execution
-- ### Breaking changes
-    1) **Operations**: `find`, `insert`, `update`, `delete` now return `CharybdisQuery` that can be
-       configured before
-       execution.
-        ```rust
-        let mut user = user.find_by_primary_key().consistency(Consistency::One).execute(session);
-        ```
-
-    2) **Callbacks**: We now have only single `Callbacks` trait that is used for all operation that
-       can accept
-       extension.
-       In case extension is not needed, we can use `()` or Option<()> and provide `None` as
-       extension argument.
-
-    3) **Batch Operations**:  Batch is now coupled with Model and it's created by
-       calling `Model::batch()` method. It
-       can also be configured before execution.
-        ```rust
-        let batch = User::batch().consistency(Consistency::One).chunked_insert(&session, users, 100).await?;
-        ```
-    4) As of **0.4.3** version`local_secondary_indexes` are now defined as list of fields. Partition
-       key part is derived
-       from `partition_keys` part of macro declaration and each element in array will result with
-       new local index.
+As of `0.4.13` UDT fields must be in the same order as they are in the database. This is due to
+scylla driver limitation that does not support named bind values. Earlier versions would
+automatically order fields by name, but this is no longer the case as ORM could not work with
+exiting UDTs.
 
 ## Usage considerations:
 
@@ -147,6 +125,8 @@ welcomed!
       pub country: Text,
   }
   ```
+
+🚨 [UDT fields must be in the same order as they are in the database](https://rust-driver.docs.scylladb.com/stable/data-types/udt.html).
 
 ### Define Materialized Views
 
