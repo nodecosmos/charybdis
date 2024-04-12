@@ -15,6 +15,7 @@ pub struct CharybdisMacroArgs {
     pub base_table: Option<String>,
     pub partition_keys: Option<Vec<String>>,
     pub clustering_keys: Option<Vec<String>>,
+    pub static_columns: Option<Vec<String>>,
     pub global_secondary_indexes: Option<Vec<String>>,
     pub local_secondary_indexes: Option<Vec<String>>,
     pub exclude_partial_model: Option<bool>,
@@ -35,6 +36,10 @@ impl CharybdisMacroArgs {
 
     pub fn clustering_keys(&self) -> Vec<String> {
         self.clustering_keys.clone().expect("clustering_keys is required")
+    }
+
+    pub fn static_columns(&self) -> Vec<String> {
+        self.static_columns.clone().unwrap_or_default()
     }
 
     pub fn global_secondary_indexes(&self) -> Vec<String> {
@@ -60,6 +65,7 @@ impl Parse for CharybdisMacroArgs {
         let mut base_table = None;
         let mut partition_keys = None;
         let mut clustering_keys = None;
+        let mut static_columns = None;
         let mut global_secondary_indexes = None;
         let mut local_secondary_indexes = None;
         let mut fields_names = None;
@@ -96,6 +102,12 @@ impl Parse for CharybdisMacroArgs {
                     let parsed = parse_arr_expr_from_literals(array);
 
                     clustering_keys = Some(parsed)
+                }
+                "static_columns" => {
+                    let array: syn::ExprArray = input.parse()?;
+                    let parsed = parse_arr_expr_from_literals(array);
+
+                    static_columns = Some(parsed)
                 }
                 "global_secondary_indexes" => {
                     let array: syn::ExprArray = input.parse()?;
@@ -150,6 +162,7 @@ impl Parse for CharybdisMacroArgs {
             base_table,
             partition_keys,
             clustering_keys,
+            static_columns,
             global_secondary_indexes,
             local_secondary_indexes,
             fields_names,

@@ -95,6 +95,7 @@ exiting UDTs.
       clustering_keys = [],
       global_secondary_indexes = [username],
       local_secondary_indexes = [],
+      static_columns = []
   )]
   pub struct User {
       pub id: Uuid,

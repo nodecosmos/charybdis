@@ -118,7 +118,7 @@ impl DbSchema {
                 self.tables
                     .get_mut(table_name)
                     .unwrap()
-                    .push_field(str_value.0, str_value.1);
+                    .push_field(str_value.0, str_value.1, false);
             }
         }
 
@@ -234,7 +234,7 @@ impl DbSchema {
                 let mut schema_object = SchemaObject::new();
 
                 for (index, field_name) in field_names.into_iter().enumerate() {
-                    schema_object.push_field(field_name, field_types[index].clone());
+                    schema_object.push_field(field_name, field_types[index].clone(), false);
                 }
 
                 self.udts.insert(type_name.to_lowercase(), schema_object);
@@ -276,7 +276,7 @@ impl DbSchema {
                 self.materialized_views
                     .get_mut(view_name)
                     .unwrap()
-                    .push_field(str_value.0, str_value.1);
+                    .push_field(str_value.0, str_value.1, false);
             }
         }
 

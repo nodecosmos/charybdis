@@ -2,12 +2,26 @@ mod parser;
 
 use crate::schema::{SchemaObject, SchemaObjects};
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use std::path::PathBuf;
 use walkdir::{DirEntry, WalkDir};
 
-const MODEL_MACRO_NAME: &str = "charybdis_model";
-const MATERIALIZED_VIEW_MACRO_NAME: &str = "charybdis_view_model";
-const UDT_MACRO_NAME: &str = "charybdis_udt_model";
+#[derive(Eq, PartialEq)]
+pub(crate) enum ModelMacro {
+    Table,
+    Udt,
+    MaterializedView,
+}
+
+impl Display for ModelMacro {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ModelMacro::Table => write!(f, "charybdis_model"),
+            ModelMacro::MaterializedView => write!(f, "charybdis_view_model"),
+            ModelMacro::Udt => write!(f, "charybdis_udt_model"),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct CodeSchema {
@@ -60,13 +74,13 @@ impl CodeSchema {
     pub fn populate_materialized_views(&mut self, entry: DirEntry) {
         let file_content: String = parser::parse_file_as_string(entry.path());
         let schema_object: SchemaObject =
-            parser::parse_charybdis_model_def(&file_content, MATERIALIZED_VIEW_MACRO_NAME);
+            parser::parse_charybdis_model_def(&file_content, ModelMacro::MaterializedView);
         let table_name = schema_object.table_name.clone();
 
         if table_name.is_empty() {
             panic!(
                 "Could not find {} macro for file: {}",
-                MATERIALIZED_VIEW_MACRO_NAME,
+                ModelMacro::MaterializedView,
                 entry.path().to_str().unwrap()
             );
         }
@@ -76,13 +90,13 @@ impl CodeSchema {
 
     pub fn populate_udts(&mut self, entry: DirEntry) {
         let file_content: String = parser::parse_file_as_string(entry.path());
-        let schema_object: SchemaObject = parser::parse_charybdis_model_def(&file_content, UDT_MACRO_NAME);
+        let schema_object: SchemaObject = parser::parse_charybdis_model_def(&file_content, ModelMacro::Udt);
         let type_name = schema_object.type_name.clone().to_lowercase();
 
         if type_name.is_empty() {
             panic!(
                 "Could not find {} macro for file: {}",
-                UDT_MACRO_NAME,
+                ModelMacro::Udt,
                 entry.path().to_str().unwrap()
             );
         }
@@ -92,7 +106,7 @@ impl CodeSchema {
 
     pub fn populate_tables(&mut self, entry: DirEntry) {
         let file_content: String = parser::parse_file_as_string(entry.path());
-        let schema_object: SchemaObject = parser::parse_charybdis_model_def(&file_content, MODEL_MACRO_NAME);
+        let schema_object: SchemaObject = parser::parse_charybdis_model_def(&file_content, ModelMacro::Table);
         let table_name = schema_object.table_name.clone();
 
         if table_name.is_empty() {
