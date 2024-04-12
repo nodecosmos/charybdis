@@ -186,6 +186,7 @@ impl CharybdisFields {
 
         let partition_keys = args.partition_keys();
         let clustering_keys = args.clustering_keys();
+        let static_columns = args.static_columns();
         let global_secondary_indexes = args.global_secondary_indexes();
         let local_secondary_indexes = args.local_secondary_indexes();
 
@@ -207,14 +208,31 @@ impl CharybdisFields {
                 .expect(&format!("Clustering key {} not found in struct fields", key));
         }
 
+        for key in &static_columns {
+            named_fields
+                .named
+                .iter()
+                .find(|f| f.ident.as_ref().is_some_and(|i| &i.to_string() == key))
+                .expect(&format!("Static column {} not found in struct fields", key));
+        }
+
         for field in &named_fields.named {
             let field_name = field.ident.clone().unwrap().to_string();
             let is_partition_key = partition_keys.contains(&field_name);
             let is_clustering_key = clustering_keys.contains(&field_name);
+            let is_static_column = static_columns.contains(&field_name);
+
             let ch_field = Field::from_field(field, is_partition_key, is_clustering_key);
 
             if is_partition_key && is_clustering_key {
                 panic!("Field {} cannot be both partition and clustering key", field_name);
+            }
+
+            if is_static_column && (is_partition_key || is_clustering_key) {
+                panic!(
+                    "Field {} cannot be both static column and partition or clustering key",
+                    field_name
+                );
             }
 
             all_fields.push(ch_field.clone());

@@ -1,5 +1,6 @@
 use crate::fields::CharybdisFields;
 use crate::macro_args::CharybdisMacroArgs;
+use crate::schema::code_schema::ModelMacro;
 use crate::schema::SchemaObject;
 use colored::Colorize;
 use std::fs::File;
@@ -29,7 +30,7 @@ pub(crate) fn parse_file_as_string(path: &Path) -> String {
     file_content
 }
 
-pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) -> SchemaObject {
+pub(crate) fn parse_charybdis_model_def(file_content: &str, model_macro: ModelMacro) -> SchemaObject {
     let ast: syn::File = syn::parse_file(file_content)
         .map_err(|e| {
             println!(
@@ -45,32 +46,45 @@ pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) ->
     for item in ast.items {
         if let Item::Struct(item_struct) = item {
             // If the struct doesn't have the required macro, continue to the next item.
-            if !item_struct.attrs.iter().any(|attr| attr.path().is_ident(macro_name)) {
+            if !item_struct
+                .attrs
+                .iter()
+                .any(|attr| attr.path().is_ident(model_macro.to_string().as_str()))
+            {
                 continue;
-            }
-
-            // parse struct fields
-            if let Fields::Named(fields_named) = item_struct.fields {
-                let db_fields = CharybdisFields::db_fields(&fields_named);
-
-                for field in db_fields {
-                    let field_name = field.ident.to_string();
-                    let field_type = type_with_arguments(&field.ty_path);
-
-                    schema_object.push_field(field_name, field_type);
-                }
             }
 
             // parse charybdis macro content
             for attr in &item_struct.attrs {
-                if attr.path().is_ident(macro_name) {
+                if attr.path().is_ident(model_macro.to_string().as_str()) {
                     let args: CharybdisMacroArgs = attr.parse_args().unwrap();
 
-                    schema_object.table_name = args.table_name.unwrap_or("".to_string());
-                    schema_object.type_name = args.type_name.unwrap_or("".to_string());
-                    schema_object.base_table = args.base_table.unwrap_or("".to_string());
-                    schema_object.partition_keys = args.partition_keys.unwrap_or(vec![]);
-                    schema_object.clustering_keys = args.clustering_keys.unwrap_or(vec![]);
+                    if let Some(table_name) = args.table_name {
+                        schema_object.table_name = table_name;
+                    } else if model_macro == ModelMacro::Table {
+                        panic!("Table name is required in charybdis_model macro");
+                    }
+
+                    if let Some(base_table) = args.base_table {
+                        schema_object.base_table = base_table;
+                    } else if model_macro == ModelMacro::MaterializedView {
+                        panic!("Base table is required in charybdis_view_model macro");
+                    }
+
+                    if let Some(type_name) = args.type_name {
+                        schema_object.type_name = type_name;
+                    } else if model_macro == ModelMacro::Udt {
+                        panic!("Type name is required in charybdis_udt_model macro");
+                    }
+
+                    if let Some(partition_keys) = args.partition_keys {
+                        schema_object.partition_keys = partition_keys;
+                    } else if model_macro == ModelMacro::Table {
+                        panic!("Partition keys are required in charybdis_model macro");
+                    }
+
+                    schema_object.clustering_keys = args.clustering_keys.unwrap_or_default();
+                    schema_object.static_columns = args.static_columns.unwrap_or_default();
 
                     if let Some(gsi) = args.global_secondary_indexes {
                         gsi.iter().for_each(|global_idx| {
@@ -89,6 +103,19 @@ pub(crate) fn parse_charybdis_model_def(file_content: &str, macro_name: &str) ->
                     }
 
                     schema_object.table_options = args.table_options;
+                }
+            }
+
+            // parse struct fields
+            if let Fields::Named(fields_named) = item_struct.fields {
+                let db_fields = CharybdisFields::db_fields(&fields_named);
+
+                for field in db_fields {
+                    let field_name = field.ident.to_string();
+                    let field_type = type_with_arguments(&field.ty_path);
+                    let is_static = schema_object.static_columns.contains(&field_name);
+
+                    schema_object.push_field(field_name, field_type, is_static);
                 }
             }
         }

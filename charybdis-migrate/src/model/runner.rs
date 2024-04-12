@@ -44,7 +44,7 @@ impl<'a> ModelRunner<'a> {
                 let cql = format!(
                     "CREATE TYPE IF NOT EXISTS {}\n(\n{}\n);\n",
                     self.data.migration_object_name,
-                    self.data.current_code_schema.get_cql_fields()
+                    self.data.current_code_schema.create_fields_clause()
                 );
 
                 self.execute(&cql).await;
@@ -67,7 +67,7 @@ impl<'a> ModelRunner<'a> {
                 let cql = format!(
                     "CREATE TABLE IF NOT EXISTS {}\n(\n{}, \n    PRIMARY KEY (({}) {})\n) \n {}",
                     self.data.migration_object_name,
-                    self.data.current_code_schema.get_cql_fields(),
+                    self.data.current_code_schema.create_fields_clause(),
                     self.data.current_code_schema.partition_keys.join(", "),
                     clustering_keys_clause,
                     table_options_clause,
@@ -101,7 +101,7 @@ impl<'a> ModelRunner<'a> {
                     .fields
                     .clone()
                     .into_iter()
-                    .map(|[field_name, _]| field_name)
+                    .map(|(field_name, _, _)| field_name)
                     .collect::<Vec<String>>();
 
                 let materialized_view_select_clause = format!(
