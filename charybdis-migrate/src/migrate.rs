@@ -48,7 +48,7 @@ async fn main() {
 
     let session: Session = initialize_session(&args).await;
 
-    let current_db_schema = DbSchema::new(&session, args.keyspace).await;
+    let current_db_schema = DbSchema::new(&session, args.keyspace.clone()).await;
     let current_code_schema = CodeSchema::new(&project_root);
 
     let migration = Migration::new(
@@ -60,7 +60,9 @@ async fn main() {
 
     migration.run().await;
 
-    current_db_schema.write_schema_to_json(project_root);
+    DbSchema::new(&session, args.keyspace)
+        .await
+        .write_schema_to_json(project_root);
 }
 
 pub(crate) fn get_project_root() -> io::Result<PathBuf> {
