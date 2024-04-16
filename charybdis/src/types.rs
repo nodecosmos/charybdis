@@ -1,4 +1,5 @@
 use crate::{FromCqlVal, SerializeCql};
+use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, Utc};
 use scylla::_macro_internal::{CellWriter, ColumnType, FromCqlValError, SerializationError, WrittenCellProof};
 use scylla::frame::response::result::CqlValue;
@@ -13,7 +14,7 @@ pub type BigInt = i64;
 pub type Boolean = bool;
 pub type Blob = Vec<u8>;
 pub type Date = NaiveDate;
-pub type Decimal = f64;
+pub type Decimal = BigDecimal;
 pub type Double = f64;
 pub type Duration = String; // TODO: Duration as native type in scylla does not have serde support
 pub type Float = f32;
