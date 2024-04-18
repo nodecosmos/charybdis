@@ -23,7 +23,7 @@ const MAX_DELETE_BY_FUNCTIONS: usize = 3;
 ///  User::delete_by_id_and_org_id_and_created_at(session: &Session, org_id: Uuid, created_at: Timestamp) -> Result<Vec<User>, errors::CharybdisError>
 pub(crate) fn delete_by_primary_key_functions(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
     let table_name = ch_args.table_name();
-
+    let partition_keys_len = fields.partition_key_fields.len();
     let primary_key_stack = &fields.primary_key_fields;
     let mut generated = quote! {};
 
@@ -33,6 +33,12 @@ pub(crate) fn delete_by_primary_key_functions(ch_args: &CharybdisMacroArgs, fiel
         }
 
         let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<Field>>();
+
+        // we need complete partition key to query
+        if current_fields.len() < partition_keys_len {
+            continue;
+        }
+
         let query_str = format!(
             "DELETE FROM {} WHERE {}",
             table_name,

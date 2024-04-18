@@ -64,6 +64,7 @@ pub(crate) fn find_by_primary_keys_functions(
 ) -> TokenStream {
     let table_name = ch_args.table_name();
     let comma_sep_cols = fields.db_fields.comma_sep_cols();
+    let partition_keys_len = fields.partition_key_fields.len();
     let primary_key_stack = &fields.primary_key_fields;
     let mut generated = quote! {};
 
@@ -73,6 +74,12 @@ pub(crate) fn find_by_primary_keys_functions(
         }
 
         let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<Field>>();
+
+        // we need complete partition key to query
+        if current_fields.len() < partition_keys_len {
+            continue;
+        }
+
         let query_str = format!(
             "SELECT {} FROM {} WHERE {}",
             comma_sep_cols,
