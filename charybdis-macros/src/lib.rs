@@ -8,9 +8,9 @@ mod traits;
 
 use crate::model::*;
 use crate::native::{
-    decrement_counter_methods, delete_by_primary_key_functions, find_by_local_secondary_index,
-    find_by_primary_keys_functions, increment_counter_methods, pull_from_collection_consts,
-    pull_from_collection_methods, push_to_collection_consts, push_to_collection_methods,
+    decrement_counter_methods, delete_by_primary_key_functions, find_by_global_secondary_index,
+    find_by_local_secondary_index, find_by_primary_keys_functions, increment_counter_methods,
+    pull_from_collection_consts, pull_from_collection_methods, push_to_collection_consts, push_to_collection_methods,
 };
 use crate::rules::*;
 use crate::scylla::from_row;
@@ -40,7 +40,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     // Charybdis::BaseModel consts
     let db_model_name_const = db_model_name_const(&args);
     let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &fields);
-    let find_by_partition_key_query_const = find_by_partition_key_query_const(&args, &fields);
+    let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, &fields);
+    let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, &fields);
     let insert_query_const = insert_query_const(&args, &fields);
 
     // Charybdis::Model consts
@@ -79,6 +80,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     // Associated functions
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
     let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, &fields);
+    let find_by_global_secondary_index_funs = find_by_global_secondary_index(struct_name, &args, &fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(&args, &fields);
 
     let expanded = quote! {
@@ -87,8 +89,10 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
         impl #struct_name {
             #find_by_key_funs
-            #find_by_local_secondary_index_funs
             #delete_by_cks_funs
+
+            #find_by_local_secondary_index_funs
+            #find_by_global_secondary_index_funs
 
             #push_to_collection_consts
             #pull_from_collection_consts
@@ -108,7 +112,8 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
             // consts
             #db_model_name_const
             #find_by_primary_key_query_const
-            #find_by_partition_key_query_const
+            #find_by_partition_key_query_consts
+            #find_first_by_partition_key_query_const
 
             // methods
             #primary_key_values_method
@@ -158,7 +163,8 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     // Charybdis::MaterializedView consts
     let db_model_name_const = db_model_name_const(&args);
     let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &fields);
-    let find_by_partition_key_query_const = find_by_partition_key_query_const(&args, &fields);
+    let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, &fields);
+    let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, &fields);
 
     // Charybdis::BaseModel methods
     let primary_key_values_method = primary_key_values_method(&fields);
@@ -187,7 +193,8 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
             // consts
             #db_model_name_const
             #find_by_primary_key_query_const
-            #find_by_partition_key_query_const
+            #find_by_partition_key_query_consts
+            #find_first_by_partition_key_query_const
 
             // methods
             #primary_key_values_method

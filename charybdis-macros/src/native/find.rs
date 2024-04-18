@@ -17,6 +17,7 @@ const MAX_FIND_BY_FIELDS: usize = 3;
 ///         table_name = posts,
 ///         partition_keys = [date],
 ///         clustering_keys = [category_id, title],
+///         global_secondary_indexes = [category_id],
 ///         local_secondary_indexes = [title]
 /// )]
 /// pub struct Post {
@@ -46,6 +47,11 @@ const MAX_FIND_BY_FIELDS: usize = 3;
 ///         let posts: CharybdisModelStream<Post> = Post::find_by_date_and_title(date, title.clone()).execute(db_session).await?;
 ///         let post: Post = Post::find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
 ///         let post: Option<Post> = Post::maybe_find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
+///
+///         // find by global secondary index
+///         let posts: CharybdisModelStream<Post> = Post::find_by_category_id(category_id).execute(db_session).await?;
+///         let post: Post = Post::find_first_by_category_id(category_id).execute(db_session).await?;
+///         let post: Option<Post> = Post::maybe_find_first_by_category_id(category_id).execute(db_session).await?;
 ///
 ///        Ok(())
 ///     }
@@ -115,6 +121,31 @@ pub(crate) fn find_by_local_secondary_index(
         let find_fn = current_fields.find_fn(struct_name, &query_str);
         let find_first_fn = current_fields.find_first_fn(struct_name, &query_str);
         let maybe_find_first_fn = current_fields.maybe_find_first_fn(struct_name, &query_str);
+
+        generated.extend(find_fn);
+        generated.extend(find_first_fn);
+        generated.extend(maybe_find_first_fn);
+    });
+
+    generated
+}
+
+pub(crate) fn find_by_global_secondary_index(
+    struct_name: &syn::Ident,
+    ch_args: &CharybdisMacroArgs,
+    fields: &CharybdisFields,
+) -> TokenStream {
+    let table_name = ch_args.table_name();
+    let comma_sep_cols = fields.db_fields.comma_sep_cols();
+    let gsi_fields = &fields.global_secondary_index_fields;
+
+    let mut generated = quote! {};
+
+    gsi_fields.iter().for_each(|gsi| {
+        let query_str = format!("SELECT {} FROM {} WHERE {} = ?", comma_sep_cols, table_name, gsi.name);
+        let find_fn = gsi.find_fn(struct_name, &query_str);
+        let find_first_fn = gsi.find_first_fn(struct_name, &query_str);
+        let maybe_find_first_fn = gsi.maybe_find_first_fn(struct_name, &query_str);
 
         generated.extend(find_fn);
         generated.extend(find_first_fn);

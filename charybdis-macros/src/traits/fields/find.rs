@@ -11,6 +11,20 @@ pub(crate) trait FieldsFindFnNames {
     fn maybe_find_first_by_fn_name(&self) -> String;
 }
 
+impl FieldsFindFnNames for Field {
+    fn find_by_fn_name(&self) -> String {
+        format!("find_by_{}", self.name)
+    }
+
+    fn find_first_by_fn_name(&self) -> String {
+        format!("find_first_by_{}", self.name)
+    }
+
+    fn maybe_find_first_by_fn_name(&self) -> String {
+        format!("maybe_find_first_by_{}", self.name)
+    }
+}
+
 impl FieldsFindFnNames for Vec<Field> {
     fn find_by_fn_name(&self) -> String {
         format!("find_by_{}", self.names().join("_and_"))
@@ -25,12 +39,7 @@ impl FieldsFindFnNames for Vec<Field> {
     }
 }
 
-pub(crate) trait FieldsFindFn {
-    fn find_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream;
-    fn find_one_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream;
-}
-
-impl FieldsFindFn for Vec<Field> {
+pub(crate) trait FieldsFindFn: FieldsFindFnNames + FieldsToArguments {
     fn find_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream {
         let find_by_fn_name = self.find_by_fn_name().to_ident();
         let arguments = self.to_fn_args();
@@ -46,6 +55,9 @@ impl FieldsFindFn for Vec<Field> {
         }
     }
 
+    /// Generates a function that finds the first model that matches the query. Difference from
+    /// `find_first` is that this function does not limit the number of results to 1 as it is only
+    /// used when provided keys matches complete primary key.
     fn find_one_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream {
         let find_by_fn_name = self.find_by_fn_name().to_ident();
         let arguments = self.to_fn_args();
@@ -62,17 +74,16 @@ impl FieldsFindFn for Vec<Field> {
     }
 }
 
-pub(crate) trait FieldsFindFirstFns {
-    fn find_first_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream;
-    fn maybe_find_first_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream;
-}
+impl FieldsFindFn for Field {}
+impl FieldsFindFn for Vec<Field> {}
 
-impl FieldsFindFirstFns for Vec<Field> {
+pub(crate) trait FieldsFindFirstFns: FieldsFindFnNames + FieldsToArguments {
     fn find_first_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream {
         let find_first_by_fn_name = self.find_first_by_fn_name().to_ident();
         let arguments = self.to_fn_args();
         let types_tp = arguments.types_tp();
         let values_tp = arguments.values_tp();
+        // let query_str = format!("{} LIMIT 1", query_str);
 
         quote! {
             pub fn #find_first_by_fn_name<'a>(
@@ -88,6 +99,7 @@ impl FieldsFindFirstFns for Vec<Field> {
         let arguments = self.to_fn_args();
         let types_tp = arguments.types_tp();
         let values_tp = arguments.values_tp();
+        // let query_str = format!("{} LIMIT 1", query_str);
 
         quote! {
             pub fn #maybe_find_first_by_fn_name<'a>(
@@ -98,3 +110,6 @@ impl FieldsFindFirstFns for Vec<Field> {
         }
     }
 }
+
+impl FieldsFindFirstFns for Field {}
+impl FieldsFindFirstFns for Vec<Field> {}

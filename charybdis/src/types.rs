@@ -128,6 +128,7 @@ impl<'de> Deserialize<'de> for Duration {
         }
 
         let helper = Helper::deserialize(deserializer)?;
+
         Ok(Duration(CqlDuration {
             months: helper.months,
             days: helper.days,
