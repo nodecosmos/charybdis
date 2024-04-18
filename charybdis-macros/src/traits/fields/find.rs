@@ -83,7 +83,7 @@ pub(crate) trait FieldsFindFirstFns: FieldsFindFnNames + FieldsToArguments {
         let arguments = self.to_fn_args();
         let types_tp = arguments.types_tp();
         let values_tp = arguments.values_tp();
-        // let query_str = format!("{} LIMIT 1", query_str);
+        let query_str = format!("{} LIMIT 1", query_str);
 
         quote! {
             pub fn #find_first_by_fn_name<'a>(
@@ -99,7 +99,7 @@ pub(crate) trait FieldsFindFirstFns: FieldsFindFnNames + FieldsToArguments {
         let arguments = self.to_fn_args();
         let types_tp = arguments.types_tp();
         let values_tp = arguments.values_tp();
-        // let query_str = format!("{} LIMIT 1", query_str);
+        let query_str = format!("{} LIMIT 1", query_str);
 
         quote! {
             pub fn #maybe_find_first_by_fn_name<'a>(
