@@ -310,6 +310,7 @@ in `charybdis::operations` module.
       table_name = posts,
       partition_keys = [date],
       clustering_keys = [category_id, title],
+      global_secondary_indexes = [category_id],
       local_secondary_indexes = [title]
   )]
   pub struct Post {
@@ -339,6 +340,11 @@ in `charybdis::operations` module.
          let posts: CharybdisModelStream<Post> = Post::find_by_date_and_title(date, title.clone()).execute(db_session).await?;
          let post: Post = Post::find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
          let post: Option<Post> = Post::maybe_find_first_by_date_and_title(date, title.clone()).execute(db_session).await?;
+  
+        // find by global secondary index
+        let posts: CharybdisModelStream<Post> = Post::find_by_category_id(category_id).execute(db_session).await?;
+        let post: Post = Post::find_first_by_category_id(category_id).execute(db_session).await?;
+        let post: Option<Post> = Post::maybe_find_first_by_category_id(category_id).execute(db_session).await?;
       
         Ok(())
       }
