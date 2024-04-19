@@ -2,6 +2,7 @@ use crate::errors::CharybdisError;
 use crate::model::Model;
 use crate::options::{Consistency, ExecutionProfileHandle, RetryPolicy, SerialConsistency};
 use crate::query::{CharybdisQuery, QueryExecutor, QueryValue};
+use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
 use scylla::batch::{Batch, BatchType};
 use scylla::history::HistoryListener;
 use scylla::serialize::row::SerializeRow;
@@ -341,9 +342,29 @@ pub trait ModelBatch<'a>: Model {
 
 impl<M: Model> ModelBatch<'_> for M {}
 
+struct SerializeRowBox<'a> {
+    inner: Box<dyn SerializeRow + 'a>,
+}
+
+impl<'a> SerializeRowBox<'a> {
+    pub fn new(val: impl SerializeRow + 'a) -> Self {
+        Self { inner: Box::new(val) }
+    }
+}
+
+impl<'a> SerializeRow for SerializeRowBox<'a> {
+    fn serialize(&self, ctx: &RowSerializationContext<'_>, writer: &mut RowWriter) -> Result<(), SerializationError> {
+        self.inner.as_ref().serialize(ctx, writer)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.inner.as_ref().is_empty()
+    }
+}
+
 pub struct CharybdisBatch<'a> {
     inner: Batch,
-    values: Vec<Box<dyn SerializeRow + 'a>>,
+    values: Vec<SerializeRowBox<'a>>,
 }
 
 impl<'a> CharybdisBatch<'a> {
@@ -361,11 +382,25 @@ impl<'a> CharybdisBatch<'a> {
         }
     }
 
-    pub fn append<Val: SerializeRow, M: Model, RtQe: QueryExecutor>(
-        &mut self,
-        query: CharybdisQuery<'a, Val, M, RtQe>,
-    ) {
+    pub fn append<Val, M, RtQe>(&mut self, query: CharybdisQuery<'a, Val, M, RtQe>) -> &mut Self
+    where
+        Val: SerializeRow,
+        M: Model,
+        RtQe: QueryExecutor,
+    {
         self.inner.append_statement(query.contents().as_str());
-        self.values.push(Box::new(query.values));
+
+        self.values.push(SerializeRowBox::new(query.values));
+
+        self
+    }
+
+    pub async fn execute(&self, db_session: &CachingSession) -> Result<QueryResult, CharybdisError> {
+        let result = db_session
+            .batch(&self.inner, &self.values)
+            .await
+            .map_err(|e| CharybdisError::BatchError("QueryBatchError", e))?;
+
+        Ok(result)
     }
 }
