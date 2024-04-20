@@ -1,7 +1,7 @@
 use crate::fields::CharybdisFields;
-use crate::macro_args::CharybdisMacroArgs;
 use crate::schema::code_schema::ModelMacro;
 use crate::schema::SchemaObject;
+use crate::traits::CharybdisMacroArgs;
 use colored::Colorize;
 use std::fs::File;
 use std::io::Read;

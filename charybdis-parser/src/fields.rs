@@ -1,5 +1,6 @@
-use crate::macro_args::CharybdisMacroArgs;
+use crate::traits::CharybdisMacroArgs;
 use darling::FromAttributes;
+use std::collections::{HashMap, HashSet};
 use syn::spanned::Spanned;
 use syn::{Data, DeriveInput, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
 
@@ -44,21 +45,21 @@ pub struct FieldAttributes {
     pub ignore: Option<bool>,
 }
 
-#[derive(Clone)]
-pub struct Field {
+pub struct Field<'a> {
     pub name: String,
     pub ident: syn::Ident,
     pub ty: Type,
     pub ty_path: syn::TypePath,
     pub outer_type: CqlType,
-    pub char_attrs: FieldAttributes,
-    pub attrs: Vec<syn::Attribute>,
     pub span: proc_macro2::Span,
+    pub attrs: &'a Vec<syn::Attribute>,
+    pub ignore: bool,
     pub is_partition_key: bool,
     pub is_clustering_key: bool,
+    pub is_static_column: bool,
 }
 
-impl Field {
+impl<'a> Field<'a> {
     pub fn outer_type(ty: &Type, ignore: bool) -> CqlType {
         if ignore {
             return CqlType::Ignored;
@@ -96,11 +97,17 @@ impl Field {
         panic!("Unable to parse type for field: {:?}", ty);
     }
 
-    pub fn from_field(field: &syn::Field, is_partition_key: bool, is_clustering_key: bool) -> Self {
+    pub fn from_field(
+        field: &'a syn::Field,
+        is_partition_key: bool,
+        is_clustering_key: bool,
+        is_static_column: bool,
+    ) -> Self {
         FieldAttributes::from_attributes(&field.attrs)
             .map(|char_attrs| {
                 let ignore = char_attrs.ignore.unwrap_or(false);
                 let ident = field.ident.clone().unwrap();
+
                 return Field {
                     name: ident.to_string(),
                     ident: ident.clone(),
@@ -110,11 +117,12 @@ impl Field {
                         _ => panic!("Only type path is supported!"),
                     },
                     outer_type: Field::outer_type(&field.ty, ignore),
-                    char_attrs,
-                    attrs: field.attrs.clone(),
                     span: field.span(),
+                    attrs: &field.attrs,
+                    ignore,
                     is_partition_key,
                     is_clustering_key,
+                    is_static_column,
                 };
             })
             .unwrap()
@@ -146,18 +154,18 @@ impl Field {
 }
 
 #[derive(Default)]
-pub struct CharybdisFields {
-    pub all_fields: Vec<Field>,
-    pub partition_key_fields: Vec<Field>,
-    pub clustering_key_fields: Vec<Field>,
-    pub primary_key_fields: Vec<Field>,
-    pub db_fields: Vec<Field>,
-    pub global_secondary_index_fields: Vec<Field>,
-    pub local_secondary_index_fields: Vec<Field>,
+pub struct CharybdisFields<'a> {
+    pub all_fields: Vec<Field<'a>>,
+    pub partition_key_fields: Vec<&'a Field<'a>>,
+    pub clustering_key_fields: Vec<&'a Field<'a>>,
+    pub primary_key_fields: Vec<&'a Field<'a>>,
+    pub db_fields: Vec<&'a Field<'a>>,
+    pub global_secondary_index_fields: Vec<&'a Field<'a>>,
+    pub local_secondary_index_fields: Vec<&'a Field<'a>>,
 }
 
-impl CharybdisFields {
-    pub fn non_primary_key_db_fields(&self) -> Vec<Field> {
+impl CharybdisFields<'_> {
+    pub fn non_primary_key_db_fields(&self) -> Vec<&Field> {
         self.db_fields
             .iter()
             .filter(|field| !field.is_primary_key())
@@ -165,131 +173,172 @@ impl CharybdisFields {
             .collect()
     }
 
-    pub fn non_db_fields(&self) -> Vec<Field> {
-        self.all_fields
-            .iter()
-            .filter(|field| field.char_attrs.ignore.unwrap_or(false))
-            .cloned()
-            .collect()
+    pub fn non_db_fields(&self) -> Vec<&Field> {
+        self.all_fields.iter().filter(|field| field.ignore).collect()
     }
 }
 
-impl CharybdisFields {
-    pub fn new(named_fields: &FieldsNamed, args: &CharybdisMacroArgs) -> Self {
-        let mut partition_key_fields = vec![];
-        let mut clustering_key_fields = vec![];
-        let mut primary_key_fields = vec![];
-        let mut db_fields = vec![];
-        let mut all_fields = vec![];
-        let mut global_secondary_index_fields = vec![];
-        let mut local_secondary_index_fields = vec![];
-
-        let partition_keys = args.partition_keys();
-        let clustering_keys = args.clustering_keys();
-        let static_columns = args.static_columns();
-        let global_secondary_indexes = args.global_secondary_indexes();
-        let local_secondary_indexes = args.local_secondary_indexes();
-
-        // make sure that all partition_keys are present in the struct fields
-        for key in &partition_keys {
-            named_fields
-                .named
-                .iter()
-                .find(|f| f.ident.as_ref().is_some_and(|i| &i.to_string() == key))
-                .expect(&format!("Partition key {} not found in struct fields", key));
-        }
-
-        // make sure that all clustering_keys are present in the struct fields
-        for key in &clustering_keys {
-            named_fields
-                .named
-                .iter()
-                .find(|f| f.ident.as_ref().is_some_and(|i| &i.to_string() == key))
-                .expect(&format!("Clustering key {} not found in struct fields", key));
-        }
-
-        for key in &static_columns {
-            named_fields
-                .named
-                .iter()
-                .find(|f| f.ident.as_ref().is_some_and(|i| &i.to_string() == key))
-                .expect(&format!("Static column {} not found in struct fields", key));
-        }
+impl<'a> CharybdisFields<'a> {
+    fn new(named_fields: &'a FieldsNamed, args: &CharybdisMacroArgs) -> Self {
+        let mut me = Self::default();
 
         for field in &named_fields.named {
-            let field_name = field.ident.clone().unwrap().to_string();
-            let is_partition_key = partition_keys.contains(&field_name);
-            let is_clustering_key = clustering_keys.contains(&field_name);
-            let is_static_column = static_columns.contains(&field_name);
+            let field_name = field.ident.clone().expect("field must have an identifier").to_string();
+            let is_partition_key = args.partition_keys().contains(&field_name);
+            let is_clustering_key = args.clustering_keys().contains(&field_name);
+            let is_static_column = args.static_columns().contains(&field_name);
 
-            let ch_field = Field::from_field(field, is_partition_key, is_clustering_key);
+            let ch_field = Field::from_field(field, is_partition_key, is_clustering_key, is_static_column);
 
             if is_partition_key && is_clustering_key {
                 panic!("Field {} cannot be both partition and clustering key", field_name);
             }
 
-            if is_static_column && (is_partition_key || is_clustering_key) {
-                panic!(
-                    "Field {} cannot be both static column and partition or clustering key",
-                    field_name
+            if is_static_column {
+                if is_partition_key || is_clustering_key {
+                    panic!(
+                        "Field {} cannot be both static column and partition or clustering key",
+                        field_name
+                    );
+                }
+            }
+
+            me.all_fields.push(ch_field);
+        }
+
+        me
+    }
+
+    pub fn populate(&'a mut self, args: &CharybdisMacroArgs) -> &Self {
+        let mut partition_key_fields: Vec<Option<&Field>> = vec![None; args.partition_keys().len()];
+        let mut clustering_key_fields: Vec<Option<&Field>> = vec![None; args.clustering_keys().len()];
+        let mut primary_key_fields: Vec<Option<&Field>> =
+            vec![None; args.partition_keys().len() + args.clustering_keys().len()];
+
+        // primary key indexes by name
+        let partition_key_indexes_by_name = args
+            .partition_keys()
+            .iter()
+            .enumerate()
+            .map(|(i, key)| (key, i))
+            .collect::<HashMap<&String, usize>>();
+
+        let clustering_key_indexes_by_name = args
+            .clustering_keys()
+            .iter()
+            .enumerate()
+            .map(|(i, key)| (key, i))
+            .collect::<HashMap<&String, usize>>();
+
+        #[allow(suspicious_double_ref_op)]
+        let primary_key_indexes_by_name = args
+            .primary_key()
+            .iter()
+            .enumerate()
+            .map(|(i, key)| (key.clone(), i))
+            .collect::<HashMap<&String, usize>>();
+
+        // used to validate that provided macro args are present in struct fields
+        let mut pk_struct_fields = HashSet::new();
+        let mut ck_struct_fields = HashSet::new();
+        let mut static_struct_fields = HashSet::new();
+
+        // populate fields
+        for ch_field in self.all_fields.iter() {
+            if !ch_field.ignore {
+                self.db_fields.push(ch_field);
+            }
+
+            if ch_field.is_static_column {
+                static_struct_fields.insert(ch_field.name.clone());
+            }
+
+            if args.global_secondary_indexes().contains(&ch_field.name) {
+                self.global_secondary_index_fields.push(ch_field);
+            }
+
+            if args.local_secondary_indexes().contains(&ch_field.name) {
+                self.local_secondary_index_fields.push(ch_field);
+            }
+
+            if ch_field.is_partition_key {
+                partition_key_fields.insert(
+                    *partition_key_indexes_by_name
+                        .get(&ch_field.name)
+                        .expect("index must be set"),
+                    Some(ch_field),
                 );
-            }
-
-            all_fields.push(ch_field.clone());
-
-            if !ch_field.char_attrs.ignore.unwrap_or(false) {
-                db_fields.push(ch_field.clone());
-            }
-
-            if global_secondary_indexes.contains(&field_name) {
-                global_secondary_index_fields.push(ch_field.clone());
-            }
-
-            if local_secondary_indexes.contains(&field_name) {
-                local_secondary_index_fields.push(ch_field.clone());
-            }
-
-            if is_partition_key {
-                partition_key_fields.push(ch_field.clone());
-                primary_key_fields.push(ch_field);
-            } else if is_clustering_key {
-                clustering_key_fields.push(ch_field.clone());
-                primary_key_fields.push(ch_field);
+                primary_key_fields.insert(
+                    *primary_key_indexes_by_name
+                        .get(&ch_field.name)
+                        .expect("index must be set"),
+                    Some(ch_field),
+                );
+                pk_struct_fields.insert(ch_field.name.clone());
+            } else if ch_field.is_clustering_key {
+                clustering_key_fields.insert(
+                    *clustering_key_indexes_by_name
+                        .get(&ch_field.name)
+                        .expect("index must be set"),
+                    Some(ch_field),
+                );
+                primary_key_fields.insert(
+                    *primary_key_indexes_by_name
+                        .get(&ch_field.name)
+                        .expect("index must be set"),
+                    Some(ch_field),
+                );
+                ck_struct_fields.insert(ch_field.name.clone());
             }
         }
 
-        Self {
-            partition_key_fields,
-            clustering_key_fields,
-            primary_key_fields,
-            all_fields,
-            db_fields,
-            global_secondary_index_fields,
-            local_secondary_index_fields,
+        // validate that provided macro args are present in struct fields
+        for key in args.partition_keys() {
+            if !pk_struct_fields.contains(key) {
+                panic!("Partition key {} not found in struct fields", key);
+            }
         }
+
+        for key in args.clustering_keys() {
+            if !ck_struct_fields.contains(key) {
+                panic!("Clustering key {} not found in struct fields", key);
+            }
+        }
+
+        for key in args.static_columns() {
+            if !static_struct_fields.contains(key) {
+                panic!("Static column {} not found in struct fields", key);
+            }
+        }
+
+        // populate primary key fields
+        self.partition_key_fields = partition_key_fields.into_iter().filter_map(|x| x).collect();
+        self.clustering_key_fields = clustering_key_fields.into_iter().filter_map(|x| x).collect();
+        self.primary_key_fields = primary_key_fields.into_iter().filter_map(|x| x).collect();
+
+        self
     }
 
     pub(crate) fn db_fields(named_fields: &FieldsNamed) -> Vec<Field> {
-        let mut all_fields = vec![];
         let mut db_fields = vec![];
 
         for field in &named_fields.named {
-            let field = Field::from_field(field, false, false);
+            let field = Field::from_field(field, false, false, false);
 
-            all_fields.push(field.clone());
-
-            if !field.char_attrs.ignore.unwrap_or(false) {
-                db_fields.push(field.clone());
+            if !field.ignore {
+                db_fields.push(field);
             }
         }
 
         db_fields
     }
 
-    pub fn from_input(input: &DeriveInput, args: &CharybdisMacroArgs) -> Self {
+    pub fn from_input(input: &'a DeriveInput, args: &'a CharybdisMacroArgs) -> Self {
         match &input.data {
             Data::Struct(data) => match &data.fields {
-                Fields::Named(named_fields) => Self::new(named_fields, args),
+                Fields::Named(named_fields) => {
+                    return CharybdisFields::new(named_fields, args);
+                }
                 _ => panic!("#[charybdis_model] works only for structs with named fields!"),
             },
             _ => panic!("#[charybdis_model] works only on structs!"),

@@ -12,7 +12,7 @@ pub(crate) trait FieldHashMapString {
     fn field_attributes_hash_map_string(&self) -> String;
 }
 
-impl FieldHashMapString for Vec<Field> {
+impl FieldHashMapString for Vec<Field<'_>> {
     fn field_types_hash_map_string(&self) -> String {
         let mut field_types = quote! {};
 

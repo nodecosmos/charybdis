@@ -1,7 +1,7 @@
 use crate::traits::fields::FieldsQuery;
 
 use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::macro_args::CharybdisMacroArgs;
+use charybdis_parser::traits::CharybdisMacroArgs;
 use quote::quote;
 use syn::ImplItem;
 

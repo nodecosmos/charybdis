@@ -9,7 +9,7 @@ pub(crate) trait FieldsQuery {
     fn where_bind_markers(&self) -> String;
 }
 
-impl FieldsQuery for Vec<Field> {
+impl FieldsQuery for Vec<&Field<'_>> {
     fn comma_sep_cols(&self) -> String {
         self.names().join(", ")
     }
