@@ -7,7 +7,7 @@ pub(crate) trait FieldsAsTuple {
     fn values(&self) -> Vec<TokenStream>;
 }
 
-impl FieldsAsTuple for Vec<Field> {
+impl FieldsAsTuple for Vec<&Field<'_>> {
     fn types(&self) -> Vec<syn::Type> {
         self.iter().map(|field| field.ty.clone()).collect()
     }

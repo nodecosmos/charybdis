@@ -182,7 +182,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "0.4.17"
+version = "0.4.18"
 dependencies = [
  "bigdecimal",
  "charybdis_macros",
@@ -199,7 +199,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.4.17"
+version = "0.4.18"
 dependencies = [
  "charybdis_parser",
  "clap",
@@ -214,7 +214,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.4.17"
+version = "0.4.18"
 dependencies = [
  "charybdis",
  "charybdis_parser",
@@ -227,7 +227,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.4.17"
+version = "0.4.18"
 dependencies = [
  "colored",
  "darling",
@@ -1218,9 +1218,9 @@ checksum = "ef927ca75afb808a4d64dd374f00a2adf8d0fcff8e7b184af886c3c87ec4a3f3"
 
 [[package]]
 name = "tokio"
-version = "1.36.0"
+version = "1.37.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61285f6515fa018fb2d1e46eb21223fff441ee8db5d0f1435e8ab4f5cdb80931"
+checksum = "1adbebffeca75fcfd058afa480fb6c0b81e165a0323f9c9d39c9697e37c46787"
 dependencies = [
  "backtrace",
  "bytes",

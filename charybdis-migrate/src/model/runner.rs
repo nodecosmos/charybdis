@@ -111,7 +111,11 @@ impl<'a> ModelRunner<'a> {
                     materialized_view_where_clause
                 );
 
-                let primary_key_clause = format!("PRIMARY KEY ({})", primary_key.join(", "));
+                let primary_key_clause = format!(
+                    "PRIMARY KEY (({}), {})\n",
+                    self.data.current_code_schema.partition_keys.join(", "),
+                    self.data.current_code_schema.clustering_keys.join(", ")
+                );
 
                 let cql = format!(
                     "CREATE MATERIALIZED VIEW IF NOT EXISTS {}\nAS {} {} {}\n",

@@ -1,7 +1,7 @@
 use crate::traits::fields::FieldsQuery;
 use crate::traits::string::ToSnakeCase;
 use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::macro_args::CharybdisMacroArgs;
+use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::parse_str;

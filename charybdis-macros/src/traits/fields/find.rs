@@ -11,7 +11,7 @@ pub(crate) trait FieldsFindFnNames {
     fn maybe_find_first_by_fn_name(&self) -> String;
 }
 
-impl FieldsFindFnNames for Field {
+impl FieldsFindFnNames for Field<'_> {
     fn find_by_fn_name(&self) -> String {
         format!("find_by_{}", self.name)
     }
@@ -25,7 +25,7 @@ impl FieldsFindFnNames for Field {
     }
 }
 
-impl FieldsFindFnNames for Vec<Field> {
+impl FieldsFindFnNames for Vec<&Field<'_>> {
     fn find_by_fn_name(&self) -> String {
         format!("find_by_{}", self.names().join("_and_"))
     }
@@ -74,8 +74,8 @@ pub(crate) trait FieldsFindFn: FieldsFindFnNames + FieldsToArguments {
     }
 }
 
-impl FieldsFindFn for Field {}
-impl FieldsFindFn for Vec<Field> {}
+impl FieldsFindFn for Field<'_> {}
+impl FieldsFindFn for Vec<&Field<'_>> {}
 
 pub(crate) trait FieldsFindFirstFns: FieldsFindFnNames + FieldsToArguments {
     fn find_first_fn(&self, struct_name: &syn::Ident, query_str: &String) -> TokenStream {
@@ -111,5 +111,5 @@ pub(crate) trait FieldsFindFirstFns: FieldsFindFnNames + FieldsToArguments {
     }
 }
 
-impl FieldsFindFirstFns for Field {}
-impl FieldsFindFirstFns for Vec<Field> {}
+impl FieldsFindFirstFns for Field<'_> {}
+impl FieldsFindFirstFns for Vec<&Field<'_>> {}

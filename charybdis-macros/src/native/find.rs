@@ -1,6 +1,6 @@
 use crate::traits::fields::{FieldsFindFirstFns, FieldsFindFn, FieldsQuery};
 use charybdis_parser::fields::{CharybdisFields, Field};
-use charybdis_parser::macro_args::CharybdisMacroArgs;
+use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -73,7 +73,7 @@ pub(crate) fn find_by_primary_keys_functions(
             break;
         }
 
-        let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<Field>>();
+        let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<&Field>>();
 
         // we need complete partition key to query
         if current_fields.len() < partition_keys_len {
@@ -117,7 +117,7 @@ pub(crate) fn find_by_local_secondary_index(
 
     lsi_fields.iter().for_each(|lsi| {
         let mut current_fields = partition_keys.clone();
-        current_fields.push(lsi.clone());
+        current_fields.push(lsi);
 
         let query_str = format!(
             "SELECT {} FROM {} WHERE {}",

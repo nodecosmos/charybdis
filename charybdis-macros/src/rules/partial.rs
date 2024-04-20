@@ -1,7 +1,7 @@
 use crate::traits::fields::{FieldHashMapString, ToIdents};
 use crate::traits::string::ToSnakeCase;
 use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::macro_args::CharybdisMacroArgs;
+use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use std::collections::HashMap;

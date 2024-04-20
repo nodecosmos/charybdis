@@ -1,7 +1,7 @@
 use crate::traits::fields::{FieldsNames, FieldsQuery, FieldsToArguments};
 use crate::traits::tuple::Tuple;
 use charybdis_parser::fields::{CharybdisFields, Field};
-use charybdis_parser::macro_args::CharybdisMacroArgs;
+use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -32,7 +32,7 @@ pub(crate) fn delete_by_primary_key_functions(ch_args: &CharybdisMacroArgs, fiel
             break;
         }
 
-        let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<Field>>();
+        let current_fields = primary_key_stack.iter().take(i + 1).cloned().collect::<Vec<&Field>>();
 
         // we need complete partition key to query
         if current_fields.len() < partition_keys_len {

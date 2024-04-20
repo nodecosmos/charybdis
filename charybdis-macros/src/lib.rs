@@ -15,7 +15,7 @@ use crate::native::{
 use crate::rules::*;
 use crate::scylla::from_row;
 use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::macro_args::CharybdisMacroArgs;
+use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse_macro_input;
@@ -24,14 +24,15 @@ use syn::DeriveInput;
 #[proc_macro_attribute]
 pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
+
     let mut input: DeriveInput = parse_macro_input!(input);
-    let fields = CharybdisFields::from_input(&input, &args);
+    let mut new_fields = CharybdisFields::from_input(&input, &args);
+    let fields = new_fields.populate(&args);
+
     let struct_name = &input.ident.clone();
 
+    // partial_<model_name>!(StructName, field1, field2, ...);
     let partial_model_generator = partial_model_macro_generator(&input, &args, &fields);
-
-    CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
-    CharybdisFields::strip_charybdis_attributes(&mut input);
 
     // Charybdis::BaseModel types
     let primary_key_type = primary_key_type(&fields);
@@ -82,6 +83,9 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, &fields);
     let find_by_global_secondary_index_funs = find_by_global_secondary_index(struct_name, &args, &fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(&args, &fields);
+
+    CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
+    CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let expanded = quote! {
         #[derive(charybdis::SerializeRow)]
@@ -150,11 +154,10 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let args: CharybdisMacroArgs = parse_macro_input!(args);
     let mut input: DeriveInput = parse_macro_input!(input);
-    let fields = CharybdisFields::from_input(&input, &args);
+    let mut new_fields = CharybdisFields::from_input(&input, &args);
+    let fields = new_fields.populate(&args);
 
-    CharybdisFields::strip_charybdis_attributes(&mut input);
-
-    let struct_name = &input.ident;
+    let struct_name = &input.ident.clone();
 
     // Charybdis::BaseModel types
     let primary_key_type = primary_key_type(&fields);
@@ -175,6 +178,9 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
 
     // Associated functions
     let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
+
+    CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
+    CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let expanded = quote! {
         #[derive(charybdis::SerializeRow)]
