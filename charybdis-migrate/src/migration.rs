@@ -1,5 +1,6 @@
 use crate::model::data::ModelData;
 use crate::model::{ModelMigration, ModelType};
+use crate::Args;
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
 use charybdis_parser::schema::SchemaObject;
@@ -10,7 +11,7 @@ pub(crate) struct Migration<'a> {
     current_db_schema: &'a DbSchema,
     current_code_schema: &'a CodeSchema,
     session: &'a Session,
-    drop_and_replace: bool,
+    args: &'a Args,
 }
 
 impl<'a> Migration<'a> {
@@ -18,13 +19,13 @@ impl<'a> Migration<'a> {
         current_db_schema: &'a DbSchema,
         current_code_schema: &'a CodeSchema,
         session: &'a Session,
-        drop_and_replace: bool,
+        args: &'a Args,
     ) -> Self {
         Migration {
             current_db_schema,
             current_code_schema,
             session,
-            drop_and_replace,
+            args,
         }
     }
 
@@ -47,7 +48,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.udts.get(name).unwrap_or(&empty_udt),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, self.drop_and_replace);
+            let migration = ModelMigration::new(&model_data, self.session, &self.args);
 
             migration.run().await;
         }
@@ -64,7 +65,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.tables.get(name).unwrap_or(&empty_table),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, self.drop_and_replace);
+            let migration = ModelMigration::new(&model_data, self.session, &self.args);
 
             migration.run().await;
         }
@@ -81,7 +82,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.materialized_views.get(name).unwrap_or(&empty_mv),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, self.drop_and_replace);
+            let migration = ModelMigration::new(&model_data, self.session, &self.args);
 
             migration.run().await;
         }

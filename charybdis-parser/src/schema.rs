@@ -62,10 +62,10 @@ impl SchemaObject {
 
         for (field_name, field_type, is_static) in self.fields.iter() {
             cql_fields.push_str(&format!(
-                "    {} {} {},\n",
+                "    {} {}{},\n",
                 field_name.bright_cyan().bold(),
                 field_type.bright_yellow(),
-                if *is_static { "static" } else { "" }
+                if *is_static { " static" } else { "" }
             ));
         }
 

@@ -39,6 +39,10 @@ struct Args {
     /// Drop and recreate columns in case of type change
     #[arg(short, long, default_value_t = false)]
     drop_and_replace: bool,
+
+    /// Prints alter table options queries
+    #[arg(long, default_value_t = false)]
+    verbose: bool,
 }
 
 #[tokio::main]
@@ -51,12 +55,7 @@ async fn main() {
     let current_db_schema = DbSchema::new(&session, args.keyspace.clone()).await;
     let current_code_schema = CodeSchema::new(&project_root);
 
-    let migration = Migration::new(
-        &current_db_schema,
-        &current_code_schema,
-        &session,
-        args.drop_and_replace,
-    );
+    let migration = Migration::new(&current_db_schema, &current_code_schema, &session, &args);
 
     migration.run().await;
 

@@ -3,6 +3,7 @@ mod runner;
 
 use crate::model::data::ModelData;
 use crate::model::runner::ModelRunner;
+use crate::Args;
 use colored::Colorize;
 use scylla::Session;
 use std::fmt::Display;
@@ -24,21 +25,44 @@ impl Display for ModelType {
     }
 }
 
+/// Migration steps in non-conflicting order
+enum MigrationStep {
+    ChangeTableOptions,
+    ChangeFieldTypes,
+    AddFields,
+    AddGlobalIndexes,
+    AddLocalIndexes,
+    RemoveLocalIndexes,
+    RemoveGlobalIndexes,
+    RemoveFields,
+}
+
+impl MigrationStep {
+    fn array() -> [MigrationStep; 8] {
+        [
+            MigrationStep::ChangeTableOptions,
+            MigrationStep::ChangeFieldTypes,
+            MigrationStep::AddFields,
+            MigrationStep::AddGlobalIndexes,
+            MigrationStep::AddLocalIndexes,
+            MigrationStep::RemoveLocalIndexes,
+            MigrationStep::RemoveGlobalIndexes,
+            MigrationStep::RemoveFields,
+        ]
+    }
+}
+
 pub(crate) struct ModelMigration<'a> {
     data: &'a ModelData<'a>,
     runner: ModelRunner<'a>,
-    drop_and_replace: bool,
+    args: &'a Args,
 }
 
 impl<'a> ModelMigration<'a> {
-    pub(crate) fn new(data: &'a ModelData, session: &'a Session, drop_and_replace: bool) -> Self {
-        let runner = ModelRunner::new(&session, &data);
+    pub(crate) fn new(data: &'a ModelData, session: &'a Session, args: &'a Args) -> Self {
+        let runner = ModelRunner::new(&session, data, args);
 
-        Self {
-            data,
-            runner,
-            drop_and_replace,
-        }
+        Self { data, runner, args }
     }
 
     pub(crate) async fn run(&self) {
@@ -47,52 +71,63 @@ impl<'a> ModelMigration<'a> {
             return;
         }
 
-        self.runner.run_table_options_change_migration().await;
-
         self.panic_on_partition_key_change();
         self.panic_on_clustering_key_change();
 
         let mut is_any_field_changed = false;
 
-        if self.data.has_changed_type_fields() {
-            is_any_field_changed = true;
-            self.handle_fields_type_change().await;
-        }
-
-        if self.data.has_new_fields() {
-            is_any_field_changed = true;
-            self.handle_new_fields().await;
-        }
-
-        if self.data.has_removed_fields() {
-            is_any_field_changed = true;
-            self.handle_removed_fields().await;
-        }
-
-        if self.data.has_new_global_secondary_indexes() {
-            is_any_field_changed = true;
-            self.runner.run_global_index_added_migration().await;
-        }
-
-        if self.data.has_new_local_secondary_indexes() {
-            is_any_field_changed = true;
-            self.runner.run_local_index_added_migration().await;
-        }
-
-        if self.data.has_removed_global_secondary_indexes() {
-            is_any_field_changed = true;
-            self.runner.run_global_index_removed_migration().await;
-        }
-
-        if self.data.has_removed_local_secondary_indexes() {
-            is_any_field_changed = true;
-            self.runner.run_local_index_removed_migration().await;
+        for step in MigrationStep::array().iter() {
+            match step {
+                MigrationStep::ChangeTableOptions => self.runner.run_table_options_change_migration().await,
+                MigrationStep::ChangeFieldTypes => {
+                    if self.data.has_changed_type_fields() {
+                        is_any_field_changed = true;
+                        self.handle_fields_type_change().await;
+                    }
+                }
+                MigrationStep::AddFields => {
+                    if self.data.has_new_fields() {
+                        is_any_field_changed = true;
+                        self.handle_new_fields().await;
+                    }
+                }
+                MigrationStep::AddGlobalIndexes => {
+                    if self.data.has_new_global_secondary_indexes() {
+                        is_any_field_changed = true;
+                        self.runner.run_global_index_added_migration().await;
+                    }
+                }
+                MigrationStep::AddLocalIndexes => {
+                    if self.data.has_new_local_secondary_indexes() {
+                        is_any_field_changed = true;
+                        self.runner.run_local_index_added_migration().await;
+                    }
+                }
+                MigrationStep::RemoveGlobalIndexes => {
+                    if self.data.has_removed_global_secondary_indexes() {
+                        is_any_field_changed = true;
+                        self.runner.run_global_index_removed_migration().await;
+                    }
+                }
+                MigrationStep::RemoveLocalIndexes => {
+                    if self.data.has_removed_local_secondary_indexes() {
+                        is_any_field_changed = true;
+                        self.runner.run_local_index_removed_migration().await;
+                    }
+                }
+                MigrationStep::RemoveFields => {
+                    if self.data.has_removed_fields() {
+                        is_any_field_changed = true;
+                        self.handle_removed_fields().await;
+                    }
+                }
+            }
         }
 
         if !is_any_field_changed {
             println!(
                 "{} {} {}",
-                "No changes detected in".green(),
+                "No field changes in".green(),
                 self.data.migration_object_name.bright_yellow(),
                 self.data.migration_object_type.to_string().bright_magenta()
             );
@@ -112,7 +147,7 @@ impl<'a> ModelMigration<'a> {
     }
 
     async fn handle_fields_type_change(&self) {
-        if self.drop_and_replace {
+        if self.args.drop_and_replace {
             self.panic_on_mv_fields_change();
             self.panic_on_udt_fields_removal();
 
