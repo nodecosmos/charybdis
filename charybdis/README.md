@@ -29,9 +29,8 @@ exiting UDTs.
 - Provide easy way to work with subset of model fields by using automatically
   generated `partial_<model>!` macro
 - Provide easy way to run complex queries by using automatically generated `find_<model>!` macro
-- Automatic migration tool that analyzes the `src/model/*.rs` files and runs migrations according to
-  differences between
-  the model definition and database
+- Automatic migration tool analyzes the project files and runs migrations according to differences
+  between the model definition and database
 
 ## Performance consideration:
 

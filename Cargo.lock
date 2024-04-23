@@ -182,7 +182,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "0.4.18"
+version = "0.5.0"
 dependencies = [
  "bigdecimal",
  "charybdis_macros",
@@ -198,7 +198,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.4.18"
+version = "0.5.0"
 dependencies = [
  "charybdis_parser",
  "clap",
@@ -213,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.4.18"
+version = "0.5.0"
 dependencies = [
  "charybdis",
  "charybdis_parser",
@@ -226,7 +226,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.4.18"
+version = "0.5.0"
 dependencies = [
  "colored",
  "darling",
@@ -528,9 +528,9 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hermit-abi"
-version = "0.3.4"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d3d0e0f38255e7fa3cf31335b3a56f05febd18025f4db5ef7a0cfb4f8da651f"
+checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 
 [[package]]
 name = "histogram"
@@ -1052,9 +1052,9 @@ dependencies = [
 
 [[package]]
 name = "signal-hook-registry"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8229b473baa5980ac72ef434c4415e70c4b5e71b423043adb4ba059f89c99a1"
+checksum = "a9e9e0b4211b72e7b8b6e85c807d36c212bdb33ea8587f7569562a84df5465b1"
 dependencies = [
  "libc",
 ]
