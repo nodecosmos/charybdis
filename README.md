@@ -122,6 +122,10 @@ exiting UDTs.
 
 🚨 [UDT fields must be in the same order as they are in the database](https://rust-driver.docs.scylladb.com/stable/data-types/udt.html).
 
+Note that in order for migration to correctly detect changes on each migration, `type_name` has to
+match struct name. So if we have `struct ReorderData` we have to use
+`#[charybdis_udt_model(type_name = reorderdata)]` - without underscores.
+
 ### Define Materialized Views
 
   ```rust
