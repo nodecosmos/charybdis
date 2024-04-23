@@ -363,25 +363,21 @@ in `charybdis::operations` module.
 
     ```rust
     // automatically generated macro rule
-    let posts = find_post!(
-        "category_id in ? AND date > ?",
-        (categor_vec, date)
-    ).execute(session).await?;
+    let posts = find_post!("category_id in ? AND date > ?", (categor_vec, date))
+        .execute(session)
+        .await?;
     ```
 
   We can also use `find_first_post!` macro to get single result:
     ```rust
-    let post = find_first_post!(
-        "category_id in ? AND date > ? LIMIT 1",
-        (date, categor_vec)
-    ).execute(session).await?;
+    let post = find_first_post!("category_id in ? AND date > ? LIMIT 1", (date, categor_vec))
+        .execute(session)
+        .await?;
     ```
 
   If we just need the `Query` and not the result, we can use `find_post_query!` macro:
     ```rust
-    let query = find_post_query!(
-        "date = ? AND category_id in ?",
-        (date, categor_vec)
+    let query = find_post_query!("date = ? AND category_id in ?", (date, categor_vec));
     ```
 
 ## Update
