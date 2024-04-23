@@ -1,11 +1,14 @@
-use crate::traits::fields::{FieldHashMapString, ToIdents};
-use crate::traits::string::ToSnakeCase;
-use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::traits::CharybdisMacroArgs;
+use std::collections::HashMap;
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use std::collections::HashMap;
-use syn::{parse_str, Attribute, DeriveInput};
+use syn::{Attribute, DeriveInput, parse_str};
+
+use charybdis_parser::fields::CharybdisFields;
+use charybdis_parser::traits::CharybdisMacroArgs;
+use charybdis_parser::traits::string::ToSnakeCase;
+
+use crate::traits::fields::{FieldHashMapString, ToIdents};
 
 ///
 /// ## Generates macro rule for partial model generation

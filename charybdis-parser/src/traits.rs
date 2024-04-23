@@ -1,12 +1,15 @@
-mod array;
-mod hash;
+use std::collections::HashMap;
+
+use proc_macro2::TokenStream;
+use quote::ToTokens;
+use syn::parse::{Parse, ParseStream};
 
 use crate::traits::array::ToStringCollection;
 use crate::traits::hash::hash_expr_lit_to_hash;
-use proc_macro2::TokenStream;
-use quote::ToTokens;
-use std::collections::HashMap;
-use syn::parse::{Parse, ParseStream};
+
+mod array;
+mod hash;
+pub mod string;
 
 static EMPTY_VEC: Vec<String> = Vec::new();
 

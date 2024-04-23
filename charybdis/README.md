@@ -83,9 +83,7 @@ exiting UDTs.
 
 ### Define Tables
 
-- Declare model as a struct within `src/models` dir:
   ```rust
-  // src/models/user.rs
   use charybdis::macros::charybdis_model;
   use charybdis::types::{Text, Timestamp, Uuid};
   
@@ -107,13 +105,9 @@ exiting UDTs.
   }
   ```
 
-(Note we use `src/models` as automatic migration tool expects that dir)
-
 ### Define UDT
 
-- `src/models/udts`
-  ```rust
-  // src/models/udts/address.rs
+ ```rust
   use charybdis::macros::charybdis_udt_model;
   use charybdis::types::Text;
   
@@ -131,10 +125,7 @@ exiting UDTs.
 
 ### Define Materialized Views
 
-- `src/models/materialized_views`
-
   ```rust
-  // src/models/materialized_views/users_by_username.rs
   use charybdis::macros::charybdis_view_model;
   use charybdis::types::{Text, Timestamp, Uuid};
   
@@ -154,7 +145,7 @@ exiting UDTs.
   
   ```
 
-  Resulting auto-generated migration query will be:
+Resulting auto-generated migration query will be:
 
   ```sql
   CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_email
@@ -169,7 +160,7 @@ exiting UDTs.
 * <a name="automatic-migration"></a>
   `charybdis-migrate` enables automatic migration to database without need to write migrations by
   hand.
-  It expects `src/models` files and generates migrations based on differences between model
+  It iterates over project files and generates migrations based on differences between model
   definitions and database.
   It supports following operations:
     - Create new tables
@@ -178,8 +169,8 @@ exiting UDTs.
     - Change field types (drop and recreate column `--drop-and-replace` flag)
     - Create secondary indexes
     - Drop secondary indexes
-    - Create UDTs (`src/models/udts`)
-    - Create materialized views (`src/models/materialized_views`)
+    - Create UDTs
+    - Create materialized views
     - Table options
       ```rust
         #[charybdis_model(
@@ -196,11 +187,10 @@ exiting UDTs.
         #[derive(Serialize, Deserialize, Default)]
         pub struct Commit {...}
         ```
-      ⚠️ If table exists, table options will result in alter table query that without
-      `CLUSTERING ORDER` and `COMPACT STORAGE` options.
+        * ⚠️ If table exists, table options will result in alter table query that without
+          `CLUSTERING ORDER` and `COMPACT STORAGE` options.
 
-      Model dropping is not added. If you don't define model within `src/model` dir
-      it will leave db structure as it is.
+  Model dropping is not added. If you removed model, you need to drop table manuall
 
 * ### Running migration
   ```bash
