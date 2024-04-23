@@ -1,12 +1,14 @@
-pub(crate) mod data;
-mod runner;
+use std::fmt::Display;
 
-use crate::model::data::ModelData;
-use crate::model::runner::ModelRunner;
-use crate::Args;
 use colored::Colorize;
 use scylla::Session;
-use std::fmt::Display;
+
+use crate::Args;
+use crate::model::data::ModelData;
+use crate::model::runner::ModelRunner;
+
+pub(crate) mod data;
+mod runner;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub(crate) enum ModelType {
@@ -212,15 +214,24 @@ impl<'a> ModelMigration<'a> {
         if self.data.migration_object_type == ModelType::Udt
             && (self.data.has_removed_fields() || self.data.has_changed_type_fields())
         {
-            panic!("\n{}\n", "UDT fields removal is not allowed!".bold().bright_red());
+            panic!(
+                "\n\n{} {} {}\n{}\n\n",
+                "Illegal change in".bright_red(),
+                self.data.migration_object_name.bright_yellow(),
+                self.data.migration_object_type.to_string().bright_magenta(),
+                "UDT fields removal is not allowed!".bright_red(),
+            );
         }
     }
 
     fn panic_on_mv_fields_change(&self) {
         if self.data.migration_object_type == ModelType::MaterializedView {
             panic!(
-                "\n{}\n",
-                "Materialized view fields change is not allowed!".bold().bright_red()
+                "\n\n{} {} {}\n{}\n\n",
+                "Illegal change in".bright_red(),
+                self.data.migration_object_name.bright_yellow(),
+                self.data.migration_object_type.to_string().bright_magenta(),
+                "Materialized view fields change is not allowed!".bright_red(),
             );
         }
     }
