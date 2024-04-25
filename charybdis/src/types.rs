@@ -327,6 +327,7 @@ impl std::hash::Hash for Timeuuid {
 /// Driver traits
 impl From<CqlTimeuuid> for Timeuuid {
     fn from(cql_timeuuid: CqlTimeuuid) -> Self {
+        // we can not return CqlTimeuuid.0 as it's private
         let u128 = cql_timeuuid.as_u128();
         let uuid = Uuid::from_u128(u128);
 
