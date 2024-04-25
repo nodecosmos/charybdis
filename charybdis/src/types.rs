@@ -1,14 +1,16 @@
-use crate::{FromCqlVal, SerializeCql};
+use std::collections::{HashMap, HashSet};
+use std::net::IpAddr;
+
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, Utc};
 use scylla::_macro_internal::{CellWriter, ColumnType, FromCqlValError, SerializationError, WrittenCellProof};
 use scylla::frame::response::result::CqlValue;
-use scylla::frame::value::CqlDuration;
+use scylla::frame::value::{CqlDuration, CqlTimeuuid};
 pub use scylla::macros::{FromRow, FromUserType, IntoUserType, ValueList};
 use scylla::serialize::value::{BuiltinTypeCheckError, BuiltinTypeCheckErrorKind};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
-use std::net::IpAddr;
+
+use crate::{FromCqlVal, SerializeCql};
 
 pub type Ascii = String;
 pub type BigInt = i64;
@@ -24,7 +26,6 @@ pub type SmallInt = i16;
 pub type Text = String;
 pub type Time = chrono::NaiveTime;
 pub type Timestamp = chrono::DateTime<Utc>;
-pub type Timeuuid = Uuid;
 pub type TinyInt = i8;
 pub type Uuid = uuid::Uuid;
 pub type Varchar = String;
@@ -151,5 +152,215 @@ impl SerializeCql for Duration {
         writer: CellWriter<'b>,
     ) -> Result<WrittenCellProof<'b>, SerializationError> {
         self.0.serialize(typ, writer)
+    }
+}
+
+/// Bellow is copy paste from scylla's CqlTimeuuid, with serde support added.
+#[derive(Serialize, Deserialize, Default, Debug, Clone, Copy, Eq)]
+pub struct Timeuuid(Uuid);
+
+/// [`Uuid`] delegate methods
+impl Timeuuid {
+    pub fn now_v1(node_id: &[u8; 6]) -> Self {
+        Self(Uuid::now_v1(node_id))
+    }
+
+    pub fn new_v1(ts: uuid::Timestamp, node_id: &[u8; 6]) -> Self {
+        Self(Uuid::new_v1(ts, node_id))
+    }
+
+    pub fn as_bytes(&self) -> &[u8; 16] {
+        self.0.as_bytes()
+    }
+
+    pub fn as_u128(&self) -> u128 {
+        self.0.as_u128()
+    }
+
+    pub fn as_fields(&self) -> (u32, u16, u16, &[u8; 8]) {
+        self.0.as_fields()
+    }
+
+    pub fn as_u64_pair(&self) -> (u64, u64) {
+        self.0.as_u64_pair()
+    }
+
+    pub fn from_slice(b: &[u8]) -> Result<Self, uuid::Error> {
+        Ok(Self(Uuid::from_slice(b)?))
+    }
+
+    pub fn from_slice_le(b: &[u8]) -> Result<Self, uuid::Error> {
+        Ok(Self(Uuid::from_slice_le(b)?))
+    }
+
+    pub fn from_bytes(bytes: [u8; 16]) -> Self {
+        Self(Uuid::from_bytes(bytes))
+    }
+
+    pub fn from_bytes_le(bytes: [u8; 16]) -> Self {
+        Self(Uuid::from_bytes_le(bytes))
+    }
+
+    pub fn from_fields(d1: u32, d2: u16, d3: u16, d4: &[u8; 8]) -> Self {
+        Self(Uuid::from_fields(d1, d2, d3, d4))
+    }
+
+    pub fn from_fields_le(d1: u32, d2: u16, d3: u16, d4: &[u8; 8]) -> Self {
+        Self(Uuid::from_fields_le(d1, d2, d3, d4))
+    }
+
+    pub fn from_u128(v: u128) -> Self {
+        Self(Uuid::from_u128(v))
+    }
+
+    pub fn from_u128_le(v: u128) -> Self {
+        Self(Uuid::from_u128_le(v))
+    }
+
+    pub fn from_u64_pair(high_bits: u64, low_bits: u64) -> Self {
+        Self(Uuid::from_u64_pair(high_bits, low_bits))
+    }
+}
+
+impl Timeuuid {
+    /// Read 8 most significant bytes of timeuuid from serialized bytes
+    fn msb(&self) -> u64 {
+        // Scylla and Cassandra use a standard UUID memory layout for MSB:
+        // 4 bytes    2 bytes    2 bytes
+        // time_low - time_mid - time_hi_and_version
+        let bytes = self.0.as_bytes();
+        ((bytes[6] & 0x0F) as u64) << 56
+            | (bytes[7] as u64) << 48
+            | (bytes[4] as u64) << 40
+            | (bytes[5] as u64) << 32
+            | (bytes[0] as u64) << 24
+            | (bytes[1] as u64) << 16
+            | (bytes[2] as u64) << 8
+            | (bytes[3] as u64)
+    }
+
+    fn lsb(&self) -> u64 {
+        let bytes = self.0.as_bytes();
+        (bytes[8] as u64) << 56
+            | (bytes[9] as u64) << 48
+            | (bytes[10] as u64) << 40
+            | (bytes[11] as u64) << 32
+            | (bytes[12] as u64) << 24
+            | (bytes[13] as u64) << 16
+            | (bytes[14] as u64) << 8
+            | (bytes[15] as u64)
+    }
+
+    fn lsb_signed(&self) -> u64 {
+        self.lsb() ^ 0x8080808080808080
+    }
+}
+
+impl std::str::FromStr for Timeuuid {
+    type Err = uuid::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(Uuid::from_str(s)?))
+    }
+}
+
+impl std::fmt::Display for Timeuuid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<Uuid> for Timeuuid {
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
+}
+
+impl From<Timeuuid> for Uuid {
+    fn from(value: Timeuuid) -> Self {
+        value.0
+    }
+}
+
+impl From<Uuid> for Timeuuid {
+    fn from(value: Uuid) -> Self {
+        Self(value)
+    }
+}
+
+/// Compare two values of timeuuid type.
+///
+/// Cassandra legacy requires:
+/// - converting 8 most significant bytes to date, which is then compared.
+/// - masking off UUID version from the 8 ms-bytes during compare, to
+///   treat possible non-version-1 UUID the same way as UUID.
+/// - using signed compare for least significant bits.
+impl Ord for Timeuuid {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let mut res = self.msb().cmp(&other.msb());
+        if let std::cmp::Ordering::Equal = res {
+            res = self.lsb_signed().cmp(&other.lsb_signed());
+        }
+        res
+    }
+}
+
+impl PartialOrd for Timeuuid {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Timeuuid {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == std::cmp::Ordering::Equal
+    }
+}
+
+impl std::hash::Hash for Timeuuid {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.lsb_signed().hash(state);
+        self.msb().hash(state);
+    }
+}
+
+/// Driver traits
+impl From<CqlTimeuuid> for Timeuuid {
+    fn from(cql_timeuuid: CqlTimeuuid) -> Self {
+        let u128 = cql_timeuuid.as_u128();
+        let uuid = Uuid::from_u128(u128);
+
+        Timeuuid(uuid)
+    }
+}
+
+impl FromCqlVal<CqlValue> for Timeuuid {
+    fn from_cql(cql_val: CqlValue) -> Result<Self, FromCqlValError> {
+        match cql_val {
+            CqlValue::Timeuuid(cql_timeuuid) => Ok(Timeuuid::from(cql_timeuuid)),
+            _ => Err(FromCqlValError::BadCqlType),
+        }
+    }
+}
+
+impl SerializeCql for Timeuuid {
+    fn serialize<'b>(
+        &self,
+        typ: &ColumnType,
+        writer: CellWriter<'b>,
+    ) -> Result<WrittenCellProof<'b>, SerializationError> {
+        if typ != &ColumnType::Timeuuid {
+            return Err(SerializationError::new(BuiltinTypeCheckError {
+                rust_name: std::any::type_name::<Timeuuid>(),
+                got: typ.clone(),
+                kind: BuiltinTypeCheckErrorKind::MismatchedType {
+                    expected: &[ColumnType::Timeuuid],
+                },
+            }));
+        }
+
+        let proof = writer.set_value(self.as_bytes().as_ref()).unwrap();
+
+        Ok(proof)
     }
 }
