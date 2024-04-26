@@ -56,9 +56,7 @@ impl CharybdisMacroArgs {
     }
 
     pub fn primary_key(&self) -> Vec<&String> {
-        let primary_key = self.partition_keys().iter().chain(self.clustering_keys());
-
-        primary_key.collect()
+        self.partition_keys().iter().chain(self.clustering_keys()).collect()
     }
 }
 
