@@ -268,13 +268,11 @@ impl<'a> CharybdisFields<'a> {
                 let partition_key_index = *partition_key_indexes_by_name
                     .get(&ch_field.name)
                     .expect("index must be set");
-
                 partition_key_fields[partition_key_index] = Some(ch_field);
 
                 let primary_key_index = *primary_key_indexes_by_name
                     .get(&ch_field.name)
                     .expect("index must be set");
-
                 primary_key_fields[primary_key_index] = Some(ch_field);
 
                 pk_struct_fields.insert(ch_field.name.clone());
@@ -287,7 +285,6 @@ impl<'a> CharybdisFields<'a> {
                 let primary_key_index = *primary_key_indexes_by_name
                     .get(&ch_field.name)
                     .expect("index must be set");
-
                 primary_key_fields[primary_key_index] = Some(ch_field);
 
                 ck_struct_fields.insert(ch_field.name.clone());
