@@ -1,6 +1,7 @@
-use charybdis_parser::fields::Field;
 use proc_macro2::TokenStream;
 use quote::quote;
+
+use charybdis_parser::fields::Field;
 
 pub(crate) trait FieldsAsTuple {
     fn types(&self) -> Vec<syn::Type>;

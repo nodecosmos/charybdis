@@ -1,11 +1,13 @@
-use crate::model::data::ModelData;
-use crate::model::{ModelMigration, ModelType};
-use crate::Args;
+use colored::Colorize;
+use scylla::Session;
+
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
 use charybdis_parser::schema::SchemaObject;
-use colored::Colorize;
-use scylla::Session;
+
+use crate::Args;
+use crate::model::{ModelMigration, ModelType};
+use crate::model::data::ModelData;
 
 pub(crate) struct Migration<'a> {
     current_db_schema: &'a DbSchema,

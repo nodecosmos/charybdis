@@ -1,6 +1,8 @@
-use crate::Args;
-use scylla::{Session, SessionBuilder};
 use std::time::Duration;
+
+use scylla::{Session, SessionBuilder};
+
+use crate::Args;
 
 pub(crate) async fn initialize_session(args: &Args) -> Session {
     let mut builder = SessionBuilder::new()

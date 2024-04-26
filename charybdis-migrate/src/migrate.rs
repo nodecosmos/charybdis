@@ -1,19 +1,21 @@
-mod migration;
-mod model;
-mod session;
-
-use crate::migration::Migration;
-
-use charybdis_parser::schema::code_schema::CodeSchema;
-use charybdis_parser::schema::db_schema::DbSchema;
-
-use clap::Parser;
-use scylla::Session;
-use session::initialize_session;
+use std::{env, io};
 use std::fs::read_dir;
 use std::io::ErrorKind;
 use std::path::PathBuf;
-use std::{env, io};
+
+use clap::Parser;
+use scylla::Session;
+
+use charybdis_parser::schema::code_schema::CodeSchema;
+use charybdis_parser::schema::db_schema::DbSchema;
+use session::initialize_session;
+
+use crate::migration::Migration;
+
+mod migration;
+mod model;
+
+mod session;
 
 /// Automatic Migration Tool
 #[derive(Parser, Debug)]

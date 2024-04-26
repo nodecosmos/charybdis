@@ -1,4 +1,6 @@
-use crate::FromRowError;
+use std::error::Error;
+use std::fmt;
+
 use colored::Colorize;
 use scylla::frame::value::SerializeValuesError;
 use scylla::transport::errors::QueryError;
@@ -6,8 +8,8 @@ use scylla::transport::iterator::NextRowError;
 use scylla::transport::query_result::{
     FirstRowTypedError, MaybeFirstRowTypedError, RowsExpectedError, SingleRowTypedError,
 };
-use std::error::Error;
-use std::fmt;
+
+use crate::FromRowError;
 
 #[derive(Debug)]
 pub enum CharybdisError {

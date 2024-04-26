@@ -1,9 +1,11 @@
+use proc_macro2::TokenStream;
+use quote::quote;
+
+use charybdis_parser::fields::Field;
+
 use crate::traits::fields::{FieldsNames, FieldsToArguments};
 use crate::traits::string::ToIdent;
 use crate::traits::tuple::Tuple;
-use charybdis_parser::fields::Field;
-use proc_macro2::TokenStream;
-use quote::quote;
 
 pub(crate) trait FieldsFindFnNames {
     fn find_by_fn_name(&self) -> String;

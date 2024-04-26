@@ -1,6 +1,8 @@
-use crate::traits::r#type::TypeWithoutOptions;
-use charybdis_parser::fields::Field;
 use syn::parse_str;
+
+use charybdis_parser::fields::Field;
+
+use crate::traits::r#type::TypeWithoutOptions;
 
 pub(crate) trait FieldsToArguments {
     fn to_fn_args(&self) -> Vec<syn::FnArg>;

@@ -1,12 +1,14 @@
-use crate::errors::DbSchemaParserError;
-use crate::schema::secondary_indexes::{IndexTarget, SecondaryIndex};
-use crate::schema::{SchemaObject, SchemaObjects};
+use std::collections::HashMap;
+use std::path::PathBuf;
+
 use colored::Colorize;
 use scylla::Session;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
-use std::collections::HashMap;
-use std::path::PathBuf;
+
+use crate::errors::DbSchemaParserError;
+use crate::schema::{SchemaObject, SchemaObjects};
+use crate::schema::secondary_indexes::{IndexTarget, SecondaryIndex};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DbSchema {

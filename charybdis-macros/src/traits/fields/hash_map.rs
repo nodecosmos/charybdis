@@ -1,6 +1,7 @@
-use charybdis_parser::fields::Field;
 use quote::quote;
 use syn::Attribute;
+
+use charybdis_parser::fields::Field;
 
 /// It is used by `partial_model_macro_generator` to associate field **types**
 /// and field **attributes** with field names for the generated partial model.

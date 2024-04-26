@@ -1,5 +1,6 @@
-use crate::traits::fields::FieldsNames;
 use charybdis_parser::fields::Field;
+
+use crate::traits::fields::FieldsNames;
 
 pub(crate) trait FieldsQuery {
     fn comma_sep_cols(&self) -> String;

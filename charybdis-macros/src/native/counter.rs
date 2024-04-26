@@ -1,10 +1,12 @@
-use crate::traits::fields::FieldsQuery;
-use crate::traits::tuple::FieldsAsTuple;
-use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::parse_str;
+
+use charybdis_parser::fields::CharybdisFields;
+use charybdis_parser::traits::CharybdisMacroArgs;
+
+use crate::traits::fields::FieldsQuery;
+use crate::traits::tuple::FieldsAsTuple;
 
 pub(crate) fn increment_counter_methods(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
     let increment_counter_methods: Vec<TokenStream> = fields

@@ -1,6 +1,7 @@
-use crate::model::runner::INDEX_SUFFIX;
-use crate::model::ModelType;
 use charybdis_parser::schema::{IndexName, SchemaObject};
+
+use crate::model::ModelType;
+use crate::model::runner::INDEX_SUFFIX;
 
 type FieldName = String;
 type FieldType = String;

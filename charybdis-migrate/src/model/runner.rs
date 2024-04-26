@@ -1,9 +1,10 @@
-use crate::model::{ModelData, ModelType};
-use crate::Args;
 use colored::*;
 use regex::Regex;
 use scylla::Session;
 use strip_ansi_escapes::strip;
+
+use crate::Args;
+use crate::model::{ModelData, ModelType};
 
 pub(crate) const INDEX_SUFFIX: &str = "idx";
 

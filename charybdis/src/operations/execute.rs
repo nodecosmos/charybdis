@@ -1,6 +1,7 @@
+use scylla::{CachingSession, QueryResult};
+
 use crate::errors::CharybdisError;
 use crate::SerializeRow;
-use scylla::{CachingSession, QueryResult};
 
 pub async fn execute(
     session: &CachingSession,

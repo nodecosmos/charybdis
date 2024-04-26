@@ -4,13 +4,11 @@ use std::net::IpAddr;
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, Utc};
 use scylla::_macro_internal::{CellWriter, ColumnType, FromCqlValError, SerializationError, WrittenCellProof};
+use scylla::cql_to_rust::FromCqlVal;
 use scylla::frame::response::result::CqlValue;
 use scylla::frame::value::{CqlDuration, CqlTimeuuid};
-pub use scylla::macros::{FromRow, FromUserType, IntoUserType, ValueList};
-use scylla::serialize::value::{BuiltinTypeCheckError, BuiltinTypeCheckErrorKind};
+use scylla::serialize::value::{BuiltinTypeCheckError, BuiltinTypeCheckErrorKind, SerializeCql};
 use serde::{Deserialize, Serialize};
-
-use crate::{FromCqlVal, SerializeCql};
 
 pub type Ascii = String;
 pub type BigInt = i64;

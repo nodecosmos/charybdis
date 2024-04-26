@@ -1,14 +1,14 @@
-mod arguments;
-mod find;
-mod hash_map;
-mod query;
-
 pub(crate) use arguments::*;
+use charybdis_parser::fields::Field;
 pub(crate) use find::*;
 pub(crate) use hash_map::*;
 pub(crate) use query::*;
 
-use charybdis_parser::fields::Field;
+mod arguments;
+mod find;
+mod hash_map;
+
+mod query;
 
 pub(crate) trait ToIdents {
     fn to_idents(&self) -> Vec<syn::Ident>;

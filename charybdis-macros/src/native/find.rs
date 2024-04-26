@@ -1,8 +1,10 @@
-use crate::traits::fields::{FieldsFindFirstFns, FieldsFindFn, FieldsQuery};
-use charybdis_parser::fields::{CharybdisFields, Field};
-use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
+
+use charybdis_parser::fields::{CharybdisFields, Field};
+use charybdis_parser::traits::CharybdisMacroArgs;
+
+use crate::traits::fields::{FieldsFindFirstFns, FieldsFindFn, FieldsQuery};
 
 const MAX_FIND_BY_FIELDS: usize = 3;
 

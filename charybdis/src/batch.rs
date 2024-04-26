@@ -1,13 +1,15 @@
-use crate::errors::CharybdisError;
-use crate::model::Model;
-use crate::options::{Consistency, ExecutionProfileHandle, RetryPolicy, SerialConsistency};
-use crate::query::{CharybdisQuery, QueryExecutor, QueryValue};
+use std::sync::Arc;
+
+use scylla::{CachingSession, QueryResult};
 use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
 use scylla::batch::{Batch, BatchType};
 use scylla::history::HistoryListener;
 use scylla::serialize::row::SerializeRow;
-use scylla::{CachingSession, QueryResult};
-use std::sync::Arc;
+
+use crate::errors::CharybdisError;
+use crate::model::Model;
+use crate::options::{Consistency, ExecutionProfileHandle, RetryPolicy, SerialConsistency};
+use crate::query::{CharybdisQuery, QueryExecutor, QueryValue};
 
 pub struct CharybdisModelBatch<'a, Val: SerializeRow, M: Model> {
     inner: Batch,

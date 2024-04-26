@@ -1,9 +1,10 @@
-use crate::traits::fields::FieldsQuery;
+use quote::quote;
+use syn::ImplItem;
 
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::traits::CharybdisMacroArgs;
-use quote::quote;
-use syn::ImplItem;
+
+use crate::traits::fields::FieldsQuery;
 
 pub(crate) fn find_by_primary_key_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str = format!(

@@ -1,8 +1,10 @@
-use crate::traits::fields::FieldsQuery;
-use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::traits::CharybdisMacroArgs;
 use quote::quote;
 use syn::ImplItem;
+
+use charybdis_parser::fields::CharybdisFields;
+use charybdis_parser::traits::CharybdisMacroArgs;
+
+use crate::traits::fields::FieldsQuery;
 
 pub(crate) fn delete_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str: String = format!(

@@ -1,7 +1,9 @@
-use crate::traits::tuple::Tuple;
-use charybdis_parser::fields::CharybdisFields;
 use quote::quote;
 use syn::ImplItem;
+
+use charybdis_parser::fields::CharybdisFields;
+
+use crate::traits::tuple::Tuple;
 
 /// returns tuple of primary key types
 pub(crate) fn primary_key_type(fields: &CharybdisFields) -> ImplItem {

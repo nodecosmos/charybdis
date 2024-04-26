@@ -1,9 +1,11 @@
-use crate::errors::CharybdisError;
-use crate::model::BaseModel;
-use futures::{Stream, StreamExt, TryStreamExt};
-use scylla::transport::iterator::{NextRowError, TypedRowIterator};
 use std::pin::Pin;
 use std::task::{Context, Poll};
+
+use futures::{Stream, StreamExt, TryStreamExt};
+use scylla::transport::iterator::{NextRowError, TypedRowIterator};
+
+use crate::errors::CharybdisError;
+use crate::model::BaseModel;
 
 pub struct CharybdisModelStream<T: BaseModel> {
     inner: TypedRowIterator<T>,

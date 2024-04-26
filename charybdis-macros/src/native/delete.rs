@@ -1,9 +1,11 @@
-use crate::traits::fields::{FieldsNames, FieldsQuery, FieldsToArguments};
-use crate::traits::tuple::Tuple;
-use charybdis_parser::fields::{CharybdisFields, Field};
-use charybdis_parser::traits::CharybdisMacroArgs;
 use proc_macro2::TokenStream;
 use quote::quote;
+
+use charybdis_parser::fields::{CharybdisFields, Field};
+use charybdis_parser::traits::CharybdisMacroArgs;
+
+use crate::traits::fields::{FieldsNames, FieldsQuery, FieldsToArguments};
+use crate::traits::tuple::Tuple;
 
 const MAX_DELETE_BY_FUNCTIONS: usize = 3;
 

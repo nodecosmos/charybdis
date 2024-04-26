@@ -1,16 +1,18 @@
+use std::sync::Arc;
+use std::time::Duration;
+
+use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
+use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
+use scylla::query::Query;
+use scylla::transport::query_result::FirstRowTypedError;
+
 use crate::callbacks::{CallbackAction, Callbacks};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
 use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, RetryPolicy, SerialConsistency};
-use crate::stream::CharybdisModelStream;
 use crate::SerializeRow;
-use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
-use scylla::query::Query;
-use scylla::transport::query_result::FirstRowTypedError;
-use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
-use std::sync::Arc;
-use std::time::Duration;
+use crate::stream::CharybdisModelStream;
 
 pub struct ModelRow<M: BaseModel>(pub M);
 pub struct OptionalModelRow<M: BaseModel>(pub Option<M>);

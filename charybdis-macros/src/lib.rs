@@ -1,10 +1,13 @@
 extern crate proc_macro;
 
-mod model;
-mod native;
-mod rules;
-mod scylla;
-mod traits;
+use proc_macro::TokenStream;
+
+use quote::quote;
+use syn::DeriveInput;
+use syn::parse_macro_input;
+
+use charybdis_parser::fields::CharybdisFields;
+use charybdis_parser::traits::CharybdisMacroArgs;
 
 use crate::model::*;
 use crate::native::{
@@ -14,12 +17,13 @@ use crate::native::{
 };
 use crate::rules::*;
 use crate::scylla::from_row;
-use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::traits::CharybdisMacroArgs;
-use proc_macro::TokenStream;
-use quote::quote;
-use syn::parse_macro_input;
-use syn::DeriveInput;
+
+mod model;
+mod native;
+mod rules;
+
+mod scylla;
+mod traits;
 
 #[proc_macro_attribute]
 pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {

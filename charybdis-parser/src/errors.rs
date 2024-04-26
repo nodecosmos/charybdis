@@ -1,6 +1,7 @@
+use std::fmt;
+
 use scylla::cql_to_rust::FromRowError;
 use scylla::transport::errors::QueryError;
-use std::fmt;
 
 #[derive(Debug)]
 pub enum DbSchemaParserError {

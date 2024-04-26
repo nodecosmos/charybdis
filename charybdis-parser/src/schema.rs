@@ -1,10 +1,12 @@
+use std::collections::{HashMap, HashSet};
+
+use colored::Colorize;
+use serde::{Deserialize, Serialize};
+
 pub mod code_schema;
 pub mod db_schema;
 pub mod secondary_indexes;
 
-use colored::Colorize;
-use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
 pub type FieldName = String;
 pub type FieldType = String;
 pub type IsStatic = bool;

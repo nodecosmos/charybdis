@@ -1,6 +1,7 @@
-use charybdis_parser::fields::CharybdisFields;
 use quote::{quote, quote_spanned};
 use syn::ImplItem;
+
+use charybdis_parser::fields::CharybdisFields;
 
 pub(crate) fn from_row(struct_name: &syn::Ident, fields: &CharybdisFields) -> ImplItem {
     let fields_count: usize = fields.db_fields.len();

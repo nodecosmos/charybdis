@@ -1,5 +1,6 @@
-use proc_macro2::TokenStream;
 use std::collections::HashMap;
+
+use proc_macro2::TokenStream;
 
 enum HashSplitter {
     Line,

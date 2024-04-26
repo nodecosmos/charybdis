@@ -1,8 +1,10 @@
-use crate::traits::CharybdisMacroArgs;
-use darling::FromAttributes;
 use std::collections::{HashMap, HashSet};
-use syn::spanned::Spanned;
+
+use darling::FromAttributes;
 use syn::{Data, DeriveInput, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
+use syn::spanned::Spanned;
+
+use crate::traits::CharybdisMacroArgs;
 
 #[derive(Clone, PartialEq, strum_macros::Display, strum_macros::EnumString)]
 pub enum CqlType {
