@@ -6,7 +6,7 @@ use syn::spanned::Spanned;
 
 use crate::traits::CharybdisMacroArgs;
 
-#[derive(Debug, Clone, PartialEq, strum_macros::Display, strum_macros::EnumString)]
+#[derive(Clone, PartialEq, strum_macros::Display, strum_macros::EnumString)]
 pub enum CqlType {
     Ascii,
     BigInt,
@@ -47,7 +47,6 @@ pub struct FieldAttributes {
     pub ignore: Option<bool>,
 }
 
-#[derive(Debug)]
 pub struct Field<'a> {
     pub name: String,
     pub ident: syn::Ident,
@@ -156,7 +155,7 @@ impl<'a> Field<'a> {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct CharybdisFields<'a> {
     pub all_fields: Vec<Field<'a>>,
     pub partition_key_fields: Vec<&'a Field<'a>>,
