@@ -264,32 +264,28 @@ impl<'a> CharybdisFields<'a> {
             }
 
             if ch_field.is_partition_key {
-                partition_key_fields.insert(
-                    *partition_key_indexes_by_name
-                        .get(&ch_field.name)
-                        .expect("index must be set"),
-                    Some(ch_field),
-                );
-                primary_key_fields.insert(
-                    *primary_key_indexes_by_name
-                        .get(&ch_field.name)
-                        .expect("index must be set"),
-                    Some(ch_field),
-                );
+                let partition_key_index = *partition_key_indexes_by_name
+                    .get(&ch_field.name)
+                    .expect("index must be set");
+                partition_key_fields[partition_key_index] = Some(ch_field);
+
+                let primary_key_index = *primary_key_indexes_by_name
+                    .get(&ch_field.name)
+                    .expect("index must be set");
+                primary_key_fields[primary_key_index] = Some(ch_field);
+
                 pk_struct_fields.insert(ch_field.name.clone());
             } else if ch_field.is_clustering_key {
-                clustering_key_fields.insert(
-                    *clustering_key_indexes_by_name
-                        .get(&ch_field.name)
-                        .expect("index must be set"),
-                    Some(ch_field),
-                );
-                primary_key_fields.insert(
-                    *primary_key_indexes_by_name
-                        .get(&ch_field.name)
-                        .expect("index must be set"),
-                    Some(ch_field),
-                );
+                let clustering_key_index = *clustering_key_indexes_by_name
+                    .get(&ch_field.name)
+                    .expect("index must be set");
+                clustering_key_fields[clustering_key_index] = Some(ch_field);
+
+                let primary_key_index = *primary_key_indexes_by_name
+                    .get(&ch_field.name)
+                    .expect("index must be set");
+                primary_key_fields[primary_key_index] = Some(ch_field);
+
                 ck_struct_fields.insert(ch_field.name.clone());
             }
         }
