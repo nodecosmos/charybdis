@@ -193,7 +193,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     ) -> Result<(), CharybdisError> {
         while !values.is_empty() {
             let chunk: Vec<Val> = values.drain(..std::cmp::min(chunk_size, values.len())).collect();
-            let batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::from_batch(&self.inner);
+            let mut batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::from_batch(&self.inner);
 
             batch.append_statements(statement, chunk)?;
 
@@ -203,11 +203,9 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         Ok(())
     }
 
-    pub fn append_statements(&self, statement: &str, values: Vec<Val>) -> Result<(), CharybdisError> {
-        let mut batch: CharybdisModelBatch<Val, M> = CharybdisModelBatch::from_batch(&self.inner);
-
+    pub fn append_statements(&mut self, statement: &str, values: Vec<Val>) -> Result<(), CharybdisError> {
         for val in values {
-            batch.append_statement(statement, val);
+            self.append_statement(statement, val);
         }
 
         Ok(())
