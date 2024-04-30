@@ -207,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "bigdecimal",
  "charybdis_macros 0.5.2",
