@@ -1,7 +1,6 @@
 use colored::*;
 use regex::Regex;
 use scylla::Session;
-use strip_ansi_escapes::strip;
 
 use crate::Args;
 use crate::model::{ModelData, ModelType};
@@ -25,9 +24,8 @@ impl<'a> ModelRunner<'a> {
         }
 
         // remove all colors from cql string
-        let stripped = strip(cql.as_bytes());
+        let stripped = strip_ansi_escapes::strip(cql.as_bytes());
         let cql: String = String::from_utf8(stripped).unwrap();
-
         let res = self.session.query(cql.clone(), ()).await;
 
         match res {
