@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use scylla::{CachingSession, QueryResult};
 use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
 use scylla::batch::{Batch, BatchType};
 use scylla::history::HistoryListener;
 use scylla::serialize::row::SerializeRow;
+use scylla::{CachingSession, QueryResult};
 
 use crate::errors::CharybdisError;
 use crate::model::Model;
@@ -343,11 +343,11 @@ pub trait ModelBatch<'a>: Model {
 impl<M: Model> ModelBatch<'_> for M {}
 
 struct SerializeRowBox<'a> {
-    inner: Box<dyn SerializeRow + 'a>,
+    inner: Box<dyn SerializeRow + Sync + Send + 'a>,
 }
 
 impl<'a> SerializeRowBox<'a> {
-    pub fn new(val: impl SerializeRow + 'a) -> Self {
+    pub fn new(val: impl SerializeRow + 'a + Sync + Send) -> Self {
         Self { inner: Box::new(val) }
     }
 }
@@ -384,8 +384,8 @@ impl<'a> CharybdisBatch<'a> {
 
     pub fn append<Val, M, RtQe>(&mut self, query: CharybdisQuery<'a, Val, M, RtQe>) -> &mut Self
     where
-        Val: SerializeRow,
-        M: Model,
+        Val: SerializeRow + Sync + Send,
+        M: Model + Sync + Send,
         RtQe: QueryExecutor,
     {
         self.inner.append_statement(query.contents().as_str());
