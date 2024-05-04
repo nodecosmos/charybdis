@@ -174,9 +174,7 @@ pub(crate) fn partial_model_macro_generator(
 
                 impl charybdis::model::AsNative<#struct_name> for $struct_name {
                     fn as_native(&self) -> #struct_name {
-                        use charybdis::operations::New;
-
-                        let mut new_model = #struct_name::new();
+                        let mut new_model = <#struct_name as charybdis::operations::New>::new();
 
                         $(
                             new_model.$field = self.$field.clone();
