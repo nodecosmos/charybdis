@@ -1,7 +1,8 @@
+use scylla::serialize::row::SerializeRow;
+
 use crate::callbacks::{Callbacks, DeleteAction};
 use crate::model::Model;
 use crate::query::{CharybdisCbQuery, CharybdisQuery, ModelMutation, QueryValue};
-use crate::SerializeRow;
 
 pub trait Delete: Model {
     fn delete_by_query<Val: SerializeRow>(

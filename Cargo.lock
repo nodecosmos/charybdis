@@ -232,7 +232,7 @@ dependencies = [
  "colored",
  "futures",
  "num-bigint 0.4.4",
- "scylla 0.12.0",
+ "scylla 0.13.0",
  "serde",
  "serde_json",
  "uuid",
@@ -1114,12 +1114,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "64037fb9d9c59ae15137fff9a56c4d528908dfd38d09e75b5f8e56e3894966dd"
 dependencies = [
  "async-trait",
+ "bigdecimal",
  "byteorder",
  "bytes",
+ "chrono",
  "lz4_flex",
+ "num-bigint 0.3.3",
+ "num-bigint 0.4.4",
  "scylla-macros 0.5.0",
+ "secrecy",
  "snap",
  "thiserror",
+ "time",
  "tokio",
  "uuid",
 ]

@@ -1,6 +1,5 @@
+use scylla::serialize::row::SerializeRow;
 use scylla::FromRow;
-
-use crate::SerializeRow;
 
 pub trait BaseModel: FromRow + Sized + SerializeRow {
     // usually tuple of primary key values
