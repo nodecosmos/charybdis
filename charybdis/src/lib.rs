@@ -1,19 +1,5 @@
 #![allow(async_fn_in_trait)]
 
-// scylla
-pub use scylla::{
-    CachingSession,
-    cql_to_rust::{FromCqlVal, FromRow, FromRowError},
-    frame::response::result::{CqlValue, Row},
-    frame::value::ValueList,
-    query::Query,
-    QueryResult,
-    serialize::row::SerializeRow,
-    serialize::value::SerializeCql, Session, transport::{errors::QueryError, session::TypedRowIter},
-};
-// scylla macros
-pub use scylla::macros::{FromRow, FromUserType, IntoUserType, SerializeCql, SerializeRow};
-
 pub mod batch;
 pub mod callbacks;
 pub mod errors;
@@ -25,11 +11,20 @@ pub mod serializers;
 pub mod stream;
 pub mod types;
 
-// orm macros
 pub mod macros {
     pub use charybdis_macros::{
         char_model_field_attrs_gen, charybdis_model, charybdis_udt_model, charybdis_view_model,
     };
+
+    pub mod scylla {
+        pub use scylla::macros::{FromRow, FromUserType, IntoUserType, SerializeCql, SerializeRow};
+    }
+}
+
+pub mod scylla {
+    pub use scylla::frame::response::cql_to_rust::{FromCqlVal, FromRow, FromRowError};
+    pub use scylla::frame::response::result::{CqlValue, Row};
+    pub use scylla::serialize::value::SerializeCql;
 }
 
 pub mod options {

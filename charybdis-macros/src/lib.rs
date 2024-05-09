@@ -3,8 +3,8 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 
 use quote::quote;
-use syn::DeriveInput;
 use syn::parse_macro_input;
+use syn::DeriveInput;
 
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::traits::CharybdisMacroArgs;
@@ -92,7 +92,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let expanded = quote! {
-        #[derive(charybdis::SerializeRow)]
+        #[derive(charybdis::macros::scylla::SerializeRow)]
         #input
 
         impl #struct_name {
@@ -138,7 +138,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
         }
 
-        impl charybdis::FromRow for #struct_name {
+        impl charybdis::scylla::FromRow for #struct_name {
             #from_row
         }
 
@@ -187,8 +187,8 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let expanded = quote! {
-        #[derive(charybdis::SerializeRow)]
-        #[derive(charybdis::FromRow)]
+        #[derive(charybdis::macros::scylla::SerializeRow)]
+        #[derive(charybdis::macros::scylla::FromRow)]
         #input
 
         impl #struct_name {
@@ -224,7 +224,7 @@ pub fn charybdis_udt_model(_: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let gen = quote! {
-        #[derive(charybdis::FromUserType, charybdis::SerializeCql)]
+        #[derive(charybdis::macros::scylla::FromUserType, charybdis::macros::scylla::SerializeCql)]
         #input
     };
 

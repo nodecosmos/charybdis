@@ -1,17 +1,17 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
-use scylla::_macro_internal::{RowSerializationContext, RowWriter, SerializationError};
 use scylla::query::Query;
+use scylla::serialize::row::{RowSerializationContext, SerializeRow};
+use scylla::serialize::{RowWriter, SerializationError};
 use scylla::transport::query_result::FirstRowTypedError;
+use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
 
 use crate::callbacks::{CallbackAction, Callbacks};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
 use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, RetryPolicy, SerialConsistency};
-use crate::SerializeRow;
 use crate::stream::CharybdisModelStream;
 
 pub struct ModelRow<M: BaseModel>(pub M);

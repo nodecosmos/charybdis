@@ -95,7 +95,7 @@ pub(crate) fn push_to_collection_methods(fields: &CharybdisFields) -> TokenStrea
             let values = fields.primary_key_fields.values();
 
             let expanded = quote! {
-                pub fn #fun_name<V: charybdis::SerializeCql>(
+                pub fn #fun_name<V: charybdis::scylla::SerializeCql>(
                     &self,
                     value: V
                 ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {
@@ -134,7 +134,7 @@ pub(crate) fn pull_from_collection_methods(fields: &CharybdisFields) -> TokenStr
             let values = fields.primary_key_fields.values();
 
             let expanded = quote! {
-                pub fn #fun_name<V: charybdis::SerializeCql>(
+                pub fn #fun_name<V: charybdis::scylla::SerializeCql>(
                     &self,
                     value: V
                 ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {

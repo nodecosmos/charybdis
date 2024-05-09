@@ -1,8 +1,8 @@
+use scylla::serialize::row::SerializeRow;
 use scylla::Bytes;
 
 use crate::model::BaseModel;
 use crate::query::{CharybdisQuery, ModelPaged, ModelRow, ModelStream, OptionalModelRow, QueryValue};
-use crate::SerializeRow;
 
 /// Configurable Find Queries
 pub trait Find: BaseModel {

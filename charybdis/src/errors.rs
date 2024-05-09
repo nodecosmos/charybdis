@@ -2,14 +2,13 @@ use std::error::Error;
 use std::fmt;
 
 use colored::Colorize;
+use scylla::cql_to_rust::FromRowError;
 use scylla::frame::value::SerializeValuesError;
 use scylla::transport::errors::QueryError;
 use scylla::transport::iterator::NextRowError;
 use scylla::transport::query_result::{
     FirstRowTypedError, MaybeFirstRowTypedError, RowsExpectedError, SingleRowTypedError,
 };
-
-use crate::FromRowError;
 
 #[derive(Debug)]
 pub enum CharybdisError {

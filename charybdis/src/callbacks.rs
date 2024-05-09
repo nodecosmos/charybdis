@@ -1,9 +1,9 @@
+use scylla::serialize::row::SerializeRow;
 use scylla::CachingSession;
 
 use crate::errors::CharybdisError;
 use crate::model::Model;
 use crate::query::QueryValue;
-use crate::SerializeRow;
 
 /// Callbacks are simple trait that can be implemented to add custom logic to the
 /// insert, update and delete operations. It's a way to wrap business logic in models.
