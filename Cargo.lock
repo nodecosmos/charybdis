@@ -18,6 +18,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
+name = "ahash"
+version = "0.8.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
+dependencies = [
+ "cfg-if",
+ "once_cell",
+ "version_check",
+ "zerocopy",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -25,6 +37,12 @@ checksum = "b2969dcb958b36655471fc61f7e416fa76033bdd4bfed0678d8fee1e2d07a1f0"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "allocator-api2"
+version = "0.2.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c6cb57a04249c6480766f7f7cef5467412af1490f8d1e243141daddada3264f"
 
 [[package]]
 name = "android-tzdata"
@@ -198,7 +216,7 @@ dependencies = [
  "colored",
  "futures",
  "num-bigint 0.4.4",
- "scylla",
+ "scylla 0.12.0",
  "serde",
  "serde_json",
  "uuid",
@@ -214,7 +232,7 @@ dependencies = [
  "colored",
  "futures",
  "num-bigint 0.4.4",
- "scylla",
+ "scylla 0.12.0",
  "serde",
  "serde_json",
  "uuid",
@@ -228,7 +246,7 @@ dependencies = [
  "clap",
  "colored",
  "regex",
- "scylla",
+ "scylla 0.13.0",
  "serde",
  "serde_json",
  "strip-ansi-escapes",
@@ -257,7 +275,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "scylla",
+ "scylla 0.13.0",
  "syn 2.0.60",
 ]
 
@@ -271,7 +289,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "scylla",
+ "scylla 0.12.0",
  "serde",
  "serde_json",
  "strum 0.26.2",
@@ -288,7 +306,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "scylla",
+ "scylla 0.13.0",
  "serde",
  "serde_json",
  "strum 0.26.2",
@@ -560,6 +578,10 @@ name = "hashbrown"
 version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
+dependencies = [
+ "ahash",
+ "allocator-api2",
+]
 
 [[package]]
 name = "heck"
@@ -1017,13 +1039,44 @@ dependencies = [
  "num_enum",
  "rand",
  "rand_pcg",
- "scylla-cql",
- "scylla-macros",
+ "scylla-cql 0.1.0",
+ "scylla-macros 0.4.0",
  "smallvec",
  "snap",
  "socket2",
  "strum 0.23.0",
  "strum_macros 0.23.1",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "scylla"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9439d92eea9f86c07175c819c3a129ca28b02477b47df26db354a1f4ea7ee276"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "dashmap",
+ "futures",
+ "hashbrown",
+ "histogram",
+ "itertools",
+ "lazy_static",
+ "lz4_flex",
+ "rand",
+ "rand_pcg",
+ "scylla-cql 0.2.0",
+ "scylla-macros 0.5.0",
+ "smallvec",
+ "snap",
+ "socket2",
  "thiserror",
  "tokio",
  "tracing",
@@ -1045,7 +1098,7 @@ dependencies = [
  "num-bigint 0.3.3",
  "num-bigint 0.4.4",
  "num_enum",
- "scylla-macros",
+ "scylla-macros 0.4.0",
  "secrecy",
  "snap",
  "thiserror",
@@ -1055,10 +1108,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "scylla-cql"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64037fb9d9c59ae15137fff9a56c4d528908dfd38d09e75b5f8e56e3894966dd"
+dependencies = [
+ "async-trait",
+ "byteorder",
+ "bytes",
+ "lz4_flex",
+ "scylla-macros 0.5.0",
+ "snap",
+ "thiserror",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "scylla-macros"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb6085ff9c3fd7e5163826901d39164ab86f11bdca16b2f766a00c528ff9cef9"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.60",
+]
+
+[[package]]
+name = "scylla-macros"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e5fe1d389adebe6a1a27bce18b81a65ff18c25d58a795de490e18b0e7a27b9f"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -1389,6 +1471,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "version_check"
+version = "0.9.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
 name = "vte"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1657,6 +1745,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1931d78a9c73861da0134f453bb1f790ce49b2e30eba8410b4b79bac72b46a2d"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "zerocopy"
+version = "0.7.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae87e3fcd617500e5d106f0380cf7b77f3c6092aae37191433159dda23cfb087"
+dependencies = [
+ "zerocopy-derive",
+]
+
+[[package]]
+name = "zerocopy-derive"
+version = "0.7.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15e934569e47891f7d9411f1a451d947a60e000ab3bd24fbb970f000387d1b3b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.60",
 ]
 
 [[package]]
