@@ -1,7 +1,5 @@
 # Rust ORM for ScyllaDB and Apache Cassandra
 
-### Use monstrous tandem of scylla and charybdis for your next project
-
 ⚠️ This project is currently in an early stage of development. Feedback and contributions are
 welcomed!
 
@@ -15,13 +13,6 @@ welcomed!
 </p>
 
 #### Charybdis is a ORM layer on top of `scylla_rust_driver` focused on easy of use and performance
-
-## Breaking changes
-
-As of `0.4.13` UDT fields must be in the same order as they are in the database. This is due to
-scylla driver limitation that does not support named bind values. Earlier versions would
-automatically order fields by name, but this is no longer the case as ORM could not work with
-exiting UDTs.
 
 ## Usage considerations:
 
@@ -595,13 +586,15 @@ Supported configuration options:
   update_user_username.update().execute(&session).await?;
   ```
 - ### Partial Model Considerations:
-    1) `partial_<model>` requires `#[derive(Default)]` on original model
-    2) `partial_<model>` require complete primary key in definition
-    3) All derives that are defined bellow `#charybdis_model` macro will be automatically added to
-       partial model.
-    4) `partial_<model>` struct implements same field attributes as original model,
-       so if we have `#[serde(rename = "rootId")]` on original model field, it will be present on
-       partial model field.
+    * `partial_<model>` requires `#[derive(Default)]` on native model
+    * `partial_<model>` require complete primary key in definition
+    * All derives that are defined bellow `#charybdis_model` macro will be automatically added to
+      partial model.
+    * `partial_<model>` struct implements same field attributes as native model,
+      so if we have `#[serde(rename = "rootId")]` on native model field, it will be present on
+      partial model field.
+    * `partial_<model>` should be defined in same file as native model, so it can reuse imports
+      required by native model
 
 - ### As Native
   In case we need to run operations on native model, we can use `as_native` method:
