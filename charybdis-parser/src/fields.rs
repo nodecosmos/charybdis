@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
 use darling::FromAttributes;
-use syn::{Data, DeriveInput, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
 use syn::spanned::Spanned;
+use syn::{Data, DeriveInput, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
 
 use crate::traits::CharybdisMacroArgs;
 
@@ -33,7 +33,6 @@ pub enum CqlType {
     List,
     Set,
     Tuple,
-    Frozen,
     Ignored,
     /// This is used when the type is not recognized. In future we might want to extend recognition to UDTs,
     /// so we can panic if type is not recognized.
@@ -153,6 +152,18 @@ impl<'a> Field<'a> {
     pub fn is_counter(&self) -> bool {
         self.outer_type == CqlType::Counter
     }
+
+    pub fn is_tuple(&self) -> bool {
+        self.outer_type == CqlType::Tuple
+    }
+
+    pub fn is_frozen(&self) -> bool {
+        self.ty_path
+            .path
+            .segments
+            .iter()
+            .any(|segment| segment.ident == "Frozen")
+    }
 }
 
 #[derive(Default)]
@@ -191,6 +202,10 @@ impl<'a> CharybdisFields<'a> {
             let is_static_column = args.static_columns().contains(&field_name);
 
             let ch_field = Field::from_field(field, is_partition_key, is_clustering_key, is_static_column);
+
+            if ch_field.is_tuple() && !ch_field.is_frozen() {
+                panic!("Tuple field {} must be frozen. Use Frozen<Tuple<T>>.", field_name);
+            }
 
             if is_partition_key && is_clustering_key {
                 panic!("Field {} cannot be both partition and clustering key", field_name);
