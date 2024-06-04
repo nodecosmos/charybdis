@@ -1,3 +1,8 @@
+[![Crates.io](https://img.shields.io/crates/v/charybdis-migrate)](https://crates.io/crates/charybdis)
+[![License](https://img.shields.io/crates/l/charybdis)]()
+[![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
+[![Discord](https://img.shields.io/discord/1247167793045176461?label=discord-server)](https://discord.gg/enDd57nNen)
+
 ## Breaking changes
 
 As of `0.4.13` UDT fields must be in the same order as they are in the database. This is due to

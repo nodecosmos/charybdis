@@ -4,8 +4,9 @@
 welcomed!
 
 [![Crates.io](https://img.shields.io/crates/v/charybdis)](https://crates.io/crates/charybdis)
-[![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
 [![License](https://img.shields.io/crates/l/charybdis)]()
+[![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
+[![Discord](https://img.shields.io/discord/1247167793045176461?label=discord-server)](https://discord.gg/enDd57nNen)
 
 <p>
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" width="150" alt="scylla_logo">
