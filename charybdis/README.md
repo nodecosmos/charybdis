@@ -710,9 +710,13 @@ E.g.
 For each collection field, we get following:
 
 - `PUSH_<field_name>_QUERY` static str
+- `PUSH_<field_name>_IF_EXISTS_QUERY` static str'
 - `PULL_<field_name>_QUERY` static str
+- `PULL_<field_name>_IF_EXISTS_QUERY` static str
 - `push_<field_name>` method
+- `push_<field_name>_if_exists` method
 - `pull_<field_name>` method
+- `pull_<field_name>_if_exists` method
 
 1) ### Model:
     ```rust
@@ -729,26 +733,28 @@ For each collection field, we get following:
     }
     ```
 2) ### Generated Collection Queries:
-    ```rust
-    User::PUSH_TAGS_QUERY;
-    User::PULL_TAGS_QUERY;
-    
-    User::PUSH_POST_IDS_QUERY;
-    User::PULL_POST_IDS_QUERY;
-    ```
 
    Generated query will expect value as first bind value and primary key fields as next bind values.
 
     ```rust
     impl User {
-      const PUSH_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ?";
-      const PULL_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags - ? WHERE id = ?";.
-       
-      const PUSH_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids + ? WHERE id = ?";
-      const PULL_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids - ? WHERE id = ?";
-    
-      const PUSH_BOOKS_BY_GENRE_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre + ? WHERE id = ?";
-      const PULL_BOOKS_BY_GENRE_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre - ? WHERE id = ?";
+        const PUSH_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ?";
+        const PUSH_TAGS_IF_EXISTS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ? IF EXISTS";
+   
+        const PULL_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags - ? WHERE id = ?";
+        const PULL_TAGS_IF_EXISTS_QUERY: &'static str = "UPDATE users SET tags = tags - ? WHERE id = ? IF EXISTS";
+         
+        const PUSH_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids + ? WHERE id = ?";
+        const PUSH_POST_IDS_IF_EXISTS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids + ? WHERE id = ? IF EXISTS";
+   
+        const PULL_POST_IDS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids - ? WHERE id = ?";
+        const PULL_POST_IDS_IF_EXISTS_QUERY: &'static str = "UPDATE users SET post_ids = post_ids - ? WHERE id = ? IF EXISTS";
+
+        const PUSH_BOOKS_BY_GENRE_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre + ? WHERE id = ?";
+        const PUSH_BOOKS_BY_GENRE_IF_EXISTS_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre + ? WHERE id = ? IF EXISTS";
+        
+        const PULL_BOOKS_BY_GENRE_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre - ? WHERE id = ?";
+        const PULL_BOOKS_BY_GENRE_IF_EXISTS_QUERY: &'static str = "UPDATE users SET books_by_genre = books_by_genre - ? WHERE id = ? IF EXISTS";
     }
     ```
 
@@ -773,14 +779,23 @@ For each collection field, we get following:
     let user: User::new();
     
     user.push_tags(tags: HashSet<T>).execute(&session).await;
+    user.push_tags_if_exists(tags: HashSet<T>).execute(&session).await;
+    
     user.pull_tags(tags: HashSet<T>).execute(&session).await;
+    user.pull_tags_if_exists(tags: HashSet<T>).execute(&session).await;
     
     
     user.push_post_ids(ids: Vec<T>).execute(&session).await;
+    user.push_post_ids_if_exists(ids: Vec<T>).execute(&session).await;
+    
     user.pull_post_ids(ids: Vec<T>).execute(&session).await;
+    user.pull_post_ids_if_exists(ids: Vec<T>).execute(&session).await;
     
     user.push_books_by_genre(map: HashMap<K, V>).execute(&session).await;
+    user.push_books_by_genre_if_exists(map: HashMap<K, V>).execute(&session).await;
+    
     user.pull_books_by_genre(map: HashMap<K, V>).execute(&session).await;
+    user.pull_books_by_genre_if_exists(map: HashMap<K, V>).execute(&session).await;
     ```
 
 ## Ignored fields
