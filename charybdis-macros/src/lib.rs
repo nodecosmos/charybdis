@@ -13,7 +13,9 @@ use crate::model::*;
 use crate::native::{
     decrement_counter_methods, delete_by_primary_key_functions, find_by_global_secondary_index,
     find_by_local_secondary_index, find_by_primary_keys_functions, increment_counter_methods,
-    pull_from_collection_consts, pull_from_collection_methods, push_to_collection_consts, push_to_collection_methods,
+    pull_from_collection_consts, pull_from_collection_consts_if_exists, pull_from_collection_methods,
+    pull_from_collection_methods_if_exists, push_to_collection_consts, push_to_collection_consts_if_exists,
+    push_to_collection_methods, push_to_collection_methods_if_exists,
 };
 use crate::rules::*;
 use crate::scylla::from_row;
@@ -61,11 +63,15 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
     // Collection consts
     let push_to_collection_consts = push_to_collection_consts(&args, &fields);
+    let push_to_collection_consts_if_exists = push_to_collection_consts_if_exists(&args, &fields);
     let pull_from_collection_consts = pull_from_collection_consts(&args, &fields);
+    let pull_from_collection_consts_if_exists = pull_from_collection_consts_if_exists(&args, &fields);
 
     // Collection methods
     let push_to_collection_methods = push_to_collection_methods(&fields);
+    let push_to_collection_methods_if_exists = push_to_collection_methods_if_exists(&fields);
     let pull_from_collection_methods = pull_from_collection_methods(&fields);
+    let pull_from_collection_methods_if_exists = pull_from_collection_methods_if_exists(&fields);
 
     // Counter methods
     let increment_counter_methods = increment_counter_methods(&args, &fields);
@@ -103,11 +109,18 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
             #find_by_global_secondary_index_funs
 
             #push_to_collection_consts
+            #push_to_collection_consts_if_exists
+
             #pull_from_collection_consts
+            #pull_from_collection_consts_if_exists
 
             // methods
             #push_to_collection_methods
+            #push_to_collection_methods_if_exists
+
             #pull_from_collection_methods
+            #pull_from_collection_methods_if_exists
+
             #increment_counter_methods
             #decrement_counter_methods
         }
