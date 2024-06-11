@@ -5,7 +5,8 @@ use syn::parse_str;
 use charybdis_parser::fields::CharybdisFields;
 use charybdis_parser::traits::CharybdisMacroArgs;
 
-use crate::traits::fields::FieldsQuery;
+use crate::traits::fields::{CollectionStatements, FieldsQuery};
+use crate::traits::r#type::TypeWithoutOptions;
 use crate::traits::tuple::FieldsAsTuple;
 
 pub(crate) fn push_to_collection_consts(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
@@ -169,12 +170,18 @@ pub(crate) fn push_to_collection_methods(fields: &CharybdisFields) -> TokenStrea
             let fun_name = parse_str::<TokenStream>(&fun_name_str).unwrap();
             let types = fields.primary_key_fields.types();
             let values = fields.primary_key_fields.values();
+            let field_type = field.ty.type_without_options();
+            let use_collection_statement = field.use_statement();
+            let extend_statement = field.extend_statement();
 
             let expanded = quote! {
-                pub fn #fun_name<V: charybdis::scylla::SerializeCql>(
-                    &self,
-                    value: V
-                ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {
+                pub fn #fun_name(
+                    &mut self,
+                    value: #field_type,
+                ) -> charybdis::query::CharybdisQuery<(#field_type, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    #use_collection_statement
+                    #extend_statement
+
                     charybdis::query::CharybdisQuery::new(
                         #push_to_query,
                         charybdis::query::QueryValue::Owned((value, #(#values),*)),
@@ -208,12 +215,18 @@ pub(crate) fn push_to_collection_methods_if_exists(fields: &CharybdisFields) -> 
             let fun_name = parse_str::<TokenStream>(&fun_name_str).unwrap();
             let types = fields.primary_key_fields.types();
             let values = fields.primary_key_fields.values();
+            let field_type = field.ty.type_without_options();
+            let use_collection_statement = field.use_statement();
+            let extend_statement = field.extend_statement();
 
             let expanded = quote! {
-                pub fn #fun_name<V: charybdis::scylla::SerializeCql>(
-                    &self,
-                    value: V
-                ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {
+                pub fn #fun_name(
+                    &mut self,
+                    value: #field_type,
+                ) -> charybdis::query::CharybdisQuery<(#field_type, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    #use_collection_statement
+                    #extend_statement
+
                     charybdis::query::CharybdisQuery::new(
                         #push_to_query,
                         charybdis::query::QueryValue::Owned((value, #(#values),*)),
@@ -247,12 +260,18 @@ pub(crate) fn pull_from_collection_methods(fields: &CharybdisFields) -> TokenStr
             let fun_name = parse_str::<TokenStream>(&fun_name_str).unwrap();
             let types = fields.primary_key_fields.types();
             let values = fields.primary_key_fields.values();
+            let field_type = field.ty.type_without_options();
+            let use_collection_statement = field.use_statement();
+            let remove_statement = field.remove_statement();
 
             let expanded = quote! {
-                pub fn #fun_name<V: charybdis::scylla::SerializeCql>(
+                pub fn #fun_name(
                     &self,
-                    value: V
-                ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    value: #field_type,
+                ) -> charybdis::query::CharybdisQuery<(#field_type, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    #use_collection_statement
+                    #remove_statement
+
                     charybdis::query::CharybdisQuery::new(
                         #pull_from_query,
                         charybdis::query::QueryValue::Owned((value, #(#values),*)),
@@ -286,12 +305,18 @@ pub(crate) fn pull_from_collection_methods_if_exists(fields: &CharybdisFields) -
             let fun_name = parse_str::<TokenStream>(&fun_name_str).unwrap();
             let types = fields.primary_key_fields.types();
             let values = fields.primary_key_fields.values();
+            let field_type = field.ty.type_without_options();
+            let use_collection_statement = field.use_statement();
+            let remove_statement = field.remove_statement();
 
             let expanded = quote! {
-                pub fn #fun_name<V: charybdis::scylla::SerializeCql>(
+                pub fn #fun_name(
                     &self,
-                    value: V
-                ) -> charybdis::query::CharybdisQuery<(V, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    value: #field_type,
+                ) -> charybdis::query::CharybdisQuery<(#field_type, #(#types),*), Self, charybdis::query::ModelMutation> {
+                    #use_collection_statement
+                    #remove_statement
+
                     charybdis::query::CharybdisQuery::new(
                         #pull_from_query,
                         charybdis::query::QueryValue::Owned((value, #(#values),*)),

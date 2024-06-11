@@ -164,6 +164,10 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
         #delete_model_rule
     };
 
+    if struct_name == "Node" {
+        println!("{:#?}", expanded.to_string());
+    }
+
     TokenStream::from(expanded)
 }
 

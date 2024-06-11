@@ -10,6 +10,7 @@ use crate::traits::hash::hash_expr_lit_to_hash;
 mod array;
 mod hash;
 pub mod string;
+pub(crate) mod syn_field;
 
 static EMPTY_VEC: Vec<String> = Vec::new();
 

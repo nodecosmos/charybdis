@@ -4,6 +4,7 @@ use darling::FromAttributes;
 use syn::spanned::Spanned;
 use syn::{Data, DeriveInput, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
 
+use crate::traits::syn_field::IsOption;
 use crate::traits::CharybdisMacroArgs;
 
 #[derive(Clone, PartialEq, strum_macros::Display, strum_macros::EnumString)]
@@ -58,6 +59,7 @@ pub struct Field<'a> {
     pub is_partition_key: bool,
     pub is_clustering_key: bool,
     pub is_static_column: bool,
+    pub is_option: bool,
 }
 
 impl<'a> Field<'a> {
@@ -124,6 +126,7 @@ impl<'a> Field<'a> {
                     is_partition_key,
                     is_clustering_key,
                     is_static_column,
+                    is_option: field.is_option(),
                 };
             })
             .unwrap()
