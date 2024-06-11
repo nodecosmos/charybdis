@@ -35,26 +35,34 @@ pub trait Find: BaseModel {
         CharybdisQuery::new(query, QueryValue::Owned(values))
     }
 
-    fn find_by_primary_key_value(value: &Self::PrimaryKey) -> CharybdisQuery<Self::PrimaryKey, Self, ModelRow<Self>> {
-        CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, QueryValue::Ref(value))
+    fn find_by_primary_key_value<'a>(
+        value: Self::PrimaryKey,
+    ) -> CharybdisQuery<'a, Self::PrimaryKey, Self, ModelRow<Self>> {
+        CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, QueryValue::Owned(value))
     }
 
-    fn maybe_find_by_primary_key_value(
-        value: &Self::PrimaryKey,
-    ) -> CharybdisQuery<Self::PrimaryKey, Self, OptionalModelRow<Self>> {
-        CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, QueryValue::Ref(value))
+    fn maybe_find_by_primary_key_value<'a>(
+        value: Self::PrimaryKey,
+    ) -> CharybdisQuery<'a, Self::PrimaryKey, Self, OptionalModelRow<Self>> {
+        CharybdisQuery::new(Self::FIND_BY_PRIMARY_KEY_QUERY, QueryValue::Owned(value))
     }
 
-    fn find_by_partition_key_value(
-        value: &Self::PartitionKey,
-    ) -> CharybdisQuery<Self::PartitionKey, Self, ModelStream<Self>> {
-        CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, QueryValue::Ref(value))
+    fn find_by_partition_key_value<'a>(
+        value: Self::PartitionKey,
+    ) -> CharybdisQuery<'a, Self::PartitionKey, Self, ModelStream<Self>> {
+        CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, QueryValue::Owned(value))
     }
 
-    fn find_first_by_partition_key_value(
-        value: &Self::PartitionKey,
-    ) -> CharybdisQuery<Self::PartitionKey, Self, ModelRow<Self>> {
-        CharybdisQuery::new(Self::FIND_FIRST_BY_PARTITION_KEY_QUERY, QueryValue::Ref(value))
+    fn find_first_by_partition_key_value<'a>(
+        value: Self::PartitionKey,
+    ) -> CharybdisQuery<'a, Self::PartitionKey, Self, ModelRow<Self>> {
+        CharybdisQuery::new(Self::FIND_FIRST_BY_PARTITION_KEY_QUERY, QueryValue::Owned(value))
+    }
+
+    fn find_by_partition_key_value_paged<'a>(
+        value: Self::PartitionKey,
+    ) -> CharybdisQuery<'a, Self::PartitionKey, Self, ModelPaged<Self>> {
+        CharybdisQuery::new(Self::FIND_BY_PARTITION_KEY_QUERY, QueryValue::Owned(value))
     }
 
     fn find_by_primary_key(&self) -> CharybdisQuery<Self::PrimaryKey, Self, ModelRow<Self>> {
