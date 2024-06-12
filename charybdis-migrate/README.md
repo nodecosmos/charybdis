@@ -51,10 +51,10 @@ migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
             table_name = commits,
             partition_keys = [object_id],
             clustering_keys = [created_at, id],
-            table_options = #r"
-                WITH CLUSTERING ORDER BY (created_at DESC) 
+            table_options = r#"
+                CLUSTERING ORDER BY (created_at DESC) 
                 AND gc_grace_seconds = 86400
-            ";
+            "#
         )]
         #[derive(Serialize, Deserialize, Default)]
         pub struct Commit {...}
