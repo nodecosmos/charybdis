@@ -174,10 +174,10 @@ Resulting auto-generated migration query will be:
             clustering_keys = [created_at, id],
             global_secondary_indexes = [],
             local_secondary_indexes = [],
-            table_options = #r"
-                WITH CLUSTERING ORDER BY (created_at DESC) 
+            table_options = r#"
+                CLUSTERING ORDER BY (created_at DESC) 
                 AND gc_grace_seconds = 86400
-            ";
+            "#
         )]
         #[derive(Serialize, Deserialize, Default)]
         pub struct Commit {...}
@@ -185,7 +185,7 @@ Resulting auto-generated migration query will be:
         * ⚠️ If table exists, table options will result in alter table query that without
           `CLUSTERING ORDER` and `COMPACT STORAGE` options.
 
-  Model dropping is not added. If you removed model, you need to drop table manuall
+  Model dropping is not added. If you removed model, you need to drop table manually.
 
 * ### Running migration
   ```bash
