@@ -388,7 +388,7 @@ impl<'a> CharybdisBatch<'a> {
         M: Model + Sync + Send,
         RtQe: QueryExecutor,
     {
-        self.inner.append_statement(query.contents().as_str());
+        self.inner.append_statement(query.query_string);
 
         self.values.push(SerializeRowBox::new(query.values));
 

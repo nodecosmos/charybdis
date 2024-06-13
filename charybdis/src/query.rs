@@ -205,8 +205,8 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
 
 pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> {
     inner: Query,
-    query_string: &'static str,
     paging_state: Option<Bytes>,
+    pub(crate) query_string: &'static str,
     pub(crate) values: QueryValue<'a, Val, M>,
     _phantom: std::marker::PhantomData<Qe>,
 }
@@ -216,8 +216,8 @@ impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> CharybdisQuery<'a, 
         Self {
             inner: Query::new(query),
             query_string: query,
-            paging_state: None,
             values,
+            paging_state: None,
             _phantom: Default::default(),
         }
     }
@@ -226,10 +226,6 @@ impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> CharybdisQuery<'a, 
         self.values = values;
 
         self
-    }
-
-    pub(crate) fn contents(&self) -> &String {
-        &self.inner.contents
     }
 
     pub fn page_size(mut self, page_size: i32) -> Self {
