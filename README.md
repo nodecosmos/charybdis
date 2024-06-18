@@ -13,7 +13,7 @@ welcomed!
 <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Cassandra_logo.svg" width="150" alt="cassandra_logo">
 </p>
 
-#### Charybdis is a ORM layer on top of `scylla_rust_driver` focused on easy of use and performance
+#### Charybdis is a ORM layer on top of [ScyllaDB Rust Driver](https://github.com/scylladb/scylla-rust-driver) focused on easy of use and performance
 
 ## Usage considerations:
 
