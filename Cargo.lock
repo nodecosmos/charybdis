@@ -246,7 +246,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "charybdis_parser 0.7.2",
  "clap",
