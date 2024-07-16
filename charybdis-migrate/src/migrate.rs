@@ -46,9 +46,17 @@ struct Args {
     #[arg(long, default_value_t = false)]
     verbose: bool,
 
-    /// Path to the certificate file if using SSL
+    /// Path to the CA file if using TLS
+    #[arg(long, default_value = None)]
+    ca: Option<String>,
+
+    /// Client certificate file if required_client_auth is set to true
     #[arg(long, default_value = None)]
     cert: Option<String>,
+
+    /// Client private key file if required_client_auth is set to true
+    #[arg(long, default_value = None)]
+    key: Option<String>,
 }
 
 #[tokio::main]

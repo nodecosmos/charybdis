@@ -15,7 +15,7 @@ pub(crate) async fn initialize_session(args: &Args) -> Session {
         builder = builder.user(user, password);
     }
 
-    if let Some(cert) = &args.cert {
+    if let Some(ca) = &args.ca {
         let mut context_builder = SslContextBuilder::new(SslMethod::tls())
             .map_err(|e| {
                 eprintln!("Failed to create SSL context: {}", e);
@@ -24,7 +24,7 @@ pub(crate) async fn initialize_session(args: &Args) -> Session {
             .unwrap();
 
         context_builder
-            .set_ca_file(cert)
+            .set_ca_file(ca)
             .map_err(|e| {
                 eprintln!("Failed to set CA file: {}", e);
                 std::process::exit(1);
@@ -32,6 +32,28 @@ pub(crate) async fn initialize_session(args: &Args) -> Session {
             .unwrap();
 
         context_builder.set_verify(SslVerifyMode::PEER);
+
+        if let Some(key) = &args.cert {
+            context_builder
+                .set_certificate_file(key, openssl::ssl::SslFiletype::PEM)
+                .map_err(|e| {
+                    eprintln!("Failed to set certificate file: {}", e);
+                    std::process::exit(1);
+                })
+                .unwrap();
+
+            let key = args
+                .key
+                .as_ref()
+                .expect("Private key file is required when certificate is provided");
+            context_builder
+                .set_private_key_file(key, openssl::ssl::SslFiletype::PEM)
+                .map_err(|e| {
+                    eprintln!("Failed to set private key file: {}", e);
+                    std::process::exit(1);
+                })
+                .unwrap();
+        }
 
         builder = builder.ssl_context(Some(context_builder.build()));
     }
