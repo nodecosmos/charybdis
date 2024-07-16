@@ -1,7 +1,7 @@
-use std::{env, io};
 use std::fs::read_dir;
 use std::io::ErrorKind;
 use std::path::PathBuf;
+use std::{env, io};
 
 use clap::Parser;
 use scylla::Session;
@@ -29,11 +29,11 @@ struct Args {
     #[arg(short, long)]
     keyspace: String,
 
-    #[arg(short, long, default_value = "")]
-    user: String,
+    #[arg(short, long, default_value = None)]
+    user: Option<String>,
 
-    #[arg(short, long, default_value = "")]
-    password: String,
+    #[arg(short, long, default_value = None)]
+    password: Option<String>,
 
     #[arg(short, long, default_value_t = 30)]
     timeout: u64,
@@ -45,6 +45,10 @@ struct Args {
     /// Prints alter table options queries
     #[arg(long, default_value_t = false)]
     verbose: bool,
+
+    /// Path to the certificate file if using SSL
+    #[arg(long, default_value = None)]
+    cert: Option<String>,
 }
 
 #[tokio::main]
