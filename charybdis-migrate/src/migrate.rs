@@ -63,8 +63,11 @@ struct Args {
 async fn main() {
     let args = Args::parse();
     let project_root = get_project_root().unwrap();
-
     let session: Session = initialize_session(&args).await;
+
+    if env::var("FORCE_COLOR").is_ok() {
+        colored::control::set_override(true);
+    }
 
     let current_db_schema = DbSchema::new(&session, args.keyspace.clone()).await;
     let current_code_schema = CodeSchema::new(&project_root);
