@@ -22,7 +22,7 @@ impl FieldsQuery for Vec<&Field<'_>> {
             .collect::<Vec<String>>()
             .join(", ");
 
-        return str_vec;
+        str_vec
     }
 
     fn set_bind_markers(&self) -> String {

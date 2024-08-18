@@ -38,9 +38,9 @@ impl FromCqlVal<CqlValue> for SecondaryIndex {
                     });
                 }
 
-                return Ok(SecondaryIndex {
+                Ok(SecondaryIndex {
                     target: IndexTarget::GlobalSecondaryIndex(target_val_string),
-                });
+                })
             }
             _ => Err(FromCqlValError::BadVal),
         }

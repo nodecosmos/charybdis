@@ -9,7 +9,7 @@ use crate::Args;
 use crate::model::{ModelMigration, ModelType};
 use crate::model::data::ModelData;
 
-pub(crate) struct Migration<'a> {
+pub struct Migration<'a> {
     current_db_schema: &'a DbSchema,
     current_code_schema: &'a CodeSchema,
     session: &'a Session,
@@ -17,7 +17,7 @@ pub(crate) struct Migration<'a> {
 }
 
 impl<'a> Migration<'a> {
-    pub(crate) fn new(
+    pub fn new(
         current_db_schema: &'a DbSchema,
         current_code_schema: &'a CodeSchema,
         session: &'a Session,
@@ -31,7 +31,7 @@ impl<'a> Migration<'a> {
         }
     }
 
-    pub(crate) async fn run(&self) {
+    pub async fn run(&self) {
         self.run_udts().await;
         self.run_tables().await;
         self.run_materialized_views().await;
@@ -50,7 +50,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.udts.get(name).unwrap_or(&empty_udt),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, &self.args);
+            let migration = ModelMigration::new(&model_data, self.session, self.args);
 
             migration.run().await;
         }
@@ -67,7 +67,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.tables.get(name).unwrap_or(&empty_table),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, &self.args);
+            let migration = ModelMigration::new(&model_data, self.session, self.args);
 
             migration.run().await;
         }
@@ -84,7 +84,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.materialized_views.get(name).unwrap_or(&empty_mv),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, &self.args);
+            let migration = ModelMigration::new(&model_data, self.session, self.args);
 
             migration.run().await;
         }

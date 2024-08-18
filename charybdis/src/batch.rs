@@ -90,7 +90,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     pub async fn chunked_insert(
         self,
         db_session: &CachingSession,
-        iter: &Vec<M>,
+        iter: &[M],
         chunk_size: usize,
     ) -> Result<(), CharybdisError> {
         let chunks = iter.chunks(chunk_size);
@@ -109,7 +109,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     pub async fn chunked_insert_if_not_exist(
         self,
         db_session: &CachingSession,
-        iter: &Vec<M>,
+        iter: &[M],
         chunk_size: usize,
     ) -> Result<(), CharybdisError> {
         let chunks = iter.chunks(chunk_size);
@@ -128,7 +128,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     pub async fn chunked_update(
         self,
         db_session: &CachingSession,
-        iter: &Vec<M>,
+        iter: &[M],
         chunk_size: usize,
     ) -> Result<(), CharybdisError> {
         let chunks = iter.chunks(chunk_size);
@@ -147,7 +147,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     pub async fn chunked_delete(
         self,
         db_session: &CachingSession,
-        iter: &Vec<M>,
+        iter: &[M],
         chunk_size: usize,
     ) -> Result<(), CharybdisError> {
         let chunks = iter.chunks(chunk_size);
@@ -168,7 +168,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     pub async fn chunked_delete_by_partition_key(
         self,
         db_session: &CachingSession,
-        iter: &Vec<M>,
+        iter: &[M],
         chunk_size: usize,
     ) -> Result<(), CharybdisError> {
         let chunks = iter.chunks(chunk_size);
@@ -404,3 +404,9 @@ impl<'a> CharybdisBatch<'a> {
         Ok(result)
     }
 }
+
+impl<'a> Default for CharybdisBatch<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+ }

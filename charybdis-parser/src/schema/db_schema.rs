@@ -340,11 +340,9 @@ impl DbSchema {
     }
 
     pub fn get_current_schema_as_json(&self) -> String {
-        let json = to_string_pretty(&self).unwrap_or_else(|e| {
+        to_string_pretty(&self).unwrap_or_else(|e| {
             panic!("Error serializing schema to json: {}", e);
-        });
-
-        json
+        })
     }
 
     pub fn write_schema_to_json(&self, project_root: PathBuf) {

@@ -15,7 +15,7 @@ pub(crate) fn parse_file_as_string(path: &Path) -> String {
     File::open(path)
         .unwrap()
         .read_to_string(&mut file_content)
-        .expect(format!("Unable to read file: {}", path.display()).as_str());
+        .unwrap_or_else(|_| panic!("Unable to read file: {}", path.display()));
 
     file_content
 }
@@ -34,7 +34,7 @@ pub(crate) fn parse_charybdis_model_def(ast: &syn::File, model_macro: ModelMacro
                 continue;
             }
 
-            schema_objects.push(extract_schema_object(&item_struct, &model_macro));
+            schema_objects.push(extract_schema_object(item_struct, &model_macro));
         }
     }
 
@@ -97,7 +97,7 @@ fn extract_schema_object(item_struct: &ItemStruct, model_macro: &ModelMacro) -> 
 
     // parse struct fields
     if let Fields::Named(fields_named) = &item_struct.fields {
-        let db_fields = CharybdisFields::db_fields(&fields_named);
+        let db_fields = CharybdisFields::db_fields(fields_named);
 
         for field in db_fields {
             let field_name = field.ident.to_string();

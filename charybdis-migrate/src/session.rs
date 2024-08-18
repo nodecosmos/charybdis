@@ -5,7 +5,7 @@ use scylla::{Session, SessionBuilder};
 
 use crate::Args;
 
-pub(crate) async fn initialize_session(args: &Args) -> Session {
+pub async fn initialize_session(args: &Args) -> Session {
     let mut builder = SessionBuilder::new()
         .known_node(&args.host)
         .use_keyspace(&args.keyspace, false)

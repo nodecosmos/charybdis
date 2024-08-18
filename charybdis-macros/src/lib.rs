@@ -38,61 +38,61 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let struct_name = &input.ident.clone();
 
     // partial_<model_name>!(StructName, field1, field2, ...);
-    let partial_model_generator = partial_model_macro_generator(&input, &args, &fields);
+    let partial_model_generator = partial_model_macro_generator(&input, &args, fields);
 
     // Charybdis::BaseModel types
-    let primary_key_type = primary_key_type(&fields);
-    let partition_key_type = partition_key_type(&fields);
+    let primary_key_type = primary_key_type(fields);
+    let partition_key_type = partition_key_type(fields);
 
     // Charybdis::BaseModel consts
     let db_model_name_const = db_model_name_const(&args);
-    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &fields);
-    let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, &fields);
-    let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, &fields);
-    let insert_query_const = insert_query_const(&args, &fields);
+    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, fields);
+    let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, fields);
+    let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, fields);
+    let insert_query_const = insert_query_const(&args, fields);
 
     // Charybdis::Model consts
-    let insert_if_not_exists_query_const = insert_if_not_exists_query_const(&args, &fields);
-    let update_query_const = update_query_const(&args, &fields);
-    let delete_query_const = delete_query_const(&args, &fields);
-    let delete_by_partition_key_query_const = delete_by_partition_key_query_const(&args, &fields);
+    let insert_if_not_exists_query_const = insert_if_not_exists_query_const(&args, fields);
+    let update_query_const = update_query_const(&args, fields);
+    let delete_query_const = delete_query_const(&args, fields);
+    let delete_by_partition_key_query_const = delete_by_partition_key_query_const(&args, fields);
 
     // Charybdis::BaseModel methods
-    let primary_key_values_method = primary_key_values_method(&fields);
-    let partition_key_values_method = partition_key_values_method(&fields);
+    let primary_key_values_method = primary_key_values_method(fields);
+    let partition_key_values_method = partition_key_values_method(fields);
 
     // Collection consts
-    let push_to_collection_consts = push_to_collection_consts(&args, &fields);
-    let push_to_collection_consts_if_exists = push_to_collection_consts_if_exists(&args, &fields);
-    let pull_from_collection_consts = pull_from_collection_consts(&args, &fields);
-    let pull_from_collection_consts_if_exists = pull_from_collection_consts_if_exists(&args, &fields);
+    let push_to_collection_consts = push_to_collection_consts(&args, fields);
+    let push_to_collection_consts_if_exists = push_to_collection_consts_if_exists(&args, fields);
+    let pull_from_collection_consts = pull_from_collection_consts(&args, fields);
+    let pull_from_collection_consts_if_exists = pull_from_collection_consts_if_exists(&args, fields);
 
     // Collection methods
-    let push_to_collection_methods = push_to_collection_methods(&fields);
-    let push_to_collection_methods_if_exists = push_to_collection_methods_if_exists(&fields);
-    let pull_from_collection_methods = pull_from_collection_methods(&fields);
-    let pull_from_collection_methods_if_exists = pull_from_collection_methods_if_exists(&fields);
+    let push_to_collection_methods = push_to_collection_methods(fields);
+    let push_to_collection_methods_if_exists = push_to_collection_methods_if_exists(fields);
+    let pull_from_collection_methods = pull_from_collection_methods(fields);
+    let pull_from_collection_methods_if_exists = pull_from_collection_methods_if_exists(fields);
 
     // Counter methods
-    let increment_counter_methods = increment_counter_methods(&args, &fields);
-    let decrement_counter_methods = decrement_counter_methods(&args, &fields);
+    let increment_counter_methods = increment_counter_methods(&args, fields);
+    let decrement_counter_methods = decrement_counter_methods(&args, fields);
 
     // FromRow trait
-    let from_row = from_row(struct_name, &fields);
+    let from_row = from_row(struct_name, fields);
 
     // Current model macro rules
-    let find_model_query_rule = find_model_query_rule(struct_name, &args, &fields);
-    let find_model_rule = find_model_rule(struct_name, &args, &fields);
-    let find_first_model_rule = find_first_model_rule(struct_name, &args, &fields);
-    let update_model_query_rule = update_model_query_rule(struct_name, &args, &fields);
+    let find_model_query_rule = find_model_query_rule(struct_name, &args, fields);
+    let find_model_rule = find_model_rule(struct_name, &args, fields);
+    let find_first_model_rule = find_first_model_rule(struct_name, &args, fields);
+    let update_model_query_rule = update_model_query_rule(struct_name, &args, fields);
     let delete_model_query_rule = delete_model_query_rule(struct_name, &args);
     let delete_model_rule = delete_model_rule(struct_name, &args);
 
     // Associated functions
-    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
-    let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, &fields);
-    let find_by_global_secondary_index_funs = find_by_global_secondary_index(struct_name, &args, &fields);
-    let delete_by_cks_funs = delete_by_primary_key_functions(&args, &fields);
+    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, fields);
+    let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, fields);
+    let find_by_global_secondary_index_funs = find_by_global_secondary_index(struct_name, &args, fields);
+    let delete_by_cks_funs = delete_by_primary_key_functions(&args, fields);
 
     CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
     CharybdisFields::strip_charybdis_attributes(&mut input);
@@ -177,24 +177,24 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     let struct_name = &input.ident.clone();
 
     // Charybdis::BaseModel types
-    let primary_key_type = primary_key_type(&fields);
-    let partition_key_type = partition_key_type(&fields);
+    let primary_key_type = primary_key_type(fields);
+    let partition_key_type = partition_key_type(fields);
 
     // Charybdis::MaterializedView consts
     let db_model_name_const = db_model_name_const(&args);
-    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, &fields);
-    let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, &fields);
-    let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, &fields);
+    let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, fields);
+    let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, fields);
+    let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, fields);
 
     // Charybdis::BaseModel methods
-    let primary_key_values_method = primary_key_values_method(&fields);
-    let partition_key_values_method = partition_key_values_method(&fields);
+    let primary_key_values_method = primary_key_values_method(fields);
+    let partition_key_values_method = partition_key_values_method(fields);
 
     // Current model rules
-    let find_model_query_rule = find_model_query_rule(struct_name, &args, &fields);
+    let find_model_query_rule = find_model_query_rule(struct_name, &args, fields);
 
     // Associated functions
-    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, &fields);
+    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, fields);
 
     CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
     CharybdisFields::strip_charybdis_attributes(&mut input);

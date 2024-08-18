@@ -79,7 +79,7 @@ impl<'a> Field<'a> {
                                 .to_string()
                                 .parse::<CqlType>()
                                 .ok()
-                                .unwrap_or_else(|| CqlType::Unknown);
+                                .unwrap_or(CqlType::Unknown);
                         }
                     }
                 } else {
@@ -88,7 +88,7 @@ impl<'a> Field<'a> {
                         .to_string()
                         .parse::<CqlType>()
                         .ok()
-                        .unwrap_or_else(|| CqlType::Unknown);
+                        .unwrap_or(CqlType::Unknown);
                 }
             }
 
@@ -109,7 +109,7 @@ impl<'a> Field<'a> {
                 let ignore = char_attrs.ignore.unwrap_or(false);
                 let ident = field.ident.clone().unwrap();
 
-                return Field {
+                Field {
                     name: ident.to_string(),
                     ident: ident.clone(),
                     ty: field.ty.clone(),
@@ -124,7 +124,7 @@ impl<'a> Field<'a> {
                     is_partition_key,
                     is_clustering_key,
                     is_static_column,
-                };
+                }
             })
             .unwrap()
     }
@@ -211,13 +211,11 @@ impl<'a> CharybdisFields<'a> {
                 panic!("Field {} cannot be both partition and clustering key", field_name);
             }
 
-            if is_static_column {
-                if is_partition_key || is_clustering_key {
-                    panic!(
-                        "Field {} cannot be both static column and partition or clustering key",
-                        field_name
-                    );
-                }
+            if is_static_column && (is_partition_key || is_clustering_key) {
+                panic!(
+                    "Field {} cannot be both static column and partition or clustering key",
+                    field_name
+                );
             }
 
             me.all_fields.push(ch_field);
@@ -325,9 +323,9 @@ impl<'a> CharybdisFields<'a> {
         }
 
         // populate primary key fields
-        self.partition_key_fields = partition_key_fields.into_iter().filter_map(|x| x).collect();
-        self.clustering_key_fields = clustering_key_fields.into_iter().filter_map(|x| x).collect();
-        self.primary_key_fields = primary_key_fields.into_iter().filter_map(|x| x).collect();
+        self.partition_key_fields = partition_key_fields.into_iter().flatten().collect();
+        self.clustering_key_fields = clustering_key_fields.into_iter().flatten().collect();
+        self.primary_key_fields = primary_key_fields.into_iter().flatten().collect();
 
         self
     }

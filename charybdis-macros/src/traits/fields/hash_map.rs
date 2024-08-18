@@ -32,7 +32,7 @@ impl FieldHashMapString for Vec<Field<'_>> {
 
         for field in self.iter() {
             let field_ident = &field.ident;
-            let attrs: &Vec<Attribute> = &field.attrs;
+            let attrs: &Vec<Attribute> = field.attrs;
 
             field_attributes.extend(quote! { #field_ident => #(#attrs)*; });
         }
@@ -41,3 +41,4 @@ impl FieldHashMapString for Vec<Field<'_>> {
         field_attributes.to_string().replace('\n', "")
     }
 }
+

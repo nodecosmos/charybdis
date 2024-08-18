@@ -62,7 +62,7 @@ pub(crate) struct ModelMigration<'a> {
 
 impl<'a> ModelMigration<'a> {
     pub(crate) fn new(data: &'a ModelData, session: &'a Session, args: &'a Args) -> Self {
-        let runner = ModelRunner::new(&session, data, args);
+        let runner = ModelRunner::new(session, data, args);
 
         Self { data, runner, args }
     }
@@ -183,30 +183,26 @@ impl<'a> ModelMigration<'a> {
     }
 
     fn panic_on_partition_key_change(&self) {
-        if self.data.migration_object_type != ModelType::Udt {
-            if self.data.partition_key_changed() {
-                panic!(
-                    "\n\n{} {} {}\n{}\n\n",
-                    "Illegal change in".bright_red(),
-                    self.data.migration_object_name.bright_yellow(),
-                    self.data.migration_object_type.to_string().bright_magenta(),
-                    "Partition key change is not allowed!".bright_red(),
-                );
-            }
+        if self.data.migration_object_type != ModelType::Udt && self.data.partition_key_changed() {
+            panic!(
+                "\n\n{} {} {}\n{}\n\n",
+                "Illegal change in".bright_red(),
+                self.data.migration_object_name.bright_yellow(),
+                self.data.migration_object_type.to_string().bright_magenta(),
+                "Partition key change is not allowed!".bright_red(),
+            );
         }
     }
 
     fn panic_on_clustering_key_change(&self) {
-        if self.data.migration_object_type != ModelType::Udt {
-            if self.data.clustering_key_changed() {
-                panic!(
-                    "\n\n{} {} {}\n{}\n\n",
-                    "Illegal change in".bright_red(),
-                    self.data.migration_object_name.bright_yellow(),
-                    self.data.migration_object_type.to_string().bright_magenta(),
-                    "Clustering key change is not allowed!".bright_red(),
-                );
-            }
+        if self.data.migration_object_type != ModelType::Udt && self.data.clustering_key_changed() {
+            panic!(
+                "\n\n{} {} {}\n{}\n\n",
+                "Illegal change in".bright_red(),
+                self.data.migration_object_name.bright_yellow(),
+                self.data.migration_object_type.to_string().bright_magenta(),
+                "Clustering key change is not allowed!".bright_red(),
+            );
         }
     }
 

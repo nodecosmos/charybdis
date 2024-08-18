@@ -336,13 +336,13 @@ impl<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> CharybdisCbQue
         profile_handle(profile_handle: Option<ExecutionProfileHandle>)
     }
 
-    pub async fn execute(mut self, session: &CachingSession) -> Result<QueryResult, M::Error> {
-        CbA::before_execute(&mut self.model, session, self.extension).await?;
+    pub async fn execute(self, session: &CachingSession) -> Result<QueryResult, M::Error> {
+        CbA::before_execute(self.model, session, self.extension).await?;
 
         let query_value = CbA::query_value(self.model);
         let res = self.inner.values(query_value).execute(session).await?;
 
-        CbA::after_execute(&mut self.model, session, self.extension).await?;
+        CbA::after_execute(self.model, session, self.extension).await?;
 
         Ok(res)
     }

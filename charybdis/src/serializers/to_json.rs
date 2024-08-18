@@ -8,6 +8,6 @@ pub trait ToJson<T: BaseModel + Serialize> {
 
 impl<T: BaseModel + Serialize> ToJson<T> for T {
     fn to_json(&self) -> Result<String, CharybdisError> {
-        serde_json::to_string(&self).map_err(|e| CharybdisError::JsonError(e))
+        serde_json::to_string(&self).map_err(CharybdisError::JsonError)
     }
 }
