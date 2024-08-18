@@ -8,57 +8,13 @@ use scylla::Session;
 
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
-use session::initialize_session;
+use migrate::Args;
+use migrate::session::initialize_session;
 
-use crate::migration::Migration;
+use migrate::migration::Migration;
 
-mod migration;
-mod model;
-
-mod session;
 
 /// Automatic Migration Tool
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Scylla Host
-    #[arg(long)]
-    host: String,
-
-    /// Keyspace
-    #[arg(short, long)]
-    keyspace: String,
-
-    #[arg(short, long, default_value = None)]
-    user: Option<String>,
-
-    #[arg(short, long, default_value = None)]
-    password: Option<String>,
-
-    #[arg(short, long, default_value_t = 30)]
-    timeout: u64,
-
-    /// Drop and recreate columns in case of type change
-    #[arg(short, long, default_value_t = false)]
-    drop_and_replace: bool,
-
-    /// Prints alter table options queries
-    #[arg(long, default_value_t = false)]
-    verbose: bool,
-
-    /// Path to the CA file if using TLS
-    #[arg(long, default_value = None)]
-    ca: Option<String>,
-
-    /// Client certificate file if required_client_auth is set to true
-    #[arg(long, default_value = None)]
-    cert: Option<String>,
-
-    /// Client private key file if required_client_auth is set to true
-    #[arg(long, default_value = None)]
-    key: Option<String>,
-}
-
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
