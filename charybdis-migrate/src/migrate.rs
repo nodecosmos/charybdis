@@ -5,34 +5,27 @@ use std::{env, io};
 
 use clap::Parser;
 use scylla::Session;
-
-use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
-use migrate::Args;
+use migrate::args::Args;
+use migrate::MigrationBuilder;
 use migrate::session::initialize_session;
-
-use migrate::migration::Migration;
-
 
 /// Automatic Migration Tool
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
     let project_root = get_project_root().unwrap();
-    let session: Session = initialize_session(&args).await;
+    let migration_data = MigrationBuilder::from_args(args);
+    let keyspace = migration_data.keyspace.clone();
+    let session: Session = initialize_session(&migration_data).await;
 
     if env::var("FORCE_COLOR").is_ok() {
         colored::control::set_override(true);
     }
 
-    let current_db_schema = DbSchema::new(&session, args.keyspace.clone()).await;
-    let current_code_schema = CodeSchema::new(&project_root);
+    migration_data.run_with_session(&session, &project_root).await;
 
-    let migration = Migration::new(&current_db_schema, &current_code_schema, &session, &args);
-
-    migration.run().await;
-
-    DbSchema::new(&session, args.keyspace)
+    DbSchema::new(&session, keyspace)
         .await
         .write_schema_to_json(project_root);
 }

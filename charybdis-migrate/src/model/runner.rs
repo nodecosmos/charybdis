@@ -1,8 +1,8 @@
 use colored::*;
 use regex::Regex;
 use scylla::Session;
+use crate::MigrationBuilder;
 
-use crate::Args;
 use crate::model::{ModelData, ModelType};
 
 pub(crate) const INDEX_SUFFIX: &str = "idx";
@@ -10,11 +10,11 @@ pub(crate) const INDEX_SUFFIX: &str = "idx";
 pub(crate) struct ModelRunner<'a> {
     session: &'a Session,
     data: &'a ModelData<'a>,
-    args: &'a Args,
+    args: &'a MigrationBuilder,
 }
 
 impl<'a> ModelRunner<'a> {
-    pub fn new(session: &'a Session, data: &'a ModelData, args: &'a Args) -> Self {
+    pub fn new(session: &'a Session, data: &'a ModelData, args: &'a MigrationBuilder) -> Self {
         Self { session, data, args }
     }
 
