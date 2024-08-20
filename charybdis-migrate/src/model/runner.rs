@@ -1,20 +1,19 @@
+use crate::args::Args;
+use crate::model::{ModelData, ModelType};
 use colored::*;
 use regex::Regex;
 use scylla::Session;
-use crate::MigrationBuilder;
-
-use crate::model::{ModelData, ModelType};
 
 pub(crate) const INDEX_SUFFIX: &str = "idx";
 
 pub(crate) struct ModelRunner<'a> {
     session: &'a Session,
     data: &'a ModelData<'a>,
-    args: &'a MigrationBuilder,
+    args: &'a Args,
 }
 
 impl<'a> ModelRunner<'a> {
-    pub fn new(session: &'a Session, data: &'a ModelData, args: &'a MigrationBuilder) -> Self {
+    pub fn new(session: &'a Session, data: &'a ModelData, args: &'a Args) -> Self {
         Self { session, data, args }
     }
 
@@ -192,9 +191,7 @@ impl<'a> ModelRunner<'a> {
 
         let cql = format!(
             "ALTER {} {} DROP ({})",
-            self.data.migration_object_type,
-            self.data.migration_object_name,
-            removed_fields,
+            self.data.migration_object_type, self.data.migration_object_name, removed_fields,
         );
 
         self.execute(&cql, true).await;
@@ -219,9 +216,7 @@ impl<'a> ModelRunner<'a> {
 
         let cql = format!(
             "ALTER {} {} DROP ({})",
-            self.data.migration_object_type,
-            self.data.migration_object_name,
-            changed_fields,
+            self.data.migration_object_type, self.data.migration_object_name, changed_fields,
         );
 
         self.execute(&cql, true).await;

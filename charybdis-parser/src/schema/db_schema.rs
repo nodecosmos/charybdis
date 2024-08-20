@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use colored::Colorize;
 use scylla::Session;
@@ -7,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 
 use crate::errors::DbSchemaParserError;
-use crate::schema::{SchemaObject, SchemaObjects};
 use crate::schema::secondary_indexes::{IndexTarget, SecondaryIndex};
+use crate::schema::{SchemaObject, SchemaObjects};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DbSchema {
@@ -345,10 +344,10 @@ impl DbSchema {
         })
     }
 
-    pub fn write_schema_to_json(&self, project_root: PathBuf) {
+    pub fn write_schema_to_json(&self, project_root: &str) {
         let json = self.get_current_schema_as_json();
 
-        let path = project_root.to_str().unwrap().to_string() + "/current_schema.json";
+        let path = project_root.to_string() + "/current_schema.json";
 
         std::fs::write(path, json).unwrap_or_else(|e| {
             panic!("Error writing schema to json: {}", e);

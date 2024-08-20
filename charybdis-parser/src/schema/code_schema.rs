@@ -34,7 +34,7 @@ pub struct CodeSchema {
 }
 
 impl CodeSchema {
-    pub fn new(project_root: &PathBuf) -> CodeSchema {
+    pub fn new(project_root: &String) -> CodeSchema {
         let mut current_code_schema = CodeSchema {
             tables: SchemaObjects::new(),
             udts: SchemaObjects::new(),
@@ -46,7 +46,8 @@ impl CodeSchema {
         current_code_schema
     }
 
-    pub fn get_models_from_code(&mut self, project_root: &PathBuf) {
+    pub fn get_models_from_code(&mut self, project_root: &String) {
+        let project_root: PathBuf = PathBuf::from(project_root);
         for entry in WalkDir::new(project_root) {
             let entry: DirEntry = entry.unwrap();
 
