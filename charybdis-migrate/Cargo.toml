@@ -20,6 +20,10 @@ clap = { version = "4.5.9", features = ["derive"] }
 regex = "1.10.5"
 openssl = "0.10.64"
 
+[lib]
+name = "migrate"
+path = "src/lib.rs"
+
 [[bin]]
 name = "migrate"
 path = "src/migrate.rs"

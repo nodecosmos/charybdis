@@ -83,7 +83,7 @@ pub trait CallbackAction<M: Callbacks> {
 
 impl<M: Callbacks> CallbackAction<M> for InsertAction<M> {
     fn query_value<Val: SerializeRow>(model: &M) -> QueryValue<Val, M> {
-        QueryValue::Model(&model)
+        QueryValue::Model(model)
     }
 
     async fn before_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {
@@ -97,7 +97,7 @@ impl<M: Callbacks> CallbackAction<M> for InsertAction<M> {
 
 impl<M: Callbacks> CallbackAction<M> for UpdateAction<M> {
     fn query_value<Val: SerializeRow>(model: &M) -> QueryValue<Val, M> {
-        QueryValue::Model(&model)
+        QueryValue::Model(model)
     }
 
     async fn before_execute(model: &mut M, session: &CachingSession, extension: &M::Extension) -> Result<(), M::Error> {

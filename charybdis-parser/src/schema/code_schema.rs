@@ -47,7 +47,7 @@ impl CodeSchema {
     }
 
     pub fn get_models_from_code(&mut self, project_root: &PathBuf) {
-        for entry in WalkDir::new(&project_root) {
+        for entry in WalkDir::new(project_root) {
             let entry: DirEntry = entry.unwrap();
 
             if entry.path().is_file() {

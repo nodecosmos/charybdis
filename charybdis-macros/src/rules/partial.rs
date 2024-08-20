@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{Attribute, DeriveInput, parse_str};
@@ -208,7 +206,7 @@ pub(crate) fn char_model_field_attrs_macro_gen(args: CharybdisMacroArgs, input: 
         .field_types_hash
         .unwrap_or_else(|| panic!("failed to parse field types hash for struct: {}", struct_name));
 
-    let field_attributes_hash = args.field_attributes_hash.unwrap_or(HashMap::new());
+    let field_attributes_hash = args.field_attributes_hash.unwrap_or_default();
 
     let fields_tokens = field_names
         .iter()

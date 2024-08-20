@@ -1,8 +1,8 @@
 use colored::*;
 use regex::Regex;
 use scylla::Session;
+use crate::MigrationBuilder;
 
-use crate::Args;
 use crate::model::{ModelData, ModelType};
 
 pub(crate) const INDEX_SUFFIX: &str = "idx";
@@ -10,11 +10,11 @@ pub(crate) const INDEX_SUFFIX: &str = "idx";
 pub(crate) struct ModelRunner<'a> {
     session: &'a Session,
     data: &'a ModelData<'a>,
-    args: &'a Args,
+    args: &'a MigrationBuilder,
 }
 
 impl<'a> ModelRunner<'a> {
-    pub fn new(session: &'a Session, data: &'a ModelData, args: &'a Args) -> Self {
+    pub fn new(session: &'a Session, data: &'a ModelData, args: &'a MigrationBuilder) -> Self {
         Self { session, data, args }
     }
 
@@ -192,7 +192,7 @@ impl<'a> ModelRunner<'a> {
 
         let cql = format!(
             "ALTER {} {} DROP ({})",
-            self.data.migration_object_type.to_string(),
+            self.data.migration_object_type,
             self.data.migration_object_name,
             removed_fields,
         );
@@ -219,7 +219,7 @@ impl<'a> ModelRunner<'a> {
 
         let cql = format!(
             "ALTER {} {} DROP ({})",
-            self.data.migration_object_type.to_string(),
+            self.data.migration_object_type,
             self.data.migration_object_name,
             changed_fields,
         );
@@ -251,7 +251,7 @@ impl<'a> ModelRunner<'a> {
         );
 
         for column_name in &self.data.new_global_secondary_indexes {
-            let index_name: String = self.data.construct_index_name(&column_name);
+            let index_name: String = self.data.construct_index_name(column_name);
 
             let cql = format!(
                 "CREATE INDEX IF NOT EXISTS {} ON {} ({})",
@@ -289,8 +289,8 @@ impl<'a> ModelRunner<'a> {
             let partition_keys = self.data.current_code_schema.partition_keys.clone();
 
             let mut idx_name = partition_keys.join("_");
-            idx_name.push_str("_");
-            idx_name.push_str(&local_secondary_index);
+            idx_name.push('_');
+            idx_name.push_str(local_secondary_index);
 
             let index_name: String = self.data.construct_index_name(&idx_name);
             let pks = partition_keys.join(", ");
