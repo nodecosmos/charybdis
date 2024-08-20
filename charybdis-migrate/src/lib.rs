@@ -1,6 +1,5 @@
 use crate::args::Args;
 use crate::migration::Migration;
-use crate::session::initialize_session;
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
 use scylla::Session;
@@ -19,8 +18,15 @@ impl MigrationBuilder {
         Self { args: Args::default() }
     }
 
-    pub async fn build(self) -> Migration {
-        let session: Session = initialize_session(&self.args).await;
+    pub async fn build(mut self, session: &Session) -> Migration {
+        if self.args.keyspace.is_empty() {
+            // try to get the keyspace from the session
+            self.args.keyspace = session
+                .get_keyspace()
+                .expect("No keyspace provided and no default keyspace set")
+                .to_string();
+        }
+
         let current_db_schema = DbSchema::new(&session, self.args.keyspace.clone()).await;
         let current_code_schema = CodeSchema::new(&self.args.project_root);
 
@@ -29,28 +35,8 @@ impl MigrationBuilder {
         migration
     }
 
-    pub fn host(mut self, host: &str) -> Self {
-        self.args.host = host.to_string();
-        self
-    }
-
-    pub fn keyspace(mut self, keyspace: &str) -> Self {
-        self.args.keyspace = keyspace.to_string();
-        self
-    }
-
-    pub fn user(mut self, user: Option<&str>) -> Self {
-        self.args.user = user.map(|s| s.to_string());
-        self
-    }
-
-    pub fn password(mut self, password: Option<&str>) -> Self {
-        self.args.password = password.map(|s| s.to_string());
-        self
-    }
-
-    pub fn timeout(mut self, timeout: u64) -> Self {
-        self.args.timeout = timeout;
+    pub fn keyspace(mut self, keyspace: String) -> Self {
+        self.args.keyspace = keyspace;
         self
     }
 
@@ -63,31 +49,10 @@ impl MigrationBuilder {
         self.args.verbose = verbose;
         self
     }
-
-    pub fn ca(mut self, ca: Option<&str>) -> Self {
-        self.args.ca = ca.map(|s| s.to_string());
-        self
-    }
-
-    pub fn cert(mut self, cert: Option<&str>) -> Self {
-        self.args.cert = cert.map(|s| s.to_string());
-        self
-    }
-
-    pub fn key(mut self, key: Option<&str>) -> Self {
-        self.args.key = key.map(|s| s.to_string());
-        self
-    }
 }
 
 impl From<Args> for MigrationBuilder {
     fn from(args: Args) -> Self {
         Self { args }
-    }
-}
-
-impl Default for MigrationBuilder {
-    fn default() -> Self {
-        Self::new()
     }
 }

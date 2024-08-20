@@ -1,6 +1,8 @@
 use clap::Parser;
 use migrate::args::Args;
+use migrate::session::initialize_session;
 use migrate::MigrationBuilder;
+use scylla::Session;
 use std::env;
 
 /// Automatic Migration Tool
@@ -11,7 +13,8 @@ async fn main() {
     }
 
     let args = Args::parse();
-    let migration = MigrationBuilder::from(args).build().await;
+    let session: Session = initialize_session(&args).await;
+    let migration = MigrationBuilder::from(args).build(&session).await;
 
     migration.run().await;
     migration.write_schema_to_json().await;

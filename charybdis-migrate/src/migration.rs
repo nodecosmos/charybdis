@@ -9,15 +9,15 @@ use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
 use charybdis_parser::schema::SchemaObject;
 
-pub struct Migration {
+pub struct Migration<'a> {
     current_db_schema: DbSchema,
     current_code_schema: CodeSchema,
-    session: Session,
+    session: &'a Session,
     args: Args,
 }
 
-impl Migration {
-    pub fn new(current_db_schema: DbSchema, current_code_schema: CodeSchema, session: Session, args: Args) -> Self {
+impl<'a> Migration<'a> {
+    pub fn new(current_db_schema: DbSchema, current_code_schema: CodeSchema, session: &'a Session, args: Args) -> Self {
         Migration {
             current_db_schema,
             current_code_schema,
