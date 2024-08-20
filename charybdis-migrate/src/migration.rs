@@ -1,33 +1,28 @@
 use colored::Colorize;
 use scylla::Session;
 
+use crate::args::Args;
+use crate::model::data::ModelData;
+use crate::model::{ModelMigration, ModelType};
+
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
 use charybdis_parser::schema::SchemaObject;
-use crate::MigrationBuilder;
-
-use crate::model::{ModelMigration, ModelType};
-use crate::model::data::ModelData;
 
 pub struct Migration<'a> {
-    current_db_schema: &'a DbSchema,
-    current_code_schema: &'a CodeSchema,
+    current_db_schema: DbSchema,
+    current_code_schema: CodeSchema,
     session: &'a Session,
-    migration_data: &'a MigrationBuilder,
+    args: Args,
 }
 
 impl<'a> Migration<'a> {
-    pub fn new(
-        current_db_schema: &'a DbSchema,
-        current_code_schema: &'a CodeSchema,
-        session: &'a Session,
-        migration_data: &'a MigrationBuilder,
-    ) -> Self {
+    pub fn new(current_db_schema: DbSchema, current_code_schema: CodeSchema, session: &'a Session, args: Args) -> Self {
         Migration {
             current_db_schema,
             current_code_schema,
             session,
-            migration_data,
+            args,
         }
     }
 
@@ -37,6 +32,12 @@ impl<'a> Migration<'a> {
         self.run_materialized_views().await;
 
         println!("\n{}", "Migration plan ran successfully!".bright_green());
+    }
+
+    pub async fn write_schema_to_json(&self) {
+        DbSchema::new(&self.session, self.args.keyspace.clone())
+            .await
+            .write_schema_to_json(&self.args.project_root);
     }
 
     async fn run_udts(&self) {
@@ -50,7 +51,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.udts.get(name).unwrap_or(&empty_udt),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, self.migration_data);
+            let migration = ModelMigration::new(&model_data, &self.session, &self.args);
 
             migration.run().await;
         }
@@ -67,7 +68,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.tables.get(name).unwrap_or(&empty_table),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, self.migration_data);
+            let migration = ModelMigration::new(&model_data, &self.session, &self.args);
 
             migration.run().await;
         }
@@ -84,7 +85,7 @@ impl<'a> Migration<'a> {
                 self.current_db_schema.materialized_views.get(name).unwrap_or(&empty_mv),
             );
 
-            let migration = ModelMigration::new(&model_data, self.session, self.migration_data);
+            let migration = ModelMigration::new(&model_data, &self.session, &self.args);
 
             migration.run().await;
         }

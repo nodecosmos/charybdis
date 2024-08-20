@@ -1,10 +1,10 @@
 use std::time::Duration;
 
+use crate::args::Args;
 use openssl::ssl::{SslContextBuilder, SslMethod, SslVerifyMode};
 use scylla::{Session, SessionBuilder};
-use crate::MigrationBuilder;
 
-pub async fn initialize_session(args: &MigrationBuilder) -> Session {
+pub async fn initialize_session(args: &Args) -> Session {
     let mut builder = SessionBuilder::new()
         .known_node(&args.host)
         .use_keyspace(&args.keyspace, false)

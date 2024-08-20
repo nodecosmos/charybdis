@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
+use crate::args::Args;
 use colored::Colorize;
 use scylla::Session;
-use crate::MigrationBuilder;
 
 use crate::model::data::ModelData;
 use crate::model::runner::ModelRunner;
@@ -57,14 +57,14 @@ impl MigrationStep {
 pub(crate) struct ModelMigration<'a> {
     data: &'a ModelData<'a>,
     runner: ModelRunner<'a>,
-    migration_data: &'a MigrationBuilder,
+    args: &'a Args,
 }
 
 impl<'a> ModelMigration<'a> {
-    pub(crate) fn new(data: &'a ModelData, session: &'a Session, migration_data: &'a MigrationBuilder) -> Self {
-        let runner = ModelRunner::new(session, data, migration_data);
+    pub(crate) fn new(data: &'a ModelData, session: &'a Session, args: &'a Args) -> Self {
+        let runner = ModelRunner::new(session, data, args);
 
-        Self { data, runner, migration_data }
+        Self { data, runner, args }
     }
 
     pub(crate) async fn run(&self) {
@@ -149,7 +149,7 @@ impl<'a> ModelMigration<'a> {
     }
 
     async fn handle_fields_type_change(&self) {
-        if self.migration_data.drop_and_replace {
+        if self.args.drop_and_replace {
             self.panic_on_mv_fields_change();
             self.panic_on_udt_fields_removal();
 

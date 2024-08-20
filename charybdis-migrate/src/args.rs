@@ -1,4 +1,7 @@
 use clap::Parser;
+use std::env;
+use std::fs::read_dir;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -39,4 +42,39 @@ pub struct Args {
     /// Client private key file if required_client_auth is set to true
     #[arg(long, default_value = None)]
     pub key: Option<String>,
+
+    #[arg(skip = get_project_root())]
+    pub project_root: String,
+}
+
+impl Default for Args {
+    fn default() -> Self {
+        Args {
+            host: String::new(),
+            keyspace: String::new(),
+            user: None,
+            password: None,
+            timeout: 30,
+            drop_and_replace: false,
+            verbose: false,
+            ca: None,
+            cert: None,
+            key: None,
+            project_root: get_project_root(),
+        }
+    }
+}
+
+pub(crate) fn get_project_root() -> String {
+    let path = env::current_dir().expect("Failed to find project root: Could not get current directory");
+    let path_ancestors = path.as_path().ancestors();
+
+    for p in path_ancestors {
+        let has_cargo = read_dir(p).unwrap().any(|p| p.unwrap().file_name() == *"Cargo.lock");
+        if has_cargo {
+            return PathBuf::from(p).to_str().unwrap().to_string();
+        }
+    }
+
+    panic!("Failed to find project root: Ran out of places to find Cargo.toml");
 }
