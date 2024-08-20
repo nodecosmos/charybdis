@@ -204,6 +204,20 @@ Resulting auto-generated migration query will be:
   in case there is no model definition for table, it will **not** drop it. In future,
   we will add `modelize` command that will generate `src/models` files from existing data source.
 
+* ### Programmatically running migrations
+  Within testing or development environment, we can trigger migrations programmatically:
+    ```rust
+    use charybdis_migrate::MigrationBuilder;
+    
+    let migration = MigrationBuilder::new()
+        .keyspace("test")
+        .drop_and_replace(true)
+        .build(&session)
+        .await;
+
+    migration.run().await;
+    ```
+
 * ### Global secondary indexes
   If we have model:
   ```rust
@@ -215,7 +229,6 @@ Resulting auto-generated migration query will be:
   )]
   ```
   resulting query will be: `CREATE INDEX ON users (username);`
-
 * ### Local secondary Indexes
 
   Indexes that are scoped to the partition key

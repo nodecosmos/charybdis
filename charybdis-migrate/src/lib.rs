@@ -6,7 +6,7 @@ use scylla::Session;
 
 pub mod args;
 pub mod migration;
-pub mod model;
+pub(crate) mod model;
 pub mod session;
 
 pub struct MigrationBuilder {
