@@ -40,6 +40,11 @@ impl MigrationBuilder {
         self
     }
 
+    pub fn project_root(mut self, project_root: String) -> Self {
+        self.args.keyspace = project_root;
+        self
+    }
+
     pub fn drop_and_replace(mut self, drop_and_replace: bool) -> Self {
         self.args.drop_and_replace = drop_and_replace;
         self
