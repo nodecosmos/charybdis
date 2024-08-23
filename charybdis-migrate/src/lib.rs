@@ -41,7 +41,7 @@ impl MigrationBuilder {
     }
 
     pub fn project_root(mut self, project_root: String) -> Self {
-        self.args.keyspace = project_root;
+        self.args.project_root = project_root;
         self
     }
 
