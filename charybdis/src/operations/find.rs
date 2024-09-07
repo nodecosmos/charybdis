@@ -1,8 +1,7 @@
-use scylla::serialize::row::SerializeRow;
-use scylla::Bytes;
-
 use crate::model::BaseModel;
 use crate::query::{CharybdisQuery, ModelPaged, ModelRow, ModelStream, OptionalModelRow, QueryValue};
+use scylla::serialize::row::SerializeRow;
+use scylla::statement::PagingState;
 
 /// Configurable Find Queries
 pub trait Find: BaseModel {
@@ -16,7 +15,7 @@ pub trait Find: BaseModel {
     fn find_paged<Val: SerializeRow>(
         query: &'static str,
         values: Val,
-        paging_state: Option<Bytes>,
+        paging_state: PagingState,
     ) -> CharybdisQuery<Val, Self, ModelPaged<Self>> {
         CharybdisQuery::new(query, QueryValue::Owned(values)).paging_state(paging_state)
     }

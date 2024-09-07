@@ -25,7 +25,7 @@ impl<'a> ModelRunner<'a> {
         // remove all colors from cql string
         let stripped = strip_ansi_escapes::strip(cql.as_bytes());
         let cql: String = String::from_utf8(stripped).unwrap();
-        let res = self.session.query(cql.clone(), ()).await;
+        let res = self.session.query_unpaged(cql.clone(), ()).await;
 
         match res {
             Ok(_) => {

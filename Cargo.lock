@@ -222,7 +222,7 @@ dependencies = [
  "colored",
  "futures",
  "num-bigint 0.4.4",
- "scylla",
+ "scylla 0.13.1",
  "serde",
  "serde_json",
  "uuid",
@@ -230,15 +230,15 @@ dependencies = [
 
 [[package]]
 name = "charybdis"
-version = "0.7.5"
+version = "0.7.7"
 dependencies = [
  "bigdecimal",
- "charybdis_macros 0.7.5",
+ "charybdis_macros 0.7.7",
  "chrono",
  "colored",
  "futures",
  "num-bigint 0.4.4",
- "scylla",
+ "scylla 0.14.0",
  "serde",
  "serde_json",
  "uuid",
@@ -246,14 +246,14 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.7.6"
+version = "0.7.7"
 dependencies = [
- "charybdis_parser 0.7.5",
+ "charybdis_parser 0.7.7",
  "clap",
  "colored",
  "openssl",
  "regex",
- "scylla",
+ "scylla 0.14.0",
  "serde",
  "serde_json",
  "strip-ansi-escapes",
@@ -275,14 +275,14 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.7.5"
+version = "0.7.7"
 dependencies = [
  "charybdis 0.7.2",
- "charybdis_parser 0.7.5",
+ "charybdis_parser 0.7.7",
  "darling",
  "proc-macro2",
  "quote",
- "scylla",
+ "scylla 0.14.0",
  "syn",
 ]
 
@@ -296,7 +296,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "scylla",
+ "scylla 0.13.1",
  "serde",
  "serde_json",
  "strum",
@@ -307,13 +307,13 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.7.5"
+version = "0.7.7"
 dependencies = [
  "colored",
  "darling",
  "proc-macro2",
  "quote",
- "scylla",
+ "scylla 0.14.0",
  "serde",
  "serde_json",
  "strum",
@@ -657,6 +657,15 @@ name = "itertools"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
@@ -1045,14 +1054,45 @@ dependencies = [
  "futures",
  "hashbrown",
  "histogram",
- "itertools",
+ "itertools 0.11.0",
+ "lazy_static",
+ "lz4_flex",
+ "rand",
+ "rand_pcg",
+ "scylla-cql 0.2.1",
+ "scylla-macros 0.5.1",
+ "smallvec",
+ "snap",
+ "socket2",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "scylla"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8139623d3fb0c8205b15e84fa587f3aa0ba61f876c19a9157b688f7c1763a7c5"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "dashmap",
+ "futures",
+ "hashbrown",
+ "histogram",
+ "itertools 0.13.0",
  "lazy_static",
  "lz4_flex",
  "openssl",
  "rand",
  "rand_pcg",
- "scylla-cql",
- "scylla-macros",
+ "scylla-cql 0.3.0",
+ "scylla-macros 0.6.0",
  "smallvec",
  "snap",
  "socket2",
@@ -1077,8 +1117,31 @@ dependencies = [
  "lz4_flex",
  "num-bigint 0.3.3",
  "num-bigint 0.4.4",
- "scylla-macros",
- "secrecy",
+ "scylla-macros 0.5.1",
+ "secrecy 0.7.0",
+ "snap",
+ "thiserror",
+ "time",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "scylla-cql"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de7020bcd1f6fdbeaed356cd426bf294b2071bd7120d48d2e8e319295e2acdcd"
+dependencies = [
+ "async-trait",
+ "bigdecimal",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "lz4_flex",
+ "num-bigint 0.3.3",
+ "num-bigint 0.4.4",
+ "scylla-macros 0.6.0",
+ "secrecy 0.8.0",
  "snap",
  "thiserror",
  "time",
@@ -1099,10 +1162,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "scylla-macros"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3859b6938663fc5062e3b26f3611649c9bd26fb252e85f6fdfa581e0d2ce74b6"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "secrecy"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0673d6a6449f5e7d12a1caf424fd9363e2af3a4953023ed455e3c4beef4597c0"
+dependencies = [
+ "zeroize",
+]
+
+[[package]]
+name = "secrecy"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bd1c54ea06cfd2f6b63219704de0b9b4f72dcc2b8fdef820be6cd799780e91e"
 dependencies = [
  "zeroize",
 ]

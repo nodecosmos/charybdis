@@ -7,7 +7,7 @@ use scylla::_macro_internal::{CellWriter, ColumnType, FromCqlValError, Serializa
 use scylla::cql_to_rust::FromCqlVal;
 use scylla::frame::response::result::CqlValue;
 use scylla::frame::value::{CqlDuration, CqlTimeuuid};
-use scylla::serialize::value::{BuiltinTypeCheckError, BuiltinTypeCheckErrorKind, SerializeCql};
+use scylla::serialize::value::{BuiltinTypeCheckError, BuiltinTypeCheckErrorKind, SerializeValue};
 use serde::{Deserialize, Serialize};
 
 pub type Ascii = String;
@@ -47,7 +47,7 @@ impl FromCqlVal<CqlValue> for Counter {
     }
 }
 
-impl SerializeCql for Counter {
+impl SerializeValue for Counter {
     fn serialize<'b>(
         &self,
         typ: &ColumnType,
@@ -143,7 +143,7 @@ impl FromCqlVal<CqlValue> for Duration {
     }
 }
 
-impl SerializeCql for Duration {
+impl SerializeValue for Duration {
     fn serialize<'b>(
         &self,
         typ: &ColumnType,
@@ -342,7 +342,7 @@ impl FromCqlVal<CqlValue> for Timeuuid {
     }
 }
 
-impl SerializeCql for Timeuuid {
+impl SerializeValue for Timeuuid {
     fn serialize<'b>(
         &self,
         typ: &ColumnType,

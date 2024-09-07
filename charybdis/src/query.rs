@@ -1,23 +1,23 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use scylla::query::Query;
-use scylla::serialize::row::{RowSerializationContext, SerializeRow};
-use scylla::serialize::{RowWriter, SerializationError};
-use scylla::transport::query_result::FirstRowTypedError;
-use scylla::{Bytes, CachingSession, IntoTypedRows, QueryResult};
-
 use crate::callbacks::{CallbackAction, Callbacks};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
 use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, RetryPolicy, SerialConsistency};
 use crate::stream::CharybdisModelStream;
+use scylla::query::Query;
+use scylla::serialize::row::{RowSerializationContext, SerializeRow};
+use scylla::serialize::{RowWriter, SerializationError};
+use scylla::statement::{PagingState, PagingStateResponse};
+use scylla::transport::query_result::FirstRowTypedError;
+use scylla::{CachingSession, IntoTypedRows, QueryResult};
 
 pub struct ModelRow<M: BaseModel>(pub M);
 pub struct OptionalModelRow<M: BaseModel>(pub Option<M>);
 pub struct ModelStream<M: BaseModel>(pub CharybdisModelStream<M>);
-pub struct ModelPaged<M: BaseModel>(pub CharybdisModelIterator<M>, pub Option<Bytes>);
+pub struct ModelPaged<M: BaseModel>(pub CharybdisModelIterator<M>, pub PagingState);
 pub struct ModelMutation(pub QueryResult);
 
 pub trait QueryType {
@@ -37,7 +37,7 @@ impl<M: BaseModel> QueryType for ModelStream<M> {
 }
 
 impl<M: BaseModel> QueryType for ModelPaged<M> {
-    type Output = (CharybdisModelIterator<M>, Option<Bytes>);
+    type Output = (CharybdisModelIterator<M>, PagingStateResponse);
 }
 
 impl QueryType for ModelMutation {
@@ -66,7 +66,7 @@ impl<Bm: BaseModel> QueryExecutor for ModelRow<Bm> {
         Qe: QueryExecutor,
     {
         let row = session
-            .execute(query.inner, query.values)
+            .execute_unpaged(query.inner, query.values)
             .await
             .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
         let res = row.first_row_typed::<Bm>().map_err(|e| match e {
@@ -89,7 +89,7 @@ impl<Bm: BaseModel> QueryExecutor for OptionalModelRow<Bm> {
         Qe: QueryExecutor,
     {
         let row = session
-            .execute(query.inner, query.values)
+            .execute_unpaged(query.inner, query.values)
             .await
             .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
         let res = row
@@ -135,11 +135,11 @@ impl<Bm: BaseModel> QueryExecutor for ModelPaged<Bm> {
         Qe: QueryExecutor,
     {
         let res = session
-            .execute_paged(query.inner, query.values, query.paging_state)
+            .execute_single_page(query.inner, query.values, query.paging_state)
             .await
             .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
-        let paging_state = res.paging_state.clone();
         let rows = res
+            .0
             .rows()
             .map_err(|e| CharybdisError::RowsExpectedError(query.query_string, e))?;
 
@@ -147,7 +147,7 @@ impl<Bm: BaseModel> QueryExecutor for ModelPaged<Bm> {
 
         typed_rows.query_string(query.query_string);
 
-        Ok((typed_rows, paging_state))
+        Ok((typed_rows, res.1))
     }
 }
 
@@ -162,7 +162,7 @@ impl QueryExecutor for ModelMutation {
         Qe: QueryExecutor,
     {
         session
-            .execute(query.inner, query.values)
+            .execute_unpaged(query.inner, query.values)
             .await
             .map_err(|e| CharybdisError::QueryError(query.query_string, e))
     }
@@ -205,7 +205,7 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
 
 pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> {
     inner: Query,
-    paging_state: Option<Bytes>,
+    paging_state: PagingState,
     pub(crate) query_string: &'static str,
     pub(crate) values: QueryValue<'a, Val, M>,
     _phantom: std::marker::PhantomData<Qe>,
@@ -217,7 +217,7 @@ impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> CharybdisQuery<'a, 
             inner: Query::new(query),
             query_string: query,
             values,
-            paging_state: None,
+            paging_state: PagingState::start(),
             _phantom: Default::default(),
         }
     }
@@ -243,7 +243,7 @@ impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> CharybdisQuery<'a, 
         self
     }
 
-    pub fn paging_state(mut self, paging_state: Option<Bytes>) -> Self {
+    pub fn paging_state(mut self, paging_state: PagingState) -> Self {
         self.paging_state = paging_state;
         self
     }
@@ -325,7 +325,7 @@ impl<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> CharybdisCbQue
         page_size(page_size: i32),
         consistency(consistency: Consistency),
         serial_consistency(consistency: Option<SerialConsistency>),
-        paging_state(paging_state: Option<Bytes>),
+        paging_state(paging_state: PagingState),
         idempotent(is_idempotent: bool),
         trace(is_tracing: bool),
         timestamp(timestamp: Option<i64>),
