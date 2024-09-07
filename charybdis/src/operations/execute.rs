@@ -9,7 +9,7 @@ pub async fn execute(
     values: impl SerializeRow,
 ) -> Result<QueryResult, CharybdisError> {
     let res = session
-        .execute(query, values)
+        .execute_unpaged(query, values)
         .await
         .map_err(|e| CharybdisError::QueryError(query, e))?;
     Ok(res)

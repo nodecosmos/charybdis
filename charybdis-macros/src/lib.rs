@@ -237,7 +237,7 @@ pub fn charybdis_udt_model(_: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let gen = quote! {
-        #[derive(charybdis::macros::scylla::FromUserType, charybdis::macros::scylla::SerializeCql)]
+        #[derive(charybdis::macros::scylla::FromUserType, charybdis::macros::scylla::SerializeValue)]
         #input
     };
 
