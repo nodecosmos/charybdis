@@ -85,6 +85,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let find_model_rule = find_model_rule(struct_name, &args, fields);
     let find_first_model_rule = find_first_model_rule(struct_name, &args, fields);
     let update_model_query_rule = update_model_query_rule(struct_name, &args, fields);
+    let update_model_rule = update_model_rule(struct_name, &args, fields);
     let delete_model_query_rule = delete_model_query_rule(struct_name, &args);
     let delete_model_rule = delete_model_rule(struct_name, &args);
 
@@ -158,6 +159,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
         #find_model_query_rule
         #find_model_rule
         #find_first_model_rule
+        #update_model_rule
         #update_model_query_rule
         #partial_model_generator
         #delete_model_query_rule
