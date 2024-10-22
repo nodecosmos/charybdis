@@ -46,6 +46,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
     // Charybdis::BaseModel consts
     let db_model_name_const = db_model_name_const(&args);
+    let find_all_query_const = find_all_query_const(&args, fields);
     let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, fields);
     let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, fields);
     let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, fields);
@@ -89,7 +90,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let delete_model_rule = delete_model_rule(struct_name, &args);
 
     // Associated functions
-    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, fields);
+    let find_by_primary_keys_functions = find_by_primary_keys_functions(struct_name, &args, fields);
     let find_by_local_secondary_index_funs = find_by_local_secondary_index(struct_name, &args, fields);
     let find_by_global_secondary_index_funs = find_by_global_secondary_index(struct_name, &args, fields);
     let delete_by_cks_funs = delete_by_primary_key_functions(&args, fields);
@@ -102,7 +103,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
         #input
 
         impl #struct_name {
-            #find_by_key_funs
+            #find_by_primary_keys_functions
             #delete_by_cks_funs
 
             #find_by_local_secondary_index_funs
@@ -132,6 +133,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
             // consts
             #db_model_name_const
+            #find_all_query_const
             #find_by_primary_key_query_const
             #find_by_partition_key_query_consts
             #find_first_by_partition_key_query_const
@@ -182,6 +184,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
 
     // Charybdis::MaterializedView consts
     let db_model_name_const = db_model_name_const(&args);
+    let find_all_query_const = find_all_query_const(&args, fields);
     let find_by_primary_key_query_const = find_by_primary_key_query_const(&args, fields);
     let find_by_partition_key_query_consts = find_by_partition_key_query_consts(&args, fields);
     let find_first_by_partition_key_query_const = find_first_by_partition_key_query_const(&args, fields);
@@ -194,7 +197,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     let find_model_query_rule = find_model_query_rule(struct_name, &args, fields);
 
     // Associated functions
-    let find_by_key_funs = find_by_primary_keys_functions(struct_name, &args, fields);
+    let find_by_primary_keys_functions = find_by_primary_keys_functions(struct_name, &args, fields);
 
     CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
     CharybdisFields::strip_charybdis_attributes(&mut input);
@@ -205,7 +208,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
         #input
 
         impl #struct_name {
-            #find_by_key_funs
+            #find_by_primary_keys_functions
         }
 
         impl charybdis::model::BaseModel for #struct_name {
@@ -215,6 +218,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
 
             // consts
             #db_model_name_const
+            #find_all_query_const
             #find_by_primary_key_query_const
             #find_by_partition_key_query_consts
             #find_first_by_partition_key_query_const

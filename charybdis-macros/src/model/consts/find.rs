@@ -6,6 +6,20 @@ use charybdis_parser::traits::CharybdisMacroArgs;
 
 use crate::traits::fields::FieldsQuery;
 
+pub(crate) fn find_all_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
+    let query_str = format!(
+        "SELECT {} FROM {}",
+        fields.db_fields.comma_sep_cols(),
+        ch_args.table_name()
+    );
+
+    let generated = quote! {
+        const FIND_ALL_QUERY: &'static str = #query_str;
+    };
+
+    syn::parse_quote!(#generated)
+}
+
 pub(crate) fn find_by_primary_key_query_const(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> ImplItem {
     let query_str = format!(
         "SELECT {} FROM {} WHERE {}",
