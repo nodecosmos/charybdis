@@ -230,10 +230,10 @@ dependencies = [
 
 [[package]]
 name = "charybdis"
-version = "0.7.7"
+version = "0.7.8"
 dependencies = [
  "bigdecimal",
- "charybdis_macros 0.7.7",
+ "charybdis_macros 0.7.8",
  "chrono",
  "colored",
  "futures",
@@ -275,7 +275,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.7.7"
+version = "0.7.8"
 dependencies = [
  "charybdis 0.7.2",
  "charybdis_parser 0.7.7",

@@ -7,6 +7,7 @@ pub trait BaseModel: FromRow + Sized + SerializeRow {
     type PartitionKey: SerializeRow + Send + Sync;
 
     const DB_MODEL_NAME: &'static str;
+    const FIND_ALL_QUERY: &'static str;
     const FIND_BY_PRIMARY_KEY_QUERY: &'static str;
     const FIND_BY_PARTITION_KEY_QUERY: &'static str;
     const FIND_FIRST_BY_PARTITION_KEY_QUERY: &'static str;

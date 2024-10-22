@@ -34,6 +34,10 @@ pub trait Find: BaseModel {
         CharybdisQuery::new(query, QueryValue::Owned(values))
     }
 
+    fn find_all<'a>() -> CharybdisQuery<'a, (), Self, ModelStream<Self>> {
+        CharybdisQuery::new(Self::FIND_ALL_QUERY, QueryValue::Empty)
+    }
+
     fn find_by_primary_key_value<'a>(
         value: Self::PrimaryKey,
     ) -> CharybdisQuery<'a, Self::PrimaryKey, Self, ModelRow<Self>> {
