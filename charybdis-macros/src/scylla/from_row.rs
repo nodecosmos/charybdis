@@ -36,6 +36,7 @@ pub(crate) fn from_row(struct_name: &syn::Ident, fields: &CharybdisFields) -> Im
     });
 
     let generated = quote! {
+        #[allow(clippy::unwrap_used, clippy::unwrap_in_result)]
         fn from_row(row: charybdis::scylla::Row) -> ::std::result::Result<Self, charybdis::scylla::FromRowError> {
                 use ::std::result::Result::{Ok, Err};
                 use ::std::iter::{Iterator, IntoIterator};
