@@ -13,6 +13,12 @@ pub struct MigrationBuilder {
     pub(crate) args: Args,
 }
 
+impl Default for MigrationBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MigrationBuilder {
     pub fn new() -> Self {
         Self { args: Args::default() }
@@ -27,7 +33,7 @@ impl MigrationBuilder {
                 .to_string();
         }
 
-        let current_db_schema = DbSchema::new(&session, self.args.keyspace.clone()).await;
+        let current_db_schema = DbSchema::new(session, self.args.keyspace.clone()).await;
         let current_code_schema = CodeSchema::new(&self.args.project_root);
 
         let migration = Migration::new(current_db_schema, current_code_schema, session, self.args);
