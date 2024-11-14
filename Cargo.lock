@@ -230,10 +230,10 @@ dependencies = [
 
 [[package]]
 name = "charybdis"
-version = "0.7.8"
+version = "0.7.9"
 dependencies = [
  "bigdecimal",
- "charybdis_macros 0.7.8",
+ "charybdis_macros 0.7.9",
  "chrono",
  "colored",
  "futures",
@@ -246,9 +246,9 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.7.7"
+version = "0.7.9"
 dependencies = [
- "charybdis_parser 0.7.7",
+ "charybdis_parser 0.7.9",
  "clap",
  "colored",
  "openssl",
@@ -275,10 +275,10 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.7.8"
+version = "0.7.9"
 dependencies = [
  "charybdis 0.7.2",
- "charybdis_parser 0.7.7",
+ "charybdis_parser 0.7.9",
  "darling",
  "proc-macro2",
  "quote",
@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.7.7"
+version = "0.7.9"
 dependencies = [
  "colored",
  "darling",

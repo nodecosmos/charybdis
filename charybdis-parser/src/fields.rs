@@ -347,9 +347,7 @@ impl<'a> CharybdisFields<'a> {
     pub fn from_input(input: &'a DeriveInput, args: &'a CharybdisMacroArgs) -> Self {
         match &input.data {
             Data::Struct(data) => match &data.fields {
-                Fields::Named(named_fields) => {
-                    return CharybdisFields::new(named_fields, args);
-                }
+                Fields::Named(named_fields) => CharybdisFields::new(named_fields, args),
                 _ => panic!("#[charybdis_model] works only for structs with named fields!"),
             },
             _ => panic!("#[charybdis_model] works only on structs!"),
