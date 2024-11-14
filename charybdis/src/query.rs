@@ -9,7 +9,7 @@ use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, Retry
 use crate::stream::CharybdisModelStream;
 use scylla::query::Query;
 use scylla::serialize::row::{RowSerializationContext, SerializeRow};
-use scylla::serialize::{RowWriter, SerializationError};
+use scylla::serialize::{writers::RowWriter, SerializationError};
 use scylla::statement::{PagingState, PagingStateResponse};
 use scylla::transport::query_result::FirstRowTypedError;
 use scylla::{CachingSession, IntoTypedRows, QueryResult};
