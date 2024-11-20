@@ -1,10 +1,8 @@
-use scylla::transport::session::TypedRowIter;
-
 use crate::errors::CharybdisError;
 use crate::model::BaseModel;
 
 pub struct CharybdisModelIterator<T: BaseModel> {
-    inner: TypedRowIter<T>,
+    inner: std::vec::IntoIter<T>,
     query_string: &'static str,
 }
 
@@ -14,10 +12,10 @@ impl<T: BaseModel> CharybdisModelIterator<T> {
     }
 }
 
-impl<T: BaseModel> From<TypedRowIter<T>> for CharybdisModelIterator<T> {
-    fn from(iter: TypedRowIter<T>) -> Self {
+impl<T: BaseModel> From<Vec<T>> for CharybdisModelIterator<T> {
+    fn from(vec: Vec<T>) -> Self {
         Self {
-            inner: iter,
+            inner: vec.into_iter(),
             query_string: "",
         }
     }
@@ -27,8 +25,6 @@ impl<T: BaseModel> Iterator for CharybdisModelIterator<T> {
     type Item = Result<T, CharybdisError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner
-            .next()
-            .map(|row| row.map_err(|e| CharybdisError::FromRowError(self.query_string, e)))
+        self.inner.next().map(Ok)
     }
 }

@@ -86,16 +86,20 @@ impl DbSchema {
             ALLOW FILTERING
         "#;
 
-        if let Some(rows) = session.query_unpaged(cql, (&self.keyspace_name,)).await?.rows {
-            for row in rows {
-                let table_name: (String,) = row.into_typed::<(String,)>()?;
-                self.tables.insert(table_name.0.clone(), SchemaObject::new());
-                self.populate_table_columns(&table_name.0, session).await?;
-                self.populate_table_partition_keys(&table_name.0, session).await?;
-                self.populate_table_clustering_keys(&table_name.0, session).await?;
-                self.populate_table_secondary_indexes(&table_name.0, session).await?;
-            }
+        let result = session
+            .query_unpaged(cql, (&self.keyspace_name,))
+            .await?
+            .into_rows_result()?;
+
+        for row in result.rows::<(String,)>()? {
+            let table_name = row?.0;
+            self.tables.insert(table_name.clone(), SchemaObject::new());
+            self.populate_table_columns(&table_name, session).await?;
+            self.populate_table_partition_keys(&table_name, session).await?;
+            self.populate_table_clustering_keys(&table_name, session).await?;
+            self.populate_table_secondary_indexes(&table_name, session).await?;
         }
+
         Ok(())
     }
 
@@ -113,18 +117,17 @@ impl DbSchema {
             AND table_name = ?
             ALLOW FILTERING"#;
 
-        if let Some(rows) = session
+        let result = session
             .query_unpaged(cql, (&self.keyspace_name, &table_name))
             .await?
-            .rows
-        {
-            for row in rows {
-                let str_value: (String, String) = row.into_typed::<(String, String)>()?;
-                self.tables
-                    .get_mut(table_name)
-                    .unwrap()
-                    .push_field(str_value.0, str_value.1, false);
-            }
+            .into_rows_result()?;
+
+        for row in result.rows::<(String, String)>()? {
+            let str_value: (String, String) = row?;
+            self.tables
+                .get_mut(table_name)
+                .unwrap()
+                .push_field(str_value.0, str_value.1, false);
         }
 
         Ok(())
@@ -144,19 +147,18 @@ impl DbSchema {
             AND kind = 'partition_key'
             ALLOW FILTERING"#;
 
-        if let Some(rows) = session
+        let result = session
             .query_unpaged(cql, (&self.keyspace_name, &table_name))
             .await?
-            .rows
-        {
-            for row in rows {
-                let str_value: (String,) = row.into_typed::<(String,)>()?;
-                self.tables
-                    .get_mut(table_name)
-                    .unwrap()
-                    .partition_keys
-                    .push(str_value.0);
-            }
+            .into_rows_result()?;
+
+        for row in result.rows::<(String,)>()? {
+            let str_value: (String,) = row?;
+            self.tables
+                .get_mut(table_name)
+                .unwrap()
+                .partition_keys
+                .push(str_value.0);
         }
 
         Ok(())
@@ -176,19 +178,18 @@ impl DbSchema {
             AND kind = 'clustering'
             ALLOW FILTERING"#;
 
-        if let Some(rows) = session
+        let result = session
             .query_unpaged(cql, (&self.keyspace_name, &table_name))
             .await?
-            .rows
-        {
-            for row in rows {
-                let str_value: (String,) = row.into_typed::<(String,)>()?;
-                self.tables
-                    .get_mut(table_name)
-                    .unwrap()
-                    .clustering_keys
-                    .push(str_value.0);
-            }
+            .into_rows_result()?;
+
+        for row in result.rows::<(String,)>()? {
+            let str_value: (String,) = row?;
+            self.tables
+                .get_mut(table_name)
+                .unwrap()
+                .clustering_keys
+                .push(str_value.0);
         }
 
         Ok(())
@@ -207,25 +208,24 @@ impl DbSchema {
             AND table_name = ?
             ALLOW FILTERING"#;
 
-        if let Some(rows) = session
+        let result = session
             .query_unpaged(cql, (&self.keyspace_name, &table_name))
             .await?
-            .rows
-        {
-            for row in rows {
-                let value: (String, SecondaryIndex) = row.into_typed()?;
-                let table_schema = self.tables.get_mut(table_name).unwrap();
+            .into_rows_result()?;
 
-                let index_name = value.0;
-                let index_target = value.1;
+        for row in result.rows::<(String, SecondaryIndex)>()? {
+            let value: (String, SecondaryIndex) = row?;
+            let table_schema = self.tables.get_mut(table_name).unwrap();
 
-                match index_target.target {
-                    IndexTarget::GlobalSecondaryIndex(target) => {
-                        table_schema.global_secondary_indexes.push((index_name, target));
-                    }
-                    IndexTarget::LocalSecondaryIndex(target) => {
-                        table_schema.local_secondary_indexes.push((index_name, target));
-                    }
+            let index_name = value.0;
+            let index_target = value.1;
+
+            match index_target.target {
+                IndexTarget::GlobalSecondaryIndex(target) => {
+                    table_schema.global_secondary_indexes.push((index_name, target));
+                }
+                IndexTarget::LocalSecondaryIndex(target) => {
+                    table_schema.local_secondary_indexes.push((index_name, target));
                 }
             }
         }
@@ -244,19 +244,23 @@ impl DbSchema {
             FROM system_schema.types
             WHERE keyspace_name = ?"#;
 
-        if let Some(rows) = session.query_unpaged(cql, (&self.keyspace_name,)).await?.rows {
-            for row in rows {
-                let (type_name, field_names, field_types) = row.into_typed::<(String, Vec<String>, Vec<String>)>()?;
+        let result = session
+            .query_unpaged(cql, (&self.keyspace_name,))
+            .await?
+            .into_rows_result()?;
 
-                let mut schema_object = SchemaObject::new();
+        for row in result.rows::<(String, Vec<String>, Vec<String>)>()? {
+            let (type_name, field_names, field_types) = row?;
 
-                for (index, field_name) in field_names.into_iter().enumerate() {
-                    schema_object.push_field(field_name, field_types[index].clone(), false);
-                }
+            let mut schema_object = SchemaObject::new();
 
-                self.udts.insert(type_name.to_lowercase(), schema_object);
+            for (index, field_name) in field_names.into_iter().enumerate() {
+                schema_object.push_field(field_name, field_types[index].clone(), false);
             }
+
+            self.udts.insert(type_name.to_lowercase(), schema_object);
         }
+
         Ok(())
     }
 
@@ -267,15 +271,20 @@ impl DbSchema {
             FROM system_schema.views
             WHERE keyspace_name = ?
             ALLOW FILTERING"#;
-        if let Some(rows) = session.query_unpaged(cql, (&self.keyspace_name,)).await?.rows {
-            for row in rows {
-                let view_name: (String,) = row.into_typed::<(String,)>()?;
-                self.materialized_views.insert(view_name.0.clone(), SchemaObject::new());
-                self.populate_mv_columns(&view_name.0, session).await?;
-                self.populate_mv_partition_key(&view_name.0, session).await?;
-                self.populate_mv_clustering_keys(&view_name.0, session).await?;
-            }
+
+        let result = session
+            .query_unpaged(cql, (&self.keyspace_name,))
+            .await?
+            .into_rows_result()?;
+
+        for row in result.rows::<(String,)>()? {
+            let view_name = row?.0;
+            self.materialized_views.insert(view_name.clone(), SchemaObject::new());
+            self.populate_mv_columns(&view_name, session).await?;
+            self.populate_mv_partition_key(&view_name, session).await?;
+            self.populate_mv_clustering_keys(&view_name, session).await?;
         }
+
         Ok(())
     }
 
@@ -287,18 +296,18 @@ impl DbSchema {
             WHERE keyspace_name = ?
             AND table_name = ?
             ALLOW FILTERING"#;
-        if let Some(rows) = session
+
+        let result = session
             .query_unpaged(cql, (&self.keyspace_name, &view_name))
             .await?
-            .rows
-        {
-            for row in rows {
-                let str_value: (String, String) = row.into_typed::<(String, String)>()?;
-                self.materialized_views
-                    .get_mut(view_name)
-                    .unwrap()
-                    .push_field(str_value.0, str_value.1, false);
-            }
+            .into_rows_result()?;
+
+        for row in result.rows::<(String, String)>()? {
+            let str_value: (String, String) = row?;
+            self.materialized_views
+                .get_mut(view_name)
+                .unwrap()
+                .push_field(str_value.0, str_value.1, false);
         }
 
         Ok(())
@@ -317,19 +326,18 @@ impl DbSchema {
             AND kind = 'partition_key'
             ALLOW FILTERING"#;
 
-        if let Some(rows) = session
+        let result = session
             .query_unpaged(cql, (&self.keyspace_name, &view_name))
             .await?
-            .rows
-        {
-            for row in rows {
-                let str_value: (String,) = row.into_typed::<(String,)>()?;
-                self.materialized_views
-                    .get_mut(view_name)
-                    .unwrap()
-                    .partition_keys
-                    .push(str_value.0);
-            }
+            .into_rows_result()?;
+
+        for row in result.rows::<(String,)>()? {
+            let str_value: (String,) = row?;
+            self.materialized_views
+                .get_mut(view_name)
+                .expect("Expected a materialized view")
+                .partition_keys
+                .push(str_value.0);
         }
 
         Ok(())
@@ -348,19 +356,18 @@ impl DbSchema {
             AND kind = 'clustering'
             ALLOW FILTERING"#;
 
-        if let Some(rows) = session
+        let result = session
             .query_unpaged(cql, (&self.keyspace_name, &view_name))
             .await?
-            .rows
-        {
-            for row in rows {
-                let str_value: (String,) = row.into_typed::<(String,)>()?;
-                self.materialized_views
-                    .get_mut(view_name)
-                    .unwrap()
-                    .clustering_keys
-                    .push(str_value.0);
-            }
+            .into_rows_result()?;
+
+        for row in result.rows::<(String,)>()? {
+            let str_value: (String,) = row?;
+            self.materialized_views
+                .get_mut(view_name)
+                .expect("Expected a materialized view")
+                .clustering_keys
+                .push(str_value.0);
         }
 
         Ok(())

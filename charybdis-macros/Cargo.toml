@@ -20,4 +20,4 @@ darling = "0.20.8"
 
 [dev-dependencies]
 charybdis = "0.7.2"
-scylla = "0.14.0"
+scylla = "0.15.0"

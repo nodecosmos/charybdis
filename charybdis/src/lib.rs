@@ -17,15 +17,18 @@ pub mod macros {
     };
 
     pub mod scylla {
-        pub use scylla::macros::{FromRow, FromUserType, IntoUserType, SerializeRow, SerializeValue};
+        pub use scylla::macros::{
+            DeserializeRow, DeserializeValue, FromRow, FromUserType, IntoUserType, SerializeRow, SerializeValue,
+        };
     }
 }
 
 pub mod scylla {
-    pub use scylla::frame::response::cql_to_rust::{FromCqlVal, FromRow, FromRowError};
+    pub use scylla::frame::response::cql_to_rust::FromRowError;
     pub use scylla::frame::response::result::{CqlValue, Row};
     pub use scylla::serialize::value::SerializeValue;
     pub use scylla::statement::PagingState;
+    pub use scylla::transport::iterator::TypedRowStream;
 }
 
 pub mod options {

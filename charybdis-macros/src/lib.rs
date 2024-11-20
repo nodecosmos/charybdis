@@ -18,13 +18,11 @@ use crate::native::{
     push_to_collection_methods, push_to_collection_methods_if_exists,
 };
 use crate::rules::*;
-use crate::scylla::from_row;
 
 mod model;
 mod native;
 mod rules;
 
-mod scylla;
 mod traits;
 
 #[proc_macro_attribute]
@@ -78,9 +76,6 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
     let increment_counter_methods = increment_counter_methods(&args, fields);
     let decrement_counter_methods = decrement_counter_methods(&args, fields);
 
-    // FromRow trait
-    let from_row = from_row(struct_name, fields);
-
     // Current model macro rules
     let find_model_query_rule = find_model_query_rule(struct_name, &args, fields);
     let find_model_rule = find_model_rule(struct_name, &args, fields);
@@ -100,6 +95,7 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #[derive(charybdis::macros::scylla::SerializeRow)]
+        #[derive(charybdis::macros::scylla::DeserializeRow)]
         #input
 
         impl #struct_name {
@@ -153,10 +149,6 @@ pub fn charybdis_model(args: TokenStream, input: TokenStream) -> TokenStream {
 
         }
 
-        impl charybdis::scylla::FromRow for #struct_name {
-            #from_row
-        }
-
         #find_model_query_rule
         #find_model_rule
         #find_first_model_rule
@@ -204,7 +196,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
 
     let expanded = quote! {
         #[derive(charybdis::macros::scylla::SerializeRow)]
-        #[derive(charybdis::macros::scylla::FromRow)]
+        #[derive(charybdis::macros::scylla::DeserializeRow)]
         #input
 
         impl #struct_name {
@@ -241,7 +233,8 @@ pub fn charybdis_udt_model(_: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let gen = quote! {
-        #[derive(charybdis::macros::scylla::FromUserType, charybdis::macros::scylla::SerializeValue)]
+        #[derive(charybdis::macros::scylla::SerializeValue)]
+        #[derive(charybdis::macros::scylla::DeserializeValue)]
         #input
     };
 

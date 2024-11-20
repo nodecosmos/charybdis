@@ -51,7 +51,7 @@ pub(crate) trait FieldsFindFn: FieldsFindFnNames + FieldsToArguments {
         quote! {
             pub fn #find_by_fn_name<'a>(
                 #(#arguments),*
-            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelStream<Self>> {
+            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelStream> {
                 <#struct_name as charybdis::operations::Find>::find(#query_str, #values_tp)
             }
         }
@@ -69,7 +69,7 @@ pub(crate) trait FieldsFindFn: FieldsFindFnNames + FieldsToArguments {
         quote! {
             pub fn #find_by_fn_name<'a>(
                 #(#arguments),*
-            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelRow<Self>> {
+            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelRow> {
                 <#struct_name as charybdis::operations::Find>::find_first(#query_str, #values_tp)
             }
         }
@@ -90,7 +90,7 @@ pub(crate) trait FieldsFindFirstFns: FieldsFindFnNames + FieldsToArguments {
         quote! {
             pub fn #find_first_by_fn_name<'a>(
                 #(#arguments),*
-            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelRow<Self>> {
+            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::ModelRow> {
                 <#struct_name as charybdis::operations::Find>::find_first(#query_str, #values_tp)
             }
         }
@@ -106,7 +106,7 @@ pub(crate) trait FieldsFindFirstFns: FieldsFindFnNames + FieldsToArguments {
         quote! {
             pub fn #maybe_find_first_by_fn_name<'a>(
                 #(#arguments),*
-            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::OptionalModelRow<Self>> {
+            ) -> charybdis::query::CharybdisQuery<'a, #types_tp, Self, charybdis::query::OptionalModelRow> {
                 <#struct_name as charybdis::operations::Find>::maybe_find_first(#query_str, #values_tp)
             }
         }
