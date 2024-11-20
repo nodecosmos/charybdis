@@ -237,7 +237,6 @@ dependencies = [
  "chrono",
  "colored",
  "futures",
- "num-bigint 0.4.4",
  "scylla 0.15.0",
  "serde",
  "serde_json",
@@ -1500,9 +1499,9 @@ dependencies = [
 
 [[package]]
 name = "vte_generate_state_changes"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d257817081c7dffcdbab24b9e62d2def62e2ff7d00b1c20062551e6cccc145ff"
+checksum = "2e369bee1b05d510a7b4ed645f5faa90619e05437111783ea5848f28d97d3c2e"
 dependencies = [
  "proc-macro2",
  "quote",

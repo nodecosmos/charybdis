@@ -14,7 +14,6 @@ categories = ["database"]
 charybdis_macros = { version = "0.7.9", path = "../charybdis-macros" }
 chrono = { version = "0.4.38", features = ["serde"] }
 futures = "0.3.30"
-num-bigint = "0.4.4"
 scylla = { version = "0.15.0", features = ["full-serialization"] }
 uuid = { version = "1.8.0", features = ["v1", "v4", "serde"] }
 serde_json = "1.0.116"
