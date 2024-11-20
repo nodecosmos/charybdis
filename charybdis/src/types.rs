@@ -4,9 +4,9 @@ use std::net::IpAddr;
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, Utc};
 use scylla::_macro_internal::{CellWriter, ColumnType, SerializationError, WrittenCellProof};
+use scylla::deserialize::{DeserializationError, DeserializeValue, FrameSlice, TypeCheckError};
 use scylla::frame::value::{Counter as CqlCounter, CqlDuration, CqlTimeuuid};
 use scylla::serialize::value::{BuiltinTypeCheckError, SerializeValue};
-use scylla_cql::_macro_internal::{DeserializationError, DeserializeValue, FrameSlice, TypeCheckError};
 use serde::{Deserialize, Serialize};
 
 pub type Ascii = String;

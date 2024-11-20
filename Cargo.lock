@@ -233,14 +233,12 @@ name = "charybdis"
 version = "0.7.9"
 dependencies = [
  "bigdecimal",
- "byteorder",
  "charybdis_macros 0.7.9",
  "chrono",
  "colored",
  "futures",
  "num-bigint 0.4.4",
  "scylla 0.15.0",
- "scylla-cql 0.4.0",
  "serde",
  "serde_json",
  "uuid",
