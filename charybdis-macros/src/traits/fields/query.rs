@@ -12,11 +12,7 @@ pub(crate) trait FieldsQuery {
 
 impl FieldsQuery for Vec<&Field<'_>> {
     fn comma_sep_cols(&self) -> String {
-        self.names()
-            .iter()
-            .map(|s| format!(r#""{s}""#))
-            .collect::<Vec<String>>()
-            .join(", ")
+        self.names().join(", ")
     }
 
     fn insert_bind_markers(&self) -> String {
