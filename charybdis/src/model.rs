@@ -1,7 +1,7 @@
+use scylla::deserialize::{DeserializeRow, DeserializeValue};
 use scylla::serialize::row::SerializeRow;
-use scylla::FromRow;
 
-pub trait BaseModel: FromRow + Sized + SerializeRow {
+pub trait BaseModel: Sized + SerializeRow + for<'frame, 'metadata> DeserializeRow<'frame, 'metadata> {
     // usually tuple of primary key values
     type PrimaryKey: SerializeRow + Send + Sync;
     type PartitionKey: SerializeRow + Send + Sync;
@@ -108,7 +108,7 @@ pub trait MaterializedView: BaseModel {}
 ///     pub country: Text,
 /// }
 /// ```
-pub trait Udt: FromRow + Sized {
+pub trait Udt: Sized + for<'frame, 'metadata> DeserializeValue<'frame, 'metadata> {
     const DB_MODEL_NAME: &'static str;
 }
 

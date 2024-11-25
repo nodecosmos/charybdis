@@ -386,7 +386,7 @@ impl<'a> CharybdisBatch<'a> {
     where
         Val: SerializeRow + Sync + Send,
         M: Model + Sync + Send,
-        RtQe: QueryExecutor,
+        RtQe: QueryExecutor<M>,
     {
         self.inner.append_statement(query.query_string);
 
@@ -409,4 +409,4 @@ impl<'a> Default for CharybdisBatch<'a> {
     fn default() -> Self {
         Self::new()
     }
- }
+}

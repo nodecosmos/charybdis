@@ -10,7 +10,7 @@ categories = ["database"]
 
 [dependencies]
 charybdis_parser = { version = "0.7.9", path = "../charybdis-parser" }
-scylla = { version = "0.14.0", features = ["ssl"] }
+scylla = { version = "0.15.0", features = ["ssl"] }
 tokio = { version = "1.38.0", features = ["full"] }
 serde_json = "1.0.120"
 serde = { version = "1.0.204", features = ["derive"] }

@@ -2,7 +2,7 @@ use crate::errors::CharybdisError;
 use crate::scylla::PagingState;
 use scylla::serialize::row::SerializeRow;
 use scylla::statement::PagingStateResponse;
-use scylla::transport::iterator::RowIterator;
+use scylla::transport::iterator::QueryPager;
 use scylla::{CachingSession, QueryResult};
 
 pub async fn execute_unpaged(
@@ -22,7 +22,7 @@ pub async fn execute_iter(
     session: &CachingSession,
     query: &'static str,
     values: impl SerializeRow,
-) -> Result<RowIterator, CharybdisError> {
+) -> Result<QueryPager, CharybdisError> {
     let res = session
         .execute_iter(query, values)
         .await

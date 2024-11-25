@@ -1,6 +1,3 @@
-use std::sync::Arc;
-use std::time::Duration;
-
 use crate::callbacks::{CallbackAction, Callbacks};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
@@ -9,162 +6,181 @@ use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, Retry
 use crate::stream::CharybdisModelStream;
 use scylla::query::Query;
 use scylla::serialize::row::{RowSerializationContext, SerializeRow};
-use scylla::serialize::{RowWriter, SerializationError};
+use scylla::serialize::{writers::RowWriter, SerializationError};
 use scylla::statement::{PagingState, PagingStateResponse};
-use scylla::transport::query_result::FirstRowTypedError;
-use scylla::{CachingSession, IntoTypedRows, QueryResult};
+use scylla::{CachingSession, QueryResult};
+use std::sync::Arc;
+use std::time::Duration;
 
-pub struct ModelRow<M: BaseModel>(pub M);
-pub struct OptionalModelRow<M: BaseModel>(pub Option<M>);
-pub struct ModelStream<M: BaseModel>(pub CharybdisModelStream<M>);
-pub struct ModelPaged<M: BaseModel>(pub CharybdisModelIterator<M>, pub PagingState);
-pub struct ModelMutation(pub QueryResult);
+pub struct ModelRow;
+pub struct OptionalModelRow;
+pub struct ModelStream;
+pub struct ModelPaged;
+pub struct ModelMutation;
 
-pub trait QueryType {
+pub trait QueryType<M: BaseModel> {
     type Output;
 }
 
-impl<M: BaseModel> QueryType for ModelRow<M> {
+impl<M: BaseModel> QueryType<M> for ModelRow {
     type Output = M;
 }
 
-impl<M: BaseModel> QueryType for OptionalModelRow<M> {
+impl<M: BaseModel> QueryType<M> for OptionalModelRow {
     type Output = Option<M>;
 }
 
-impl<M: BaseModel> QueryType for ModelStream<M> {
+impl<M: 'static + BaseModel> QueryType<M> for ModelStream {
     type Output = CharybdisModelStream<M>;
 }
 
-impl<M: BaseModel> QueryType for ModelPaged<M> {
+impl<M: BaseModel> QueryType<M> for ModelPaged {
     type Output = (CharybdisModelIterator<M>, PagingStateResponse);
 }
 
-impl QueryType for ModelMutation {
+impl<M: BaseModel> QueryType<M> for ModelMutation {
     type Output = QueryResult;
 }
 
-pub trait QueryExecutor: QueryType {
-    async fn execute<Val, M, Qe>(
-        query: CharybdisQuery<'_, Val, M, Qe>,
+pub trait QueryExecutor<M: BaseModel>: QueryType<M> {
+    async fn execute<Val, Qe>(
+        query: CharybdisQuery<Val, M, Qe>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>
     where
         M: BaseModel,
         Val: SerializeRow,
-        Qe: QueryExecutor;
+        Qe: QueryExecutor<M>;
 }
 
-impl<Bm: BaseModel> QueryExecutor for ModelRow<Bm> {
-    async fn execute<Val, M, Qe>(
+impl<M: BaseModel> QueryExecutor<M> for ModelRow {
+    async fn execute<Val, Qe>(
         query: CharybdisQuery<'_, Val, M, Qe>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>
     where
         M: BaseModel,
         Val: SerializeRow,
-        Qe: QueryExecutor,
+        Qe: QueryExecutor<M>,
     {
-        let row = session
+        let res = session
             .execute_unpaged(query.inner, query.values)
             .await
             .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
-        let res = row.first_row_typed::<Bm>().map_err(|e| match e {
-            FirstRowTypedError::RowsEmpty => CharybdisError::NotFoundError(query.query_string),
-            _ => CharybdisError::FirstRowTypedError(query.query_string, e),
-        })?;
+
+        let res = res
+            .into_rows_result()
+            .map_err(|e| CharybdisError::IntoRowsResultError(query.query_string, e))?;
+
+        let row = res
+            .first_row::<M>()
+            .map_err(|e| CharybdisError::FirstRowError(query.query_string, e))?;
+
+        Ok(row)
+    }
+}
+
+impl<M: BaseModel> QueryExecutor<M> for OptionalModelRow {
+    async fn execute<Val, Qe>(
+        query: CharybdisQuery<'_, Val, M, Qe>,
+        session: &CachingSession,
+    ) -> Result<Self::Output, CharybdisError>
+    where
+        M: BaseModel,
+        Val: SerializeRow,
+        Qe: QueryExecutor<M>,
+    {
+        let res = session
+            .execute_unpaged(query.inner, query.values)
+            .await
+            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?
+            .into_rows_result()
+            .map_err(|e| CharybdisError::IntoRowsResultError(query.query_string, e))?
+            .maybe_first_row::<M>()
+            .map_err(|e| CharybdisError::MaybeFirstRowError(query.query_string, e))?;
 
         Ok(res)
     }
 }
 
-impl<Bm: BaseModel> QueryExecutor for OptionalModelRow<Bm> {
-    async fn execute<Val, M, Qe>(
+impl<M: BaseModel + 'static> QueryExecutor<M> for ModelStream {
+    async fn execute<Val, Qe>(
         query: CharybdisQuery<'_, Val, M, Qe>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>
     where
         M: BaseModel,
         Val: SerializeRow,
-        Qe: QueryExecutor,
+        Qe: QueryExecutor<M>,
     {
-        let row = session
-            .execute_unpaged(query.inner, query.values)
-            .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
-        let res = row
-            .maybe_first_row_typed::<Bm>()
-            .map_err(|e| CharybdisError::MaybeFirstRowTypedError(query.query_string, e))?;
-
-        Ok(res)
-    }
-}
-
-impl<Bm: BaseModel> QueryExecutor for ModelStream<Bm> {
-    async fn execute<Val, M, Qe>(
-        query: CharybdisQuery<'_, Val, M, Qe>,
-        session: &CachingSession,
-    ) -> Result<Self::Output, CharybdisError>
-    where
-        M: BaseModel,
-        Val: SerializeRow,
-        Qe: QueryExecutor,
-    {
-        let rows = session
+        let res = session
             .execute_iter(query.inner, query.values)
             .await
             .map_err(|e| CharybdisError::QueryError(query.query_string, e))?
-            .into_typed::<Bm>();
+            .rows_stream::<M>()
+            .map_err(|e| CharybdisError::TypeCheckError(query.query_string, e))?;
 
-        let mut stream = CharybdisModelStream::from(rows);
-
+        let mut stream = CharybdisModelStream::from(res);
         stream.query_string(query.query_string);
 
         Ok(stream)
     }
 }
 
-impl<Bm: BaseModel> QueryExecutor for ModelPaged<Bm> {
-    async fn execute<Val, M, Qe>(
+impl<M: BaseModel> QueryExecutor<M> for ModelPaged {
+    async fn execute<Val, Qe>(
         query: CharybdisQuery<'_, Val, M, Qe>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>
     where
         M: BaseModel,
         Val: SerializeRow,
-        Qe: QueryExecutor,
+        Qe: QueryExecutor<M>,
     {
         let res = session
             .execute_single_page(query.inner, query.values, query.paging_state)
             .await
             .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
-        let rows = res
+        let psr = res.1;
+
+        let rows_res = res
             .0
+            .into_rows_result()
+            .map_err(|e| CharybdisError::IntoRowsResultError(query.query_string, e))?;
+
+        let rows = rows_res
             .rows()
-            .map_err(|e| CharybdisError::RowsExpectedError(query.query_string, e))?;
+            .map_err(|e| CharybdisError::RowsError(query.query_string, e))?;
 
-        let mut typed_rows = CharybdisModelIterator::from(rows.into_typed());
+        let models_result: Result<Vec<M>, CharybdisError> = rows
+            .map(|row_result| row_result.map_err(|e| CharybdisError::DeserializationError(query.query_string, e)))
+            .collect();
 
-        typed_rows.query_string(query.query_string);
+        let models = models_result?;
 
-        Ok((typed_rows, res.1))
+        let mut iterator = CharybdisModelIterator::from(models);
+        iterator.query_string(query.query_string);
+
+        Ok((iterator, psr))
     }
 }
 
-impl QueryExecutor for ModelMutation {
-    async fn execute<Val, M, Qe>(
+impl<M: BaseModel> QueryExecutor<M> for ModelMutation {
+    async fn execute<Val, Qe>(
         query: CharybdisQuery<'_, Val, M, Qe>,
         session: &CachingSession,
     ) -> Result<Self::Output, CharybdisError>
     where
         M: BaseModel,
         Val: SerializeRow,
-        Qe: QueryExecutor,
+        Qe: QueryExecutor<M>,
     {
-        session
+        let res = session
             .execute_unpaged(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string, e))
+            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
+
+        Ok(res)
     }
 }
 
@@ -203,7 +219,7 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
     }
 }
 
-pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> {
+pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor<M>> {
     inner: Query,
     paging_state: PagingState,
     pub(crate) query_string: &'static str,
@@ -211,7 +227,7 @@ pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor
     _phantom: std::marker::PhantomData<Qe>,
 }
 
-impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor> CharybdisQuery<'a, Val, M, Qe> {
+impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor<M>> CharybdisQuery<'a, Val, M, Qe> {
     pub fn new(query: &'static str, values: QueryValue<'a, Val, M>) -> Self {
         Self {
             inner: Query::new(query),

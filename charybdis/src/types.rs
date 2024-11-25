@@ -3,11 +3,10 @@ use std::net::IpAddr;
 
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, Utc};
-use scylla::_macro_internal::{CellWriter, ColumnType, FromCqlValError, SerializationError, WrittenCellProof};
-use scylla::cql_to_rust::FromCqlVal;
-use scylla::frame::response::result::CqlValue;
-use scylla::frame::value::{CqlDuration, CqlTimeuuid};
-use scylla::serialize::value::{BuiltinTypeCheckError, BuiltinTypeCheckErrorKind, SerializeValue};
+use scylla::_macro_internal::{CellWriter, ColumnType, SerializationError, WrittenCellProof};
+use scylla::deserialize::{DeserializationError, DeserializeValue, FrameSlice, TypeCheckError};
+use scylla::frame::value::{Counter as CqlCounter, CqlDuration, CqlTimeuuid};
+use scylla::serialize::value::{BuiltinTypeCheckError, SerializeValue};
 use serde::{Deserialize, Serialize};
 
 pub type Ascii = String;
@@ -40,10 +39,17 @@ pub type Frozen<T> = T;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Serialize, Deserialize)]
 pub struct Counter(pub i64);
 
-impl FromCqlVal<CqlValue> for Counter {
-    fn from_cql(cql_val: CqlValue) -> Result<Self, FromCqlValError> {
-        let counter_value = scylla::frame::value::Counter::from_cql(cql_val)?;
-        Ok(Counter(counter_value.0))
+impl<'frame, 'metadata> DeserializeValue<'frame, 'metadata> for Counter {
+    fn type_check(typ: &ColumnType) -> Result<(), TypeCheckError> {
+        CqlCounter::type_check(typ)
+    }
+
+    fn deserialize(
+        typ: &'metadata ColumnType<'metadata>,
+        v: Option<FrameSlice<'frame>>,
+    ) -> Result<Self, DeserializationError> {
+        let counter = CqlCounter::deserialize(typ, v)?;
+        Ok(Counter(counter.0))
     }
 }
 
@@ -56,8 +62,8 @@ impl SerializeValue for Counter {
         if typ != &ColumnType::Counter {
             return Err(SerializationError::new(BuiltinTypeCheckError {
                 rust_name: std::any::type_name::<Counter>(),
-                got: typ.clone(),
-                kind: BuiltinTypeCheckErrorKind::MismatchedType {
+                got: typ.clone().into_owned(),
+                kind: scylla::serialize::value::BuiltinTypeCheckErrorKind::MismatchedType {
                     expected: &[ColumnType::Counter],
                 },
             }));
@@ -136,9 +142,17 @@ impl<'de> Deserialize<'de> for Duration {
     }
 }
 
-impl FromCqlVal<CqlValue> for Duration {
-    fn from_cql(cql_val: CqlValue) -> Result<Self, FromCqlValError> {
-        let duration = CqlDuration::from_cql(cql_val)?;
+impl<'frame, 'metadata> DeserializeValue<'frame, 'metadata> for Duration {
+    fn type_check(typ: &ColumnType) -> Result<(), TypeCheckError> {
+        CqlDuration::type_check(typ)
+    }
+
+    fn deserialize(
+        typ: &'metadata ColumnType<'metadata>,
+        v: Option<FrameSlice<'frame>>,
+    ) -> Result<Self, DeserializationError> {
+        let duration = CqlDuration::deserialize(typ, v)?;
+
         Ok(Duration(duration))
     }
 }
@@ -333,12 +347,17 @@ impl From<CqlTimeuuid> for Timeuuid {
     }
 }
 
-impl FromCqlVal<CqlValue> for Timeuuid {
-    fn from_cql(cql_val: CqlValue) -> Result<Self, FromCqlValError> {
-        match cql_val {
-            CqlValue::Timeuuid(cql_timeuuid) => Ok(Timeuuid::from(cql_timeuuid)),
-            _ => Err(FromCqlValError::BadCqlType),
-        }
+impl<'frame, 'metadata> DeserializeValue<'frame, 'metadata> for Timeuuid {
+    fn type_check(typ: &ColumnType) -> Result<(), TypeCheckError> {
+        CqlTimeuuid::type_check(typ)
+    }
+
+    fn deserialize(
+        typ: &'metadata ColumnType<'metadata>,
+        v: Option<FrameSlice<'frame>>,
+    ) -> Result<Self, DeserializationError> {
+        let uuid = CqlTimeuuid::deserialize(typ, v)?;
+        Ok(Timeuuid::from(uuid))
     }
 }
 
@@ -351,8 +370,8 @@ impl SerializeValue for Timeuuid {
         if typ != &ColumnType::Timeuuid {
             return Err(SerializationError::new(BuiltinTypeCheckError {
                 rust_name: std::any::type_name::<Timeuuid>(),
-                got: typ.clone(),
-                kind: BuiltinTypeCheckErrorKind::MismatchedType {
+                got: typ.clone().into_owned(),
+                kind: scylla::serialize::value::BuiltinTypeCheckErrorKind::MismatchedType {
                     expected: &[ColumnType::Timeuuid],
                 },
             }));
