@@ -152,7 +152,6 @@ impl<M: BaseModel> QueryExecutor<M> for ModelPaged {
             .rows()
             .map_err(|e| CharybdisError::RowsError(query.query_string, e))?;
 
-        // TODO: check this
         let models_result: Result<Vec<M>, CharybdisError> = rows
             .map(|row_result| row_result.map_err(|e| CharybdisError::DeserializationError(query.query_string, e)))
             .collect();
