@@ -225,7 +225,7 @@ impl<'a> ModelRunner<'a> {
             .data
             .changed_field_types
             .iter()
-            .map(|(field_name, _, field_type)| format!("{} {}", field_name, field_type))
+            .map(|(field_name, _, field_type)| format!(r#""{}" {}"#, field_name, field_type))
             .collect::<Vec<String>>()
             .join(", ");
 
@@ -249,7 +249,7 @@ impl<'a> ModelRunner<'a> {
             let index_name: String = self.data.construct_index_name(column_name);
 
             let cql = format!(
-                "CREATE INDEX IF NOT EXISTS {} ON {} ({})",
+                r#"CREATE INDEX IF NOT EXISTS {} ON {} ("{}")"#,
                 index_name, self.data.migration_object_name, column_name,
             );
 
