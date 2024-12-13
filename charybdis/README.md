@@ -646,7 +646,7 @@ E.g.
     #[charybdis_model(...)]
     pub struct Post {}
     
-    impl ExtCallbacks for Post {
+    impl Callback for Post {
         type Extention = AppExtensions;
         type Error = AppError; // From<CharybdisError>
         
