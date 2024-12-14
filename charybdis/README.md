@@ -207,7 +207,7 @@ Resulting auto-generated migration query will be:
 * ### Programmatically running migrations
   Within testing or development environment, we can trigger migrations programmatically:
     ```rust
-    use charybdis_migrate::MigrationBuilder;
+    use charybdis::migrate::MigrationBuilder;
     
     let migration = MigrationBuilder::new()
         .keyspace("test")
