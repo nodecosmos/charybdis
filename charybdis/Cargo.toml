@@ -23,5 +23,4 @@ colored = "2.1.0"
 bigdecimal = { version = "0.4.3", features = ["serde"] }
 
 [features]
-default = ["migrate"]
 migrate = ["charybdis-migrate"]
