@@ -31,6 +31,7 @@ pub mod scylla {
     pub use scylla::serialize::value::SerializeValue;
     pub use scylla::statement::PagingState;
     pub use scylla::transport::iterator::TypedRowStream;
+    pub use scylla::*;
 }
 
 pub mod options {
