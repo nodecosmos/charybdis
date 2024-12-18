@@ -233,6 +233,7 @@ name = "charybdis"
 version = "0.7.9"
 dependencies = [
  "bigdecimal",
+ "charybdis-migrate",
  "charybdis_macros 0.7.9",
  "chrono",
  "colored",
