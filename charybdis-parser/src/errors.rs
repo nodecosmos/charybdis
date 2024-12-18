@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::fmt;
 
-use scylla::cql_to_rust::FromRowError;
 use scylla::deserialize::DeserializationError;
 use scylla::transport::errors::QueryError;
 use scylla::transport::query_result::{IntoRowsResultError, RowsError};
@@ -10,7 +9,6 @@ use scylla::transport::query_result::{IntoRowsResultError, RowsError};
 pub enum DbSchemaParserError {
     // scylla
     QueryError(QueryError),
-    FromRowError(FromRowError),
     IntoRowsResultError(IntoRowsResultError),
     RowsError(RowsError),
     DeserializationError(DeserializationError),
@@ -22,12 +20,6 @@ impl Error for DbSchemaParserError {}
 impl From<QueryError> for DbSchemaParserError {
     fn from(e: QueryError) -> Self {
         DbSchemaParserError::QueryError(e)
-    }
-}
-
-impl From<FromRowError> for DbSchemaParserError {
-    fn from(e: FromRowError) -> Self {
-        DbSchemaParserError::FromRowError(e)
     }
 }
 
@@ -54,9 +46,6 @@ impl fmt::Display for DbSchemaParserError {
         match self {
             // scylla errors
             DbSchemaParserError::QueryError(e) => write!(f, "QueryError: {}", e),
-            DbSchemaParserError::FromRowError(e) => {
-                write!(f, "FromRowError: {:?}", e)
-            }
             DbSchemaParserError::IntoRowsResultError(e) => {
                 write!(f, "IntoRowsResultError: {:?}", e)
             }
