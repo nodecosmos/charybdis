@@ -16,4 +16,4 @@ pub trait UpdateWithCallbacks<'a>: Callbacks {
     }
 }
 
-impl<'a, M: Callbacks> UpdateWithCallbacks<'a> for M {}
+impl<M: Callbacks> UpdateWithCallbacks<'_> for M {}

@@ -35,4 +35,4 @@ pub trait DeleteWithCallbacks<'a>: Callbacks {
     }
 }
 
-impl<'a, M: Callbacks> DeleteWithCallbacks<'a> for M {}
+impl<M: Callbacks> DeleteWithCallbacks<'_> for M {}

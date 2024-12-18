@@ -59,7 +59,7 @@ impl<T: FieldsAsTuple> Tuple for T {
     fn types_tp(&self) -> TokenStream {
         let types = self.types();
 
-        return if types.len() == 1 {
+        if types.len() == 1 {
             let single_type = types.first().unwrap();
             quote! {
                 (#single_type,)
@@ -68,13 +68,13 @@ impl<T: FieldsAsTuple> Tuple for T {
             quote! {
                 (#(#types),*)
             }
-        };
+        }
     }
 
     fn values_tp(&self) -> TokenStream {
         let values = self.values();
 
-        return if values.len() == 1 {
+        if values.len() == 1 {
             let single_value = values.first().unwrap();
             quote! {
                 (#single_value,)
@@ -83,6 +83,6 @@ impl<T: FieldsAsTuple> Tuple for T {
             quote! {
                 (#(#values),*)
             }
-        };
+        }
     }
 }

@@ -1,10 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Attribute, DeriveInput, parse_str};
+use syn::{parse_str, Attribute, DeriveInput};
 
 use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::traits::CharybdisMacroArgs;
 use charybdis_parser::traits::string::ToSnakeCase;
+use charybdis_parser::traits::CharybdisMacroArgs;
 
 use crate::traits::fields::{FieldHashMapString, ToIdents};
 
@@ -117,7 +117,6 @@ use crate::traits::fields::{FieldHashMapString, ToIdents};
 /// However, all partition keys are required for db operations, so we can't have partial partition
 /// keys.
 ///
-
 pub(crate) fn partial_model_macro_generator(
     input: &DeriveInput,
     args: &CharybdisMacroArgs,

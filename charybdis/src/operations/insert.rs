@@ -20,4 +20,4 @@ pub trait InsertWithCallbacks<'a>: Callbacks {
     }
 }
 
-impl<'a, M: Callbacks> InsertWithCallbacks<'a> for M {}
+impl<M: Callbacks> InsertWithCallbacks<'_> for M {}

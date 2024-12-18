@@ -292,7 +292,7 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 }
 
-impl<'a, Val: SerializeRow, M: Model> Default for CharybdisModelBatch<'a, Val, M> {
+impl<Val: SerializeRow, M: Model> Default for CharybdisModelBatch<'_, Val, M> {
     fn default() -> Self {
         Self::new()
     }
@@ -352,7 +352,7 @@ impl<'a> SerializeRowBox<'a> {
     }
 }
 
-impl<'a> SerializeRow for SerializeRowBox<'a> {
+impl SerializeRow for SerializeRowBox<'_> {
     fn serialize(&self, ctx: &RowSerializationContext<'_>, writer: &mut RowWriter) -> Result<(), SerializationError> {
         self.inner.as_ref().serialize(ctx, writer)
     }
@@ -405,7 +405,7 @@ impl<'a> CharybdisBatch<'a> {
     }
 }
 
-impl<'a> Default for CharybdisBatch<'a> {
+impl Default for CharybdisBatch<'_> {
     fn default() -> Self {
         Self::new()
     }
