@@ -27,7 +27,6 @@ pub mod macros {
 }
 
 pub mod scylla {
-    pub use scylla::frame::response::cql_to_rust::FromRowError;
     pub use scylla::frame::response::result::{CqlValue, Row};
     pub use scylla::serialize::value::SerializeValue;
     pub use scylla::statement::PagingState;

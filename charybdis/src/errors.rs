@@ -4,7 +4,6 @@ use std::fmt;
 use colored::Colorize;
 use scylla::_macro_internal::TypeCheckError;
 use scylla::deserialize::DeserializationError;
-use scylla::frame::value::SerializeValuesError;
 use scylla::transport::errors::QueryError;
 use scylla::transport::iterator::NextRowError;
 use scylla::transport::query_result::{
@@ -19,7 +18,6 @@ pub enum CharybdisError {
     BatchError(&'static str, QueryError),
     SingleRowError(&'static str, SingleRowError),
     RowsError(&'static str, RowsError),
-    SerializeValuesError(&'static str, SerializeValuesError),
     FirstRowError(&'static str, FirstRowError),
     MaybeFirstRowError(&'static str, MaybeFirstRowError),
     DeserializationError(&'static str, DeserializationError),
@@ -56,10 +54,6 @@ impl fmt::Display for CharybdisError {
             CharybdisError::DeserializationError(query, e) => {
                 write!(f, "Query: {}\nDeserializationError: {:?}", query.bright_purple(), e)
             }
-
-            CharybdisError::SerializeValuesError(query, e) => {
-                write!(f, "Query: {}\nSerializeValuesError: {:?}", query.bright_purple(), e)
-            }
             CharybdisError::NotFoundError(query) => {
                 write!(f, "Records not found for query: {}", query.bright_purple())
             }
@@ -85,7 +79,6 @@ impl Error for CharybdisError {
             CharybdisError::MaybeFirstRowError(_, e) => Some(e),
             CharybdisError::DeserializationError(_, e) => Some(e),
             CharybdisError::NextRowError(_, e) => Some(e),
-            CharybdisError::SerializeValuesError(_, e) => Some(e),
             CharybdisError::JsonError(e) => Some(e),
             _ => None,
         }

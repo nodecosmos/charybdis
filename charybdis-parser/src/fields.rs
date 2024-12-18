@@ -224,7 +224,7 @@ impl<'a> CharybdisFields<'a> {
         me
     }
 
-    pub fn populate(&'a mut self, args: &CharybdisMacroArgs) -> &Self {
+    pub fn populate(&'a mut self, args: &CharybdisMacroArgs) -> &'a Self {
         let mut partition_key_fields: Vec<Option<&Field>> = vec![None; args.partition_keys().len()];
         let mut clustering_key_fields: Vec<Option<&Field>> = vec![None; args.clustering_keys().len()];
         let mut primary_key_fields: Vec<Option<&Field>> =

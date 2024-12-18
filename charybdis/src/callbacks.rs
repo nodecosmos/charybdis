@@ -12,7 +12,10 @@ use crate::query::QueryValue;
 /// sending messages to kafka, etc.
 /// In case one doesn't need extension it can be set to `Option<()>` and then
 /// it can be set to `None` when calling the operation.
-pub trait Callbacks: Model {
+pub trait Callbacks: Model + 'static
+where
+    Self: 'static,
+{
     type Extension;
     type Error: From<CharybdisError>;
 

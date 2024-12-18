@@ -8,7 +8,7 @@ pub trait Delete: Model {
     fn delete_by_query<Val: SerializeRow>(
         query: &'static str,
         values: Val,
-    ) -> CharybdisQuery<Val, Self, ModelMutation> {
+    ) -> CharybdisQuery<'static, Val, Self, ModelMutation> {
         CharybdisQuery::new(query, QueryValue::Owned(values))
     }
 
@@ -30,7 +30,7 @@ pub trait DeleteWithCallbacks<'a>: Callbacks {
     fn delete_cb(
         &'a mut self,
         extension: &'a Self::Extension,
-    ) -> CharybdisCbQuery<Self, DeleteAction<Self>, Self::PrimaryKey> {
+    ) -> CharybdisCbQuery<'a, Self, DeleteAction<Self>, Self::PrimaryKey> {
         CharybdisCbQuery::new(Self::DELETE_QUERY, self, extension)
     }
 }

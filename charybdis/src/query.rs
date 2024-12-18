@@ -8,6 +8,7 @@ use scylla::query::Query;
 use scylla::serialize::row::{RowSerializationContext, SerializeRow};
 use scylla::serialize::{writers::RowWriter, SerializationError};
 use scylla::statement::{PagingState, PagingStateResponse};
+use scylla::transport::query_result::FirstRowError;
 use scylla::{CachingSession, QueryResult};
 use std::sync::Arc;
 use std::time::Duration;
@@ -72,9 +73,10 @@ impl<M: BaseModel> QueryExecutor<M> for ModelRow {
             .into_rows_result()
             .map_err(|e| CharybdisError::IntoRowsResultError(query.query_string, e))?;
 
-        let row = res
-            .first_row::<M>()
-            .map_err(|e| CharybdisError::FirstRowError(query.query_string, e))?;
+        let row = res.first_row::<M>().map_err(|e| match e {
+            FirstRowError::RowsEmpty => CharybdisError::NotFoundError(query.query_string),
+            _ => CharybdisError::FirstRowError(query.query_string, e),
+        })?;
 
         Ok(row)
     }

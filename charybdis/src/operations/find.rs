@@ -16,7 +16,7 @@ where
         query: &'static str,
         values: Val,
         paging_state: PagingState,
-    ) -> CharybdisQuery<Val, Self, ModelPaged> {
+    ) -> CharybdisQuery<'static, Val, Self, ModelPaged> {
         CharybdisQuery::new(query, QueryValue::Owned(values)).paging_state(paging_state)
     }
 

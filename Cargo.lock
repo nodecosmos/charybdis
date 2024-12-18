@@ -238,7 +238,7 @@ dependencies = [
  "chrono",
  "colored",
  "futures",
- "scylla 0.15.0",
+ "scylla 0.15.1",
  "serde",
  "serde_json",
  "uuid",
@@ -253,9 +253,7 @@ dependencies = [
  "colored",
  "openssl",
  "regex",
- "scylla 0.15.0",
- "serde",
- "serde_json",
+ "scylla 0.15.1",
  "strip-ansi-escapes",
  "tokio",
 ]
@@ -279,10 +277,9 @@ version = "0.7.9"
 dependencies = [
  "charybdis 0.7.2",
  "charybdis_parser 0.7.9",
- "darling",
  "proc-macro2",
  "quote",
- "scylla 0.15.0",
+ "scylla 0.15.1",
  "syn",
 ]
 
@@ -313,7 +310,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "scylla 0.15.0",
+ "scylla 0.15.1",
  "serde",
  "serde_json",
  "strum",
@@ -913,9 +910,9 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.81"
+version = "1.0.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d1597b0c024618f09a9c3b8655b7e430397a36d23fdafec26d6965e9eec3eba"
+checksum = "37d3544b3f2748c54e147655edb5025752e2303145b5aefb3c3ea2c78b973bb0"
 dependencies = [
  "unicode-ident",
 ]
@@ -1064,7 +1061,7 @@ dependencies = [
  "smallvec",
  "snap",
  "socket2",
- "thiserror",
+ "thiserror 1.0.56",
  "tokio",
  "tracing",
  "uuid",
@@ -1072,9 +1069,9 @@ dependencies = [
 
 [[package]]
 name = "scylla"
-version = "0.15.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6075cf39d1b59505fd6777c4028d6b60b2621ea7f79b6b7fb2e02d4c07c4ca9"
+checksum = "f0408e59e11f589071d1cefc3928270aa8fe4d03f654cb118e0c24d16013ea82"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -1091,12 +1088,12 @@ dependencies = [
  "openssl",
  "rand",
  "rand_pcg",
- "scylla-cql 0.4.0",
- "scylla-macros 0.7.0",
+ "scylla-cql 0.4.1",
+ "scylla-macros 0.7.1",
  "smallvec",
  "snap",
  "socket2",
- "thiserror",
+ "thiserror 2.0.7",
  "tokio",
  "tokio-openssl",
  "tracing",
@@ -1120,7 +1117,7 @@ dependencies = [
  "scylla-macros 0.5.1",
  "secrecy 0.7.0",
  "snap",
- "thiserror",
+ "thiserror 1.0.56",
  "time",
  "tokio",
  "uuid",
@@ -1128,9 +1125,9 @@ dependencies = [
 
 [[package]]
 name = "scylla-cql"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e032407a921ad7278d58a313829376950a6c81d9680d454cdf7f07891605f3c"
+checksum = "a0cefd8b924bb8f67525937a811038d5662f9febc30c74c778a8205f63c4b365"
 dependencies = [
  "async-trait",
  "bigdecimal",
@@ -1140,11 +1137,11 @@ dependencies = [
  "lz4_flex",
  "num-bigint 0.3.3",
  "num-bigint 0.4.4",
- "scylla-macros 0.7.0",
+ "scylla-macros 0.7.1",
  "secrecy 0.8.0",
  "snap",
  "stable_deref_trait",
- "thiserror",
+ "thiserror 2.0.7",
  "time",
  "tokio",
  "uuid",
@@ -1165,9 +1162,9 @@ dependencies = [
 
 [[package]]
 name = "scylla-macros"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9227c539e4a7df86998b949b973567b3569d1ca179216cfc787b918522f128fe"
+checksum = "e878bfb8a235207864ac3fb0b51d7954c77fd38486e0e4fb4e037935ff7eb46c"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -1312,9 +1309,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.60"
+version = "2.0.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "909518bc7b1c9b779f1bbf07f2929d35af9f0f37e47c6e9ef7f9dddc1e1821f3"
+checksum = "919d3b74a5dd0ccd15aeb8f93e7006bd9e14c295087c9896a110f490752bcf31"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1338,7 +1335,16 @@ version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d54378c645627613241d077a3a79db965db602882668f9136ac42af9ecb730ad"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.56",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93605438cbd668185516ab499d589afb7ee1859ea3d5fc8f6b0755e1c7443767"
+dependencies = [
+ "thiserror-impl 2.0.7",
 ]
 
 [[package]]
@@ -1346,6 +1352,17 @@ name = "thiserror-impl"
 version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fa0faa943b50f3db30a20aa7e265dbc66076993efed8463e8de414e5d06d3471"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1d8749b4531af2117677a5fcd12b1348a3fe2b81e36e61ffeac5c4aa3273e36"
 dependencies = [
  "proc-macro2",
  "quote",
