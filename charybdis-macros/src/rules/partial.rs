@@ -16,78 +16,19 @@ use crate::traits::fields::{FieldHashMapString, ToIdents};
 /// It is basically the same as base model struct, but with provided fields only.
 ///
 /// So, if we have a model User with some fields:
-/// ```ignore
-/// use charybdis::*;
-/// use super::Address;
-/// #[charybdis_model(
-///     table_name = "users",
-///     partition_keys = ["id"],
-///     clustering_keys = [])]
-/// pub struct User {
-///     pub id: Uuid,
-///     pub username: Text,
-///     pub password: Text,
-///     pub hashed_password: Text,
-///     pub email: Text,
-///     pub created_at: Timestamp,
-///     pub updated_at: Timestamp,
-///     pub address: Address,
-/// }
-/// ```
-/// It will generate a `partial_user!` macro that can be used to generate a partial users structs.
+/// Example:
+/// ```rust
+/// use charybdis::macros::charybdis_model;
+/// use charybdis::types::{Text, Timestamp, Uuid};
+/// use scylla::CachingSession;
 ///
-/// ## Example generation:
-/// ```ignore
-/// partial_user!(PartialUser, id, username, email);
-/// ```
-/// It will generate a struct with only those fields:
-/// ```ignore
-/// #[charybdis_model(
-///     table_name = "users",
-///     partition_keys = ["id"],
-///     clustering_keys = []
-///     global_secondary_indexes = [])]
-/// pub struct PartialUser {
-///    pub id: Uuid,
-///    pub username: Text,
-///    pub email: Text,
-/// }
-///```
-/// And we can use it as a normal model struct.
-///
-/// ```ignore
-/// let mut partial_user = PartialUser {id, username, email};
-/// partial_user.insert().execute(&session).await?;
-/// partial_user.find_by_primary_key().execute(&session).await?;
-/// ```
-///
-/// ## Example usage:
-/// ```ignore
-///     partial_user!(PartialUser, id, username, email);
-///
-///     let mut partial_user = PartialUser {
-///         id: Uuid::new_v4(),
-///         username: "test".to_string(),
-///         email: "test@gmail.com".to_string(),
-///     };
-///
-///    println!("{:?}", partial_user);
-///```
-///---
-///
-/// ### `#[charybdis_model]` declaration
-/// It also appends `#[charybdis_model(...)]` declaration with clustering keys and secondary indexes
-/// based on fields that are provided in partial_model struct.
-///
-/// E.g. if we have model:
-/// ```ignore
-/// #[partial_model_generator]
 /// #[charybdis_model(
 ///     table_name = users,
 ///     partition_keys = [id],
-///     clustering_keys = [created_at, updated_at],
+///     clustering_keys = [],
 ///     global_secondary_indexes = []
 /// )]
+/// #[derive(Default)]
 /// pub struct User {
 ///     pub id: Uuid,
 ///     pub username: Text,
@@ -97,26 +38,27 @@ use crate::traits::fields::{FieldHashMapString, ToIdents};
 ///     pub created_at: Timestamp,
 ///     pub updated_at: Timestamp,
 /// }
+/// partial_user!(UpdateUsernameUser, id, username, updated_at);
 /// ```
+/// it will generate a struct with `#[charybdis_model(...)]` declaration like this:
 ///
-/// and we use partial model macro:
-/// ```ignore
-/// partial_user!(UserOps, id, username, email, created_at);
 /// ```
-/// it will generate a struct with `#[charybdis_model(...)]` declaration:
-///
-/// ```ignore
+/// use charybdis::macros::charybdis_model;
+/// use charybdis::types::{Text, Timestamp, Uuid};
+/// use scylla::CachingSession;
 /// #[charybdis_model(
 ///     table_name = users,
 ///     partition_keys = [id],
-///     clustering_keys = [created_at],
-///     global_secondary_indexes = [])]
-/// pub struct UserOps {...}
+///     clustering_keys = [],
+///     global_secondary_indexes = []
+/// )]
+/// pub struct UpdateUsernameUser {
+///     pub id: Uuid,
+///     pub username: Text,
+///     pub updated_at: Timestamp,
+/// }
 /// ```
-/// Note that `updated_at` is not present in generated declaration.
-/// However, all partition keys are required for db operations, so we can't have partial partition
-/// keys.
-///
+/// Note that partial_user! requires `Default` to be implemented for the model.
 pub(crate) fn partial_model_macro_generator(
     input: &DeriveInput,
     args: &CharybdisMacroArgs,

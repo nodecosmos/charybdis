@@ -3,8 +3,8 @@ use quote::quote;
 use syn::parse_str;
 
 use charybdis_parser::fields::CharybdisFields;
-use charybdis_parser::traits::CharybdisMacroArgs;
 use charybdis_parser::traits::string::ToSnakeCase;
+use charybdis_parser::traits::CharybdisMacroArgs;
 
 use crate::traits::fields::FieldsQuery;
 

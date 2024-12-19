@@ -24,3 +24,6 @@ bigdecimal = { version = "0.4.3", features = ["serde"] }
 
 [features]
 migrate = ["charybdis-migrate"]
+
+[dev-dependencies]
+tokio = "1.42.0"

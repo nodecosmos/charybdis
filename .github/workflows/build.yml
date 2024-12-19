@@ -1,0 +1,54 @@
+name: Test and Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+env:
+  FORCE_COLOR: 1
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: full
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup 3-node Scylla cluster
+        run: |
+          sudo sh -c "echo 2097152 >> /proc/sys/fs/aio-max-nr"
+          docker compose -f test/docker-compose.yml up -d --wait
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Update rust toolchain
+        run: rustup update
+      - name: Print rustc version
+        run: rustc --version
+      - name: Print rustfmt version
+        run: cargo fmt --version
+      - name: Print clippy version
+        run: cargo clippy --version
+      - name: Format check
+        run: cargo fmt --verbose --all -- --check
+      - name: Clippy check
+        run: cargo clippy --verbose --all-targets --all-features
+      - name: Cargo check
+        run: cargo check --verbose --all-targets --all-features
+      - name: Build
+        run: cargo build --verbose --all-targets
+      - name: Install Charybdis Migration Tool
+        run: cargo install --path charybdis-migrate
+      - name: Run Charybdis Migration Tool
+        run: migrate --keyspace charybdis --host 127.0.0.1:9042 --drop-and-replace
+      - name: Run tests
+        run: cargo test --verbose --all-targets
