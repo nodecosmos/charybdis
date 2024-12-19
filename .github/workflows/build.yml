@@ -21,6 +21,10 @@ jobs:
         run: |
           sudo sh -c "echo 2097152 >> /proc/sys/fs/aio-max-nr"
           docker compose -f test/docker-compose.yml up -d --wait
+      - name: Create Keyspace
+        run: |
+          docker exec scylla1 cqlsh 127.0.0.1 -e \
+          "CREATE KEYSPACE charybdis WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2};"
       - name: Cache Dependencies
         uses: actions/cache@v4
         with:

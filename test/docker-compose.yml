@@ -27,14 +27,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 60
-  init-keyspace:
-    image: scylladb/scylla
-    depends_on:
-      scylla1:
-        condition: service_healthy
-    command: [ "cqlsh", "scylla1", "-e", "CREATE KEYSPACE charybdis WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2};" ]
-    networks:
-      - public
   scylla2:
     image: scylladb/scylla
     networks:
