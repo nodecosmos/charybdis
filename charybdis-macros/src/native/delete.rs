@@ -11,18 +11,37 @@ const MAX_DELETE_BY_FUNCTIONS: usize = 3;
 
 /// for 3 keys generate additional function that deletes by partition key & partial clustering key
 /// Example:
-/// ```ignore
+/// ```rust
+/// use charybdis::macros::charybdis_model;
+/// use charybdis::errors::CharybdisError;
+/// use charybdis::types::{Timestamp, Uuid};
+/// use scylla::CachingSession;
+///
 /// #[charybdis_model(
 ///     table_name = users,
 ///     partition_keys = [id],
 ///     clustering_keys = [org_id, created_at],
-///     global_secondary_indexes = [])]
-/// pub struct UserOps {...}
+///     global_secondary_indexes = []
+/// )]
+/// pub struct User {
+///     id: Uuid,
+///     org_id: Uuid,
+///     created_at: Timestamp,
+/// }
+/// impl User {
+///     pub async fn delete_funs(db: &CachingSession) -> Result<(), CharybdisError>  {
+///         let id = Uuid::new_v4();
+///         let org_id = Uuid::new_v4();
+///         let created_at = chrono::Utc::now();
+///
+///         User::delete_by_id(id).execute(db).await?;
+///         User::delete_by_id_and_org_id(id, org_id).execute(db).await?;
+///         User::delete_by_id_and_org_id_and_created_at(id, org_id, created_at).execute(db).await?;
+///
+///         Ok(())
+///     }
+/// }
 /// ```
-/// we would have a functions:
-/// ```ignore
-///  User::delete_by_id_and_org_id(session: &Session, org_id: Uuid) -> Result<Vec<User>, errors::CharybdisError>
-///  User::delete_by_id_and_org_id_and_created_at(session: &Session, org_id: Uuid, created_at: Timestamp) -> Result<Vec<User>, errors::CharybdisError>
 pub(crate) fn delete_by_primary_key_functions(ch_args: &CharybdisMacroArgs, fields: &CharybdisFields) -> TokenStream {
     let table_name = ch_args.table_name();
     let partition_keys_len = fields.partition_key_fields.len();

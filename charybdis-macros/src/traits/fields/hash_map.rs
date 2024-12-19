@@ -41,4 +41,3 @@ impl FieldHashMapString for Vec<Field<'_>> {
         field_attributes.to_string().replace('\n', "")
     }
 }
-

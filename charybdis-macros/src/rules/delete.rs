@@ -2,8 +2,8 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::parse_str;
 
-use charybdis_parser::traits::CharybdisMacroArgs;
 use charybdis_parser::traits::string::ToSnakeCase;
+use charybdis_parser::traits::CharybdisMacroArgs;
 
 pub(crate) fn delete_model_query_rule(struct_name: &Ident, args: &CharybdisMacroArgs) -> TokenStream {
     let macro_name_str: String = format!("delete_{}_query", struct_name.to_string().to_snake_case());

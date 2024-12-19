@@ -10,4 +10,3 @@ mod insert;
 
 mod model_name;
 mod update;
-
