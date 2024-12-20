@@ -10,6 +10,7 @@ networks:
         - subnet: 172.42.0.0/16
 services:
   scylla1:
+    container_name: scylla1
     image: scylladb/scylla
     networks:
       public:
@@ -28,6 +29,7 @@ services:
       timeout: 5s
       retries: 60
   scylla2:
+    container_name: scylla2
     image: scylladb/scylla
     networks:
       public:
@@ -49,6 +51,7 @@ services:
       scylla1:
         condition: service_healthy
   scylla3:
+    container_name: scylla3
     image: scylladb/scylla
     networks:
       public:
