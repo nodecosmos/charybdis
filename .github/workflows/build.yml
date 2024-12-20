@@ -23,7 +23,7 @@ jobs:
           docker compose -f test/docker-compose.yml up -d --wait
       - name: Create Keyspace
         run: |
-          docker exec scylla1 cqlsh 127.0.0.1 -e \
+          docker exec scylla1 cqlsh -e \
           "CREATE KEYSPACE charybdis WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2};"
       - name: Cache Dependencies
         uses: actions/cache@v4
