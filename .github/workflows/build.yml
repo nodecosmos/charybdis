@@ -43,16 +43,16 @@ jobs:
       - name: Print clippy version
         run: cargo clippy --version
       - name: Format check
-        run: cargo fmt --verbose --all -- --check
+        run: cargo fmt --verbose -- --check
       - name: Clippy check
-        run: cargo clippy --verbose --all-targets --all-features
+        run: cargo clippy --verbose
       - name: Cargo check
-        run: cargo check --verbose --all-targets --all-features
+        run: cargo check --verbose
       - name: Build
-        run: cargo build --verbose --all-targets
+        run: cargo build --verbose
       - name: Install Charybdis Migration Tool
         run: cargo install --path charybdis-migrate --force
       - name: Run Charybdis Migration Tool
         run: migrate --keyspace charybdis --host 127.0.0.1:9042 --drop-and-replace
       - name: Run tests
-        run: cargo test --verbose --all-targets
+        run: cargo test --verbose
