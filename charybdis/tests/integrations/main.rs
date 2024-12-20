@@ -1,3 +1,3 @@
 mod common;
-mod models;
+mod model;
 mod query;
