@@ -1,7 +1,7 @@
 use charybdis_parser::schema::{IndexName, SchemaObject};
 
-use crate::model::ModelType;
 use crate::model::runner::INDEX_SUFFIX;
+use crate::model::ModelType;
 
 type FieldName = String;
 type FieldType = String;
