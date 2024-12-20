@@ -7,7 +7,7 @@ welcomed!
 [![License](https://img.shields.io/crates/l/charybdis)]()
 [![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)
 [![Discord](https://img.shields.io/discord/1247167793045176461?label=discord-server)](https://discord.gg/enDd57nNen)
-
+![Build](https://github.com/nodecosmos/charybdis/actions/workflows/build.yml/badge.svg)
 <p>
 <img src="https://www.scylladb.com/wp-content/uploads/scylla-opensource-1.png" width="150" alt="scylla_logo">
 <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Cassandra_logo.svg" width="150" alt="cassandra_logo">

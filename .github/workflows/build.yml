@@ -51,7 +51,7 @@ jobs:
       - name: Build
         run: cargo build --verbose --all-targets
       - name: Install Charybdis Migration Tool
-        run: cargo install --path charybdis-migrate
+        run: cargo install --path charybdis-migrate --force
       - name: Run Charybdis Migration Tool
         run: migrate --keyspace charybdis --host 127.0.0.1:9042 --drop-and-replace
       - name: Run tests
