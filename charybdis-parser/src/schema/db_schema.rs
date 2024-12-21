@@ -113,8 +113,8 @@ impl DbSchema {
             SELECT
                 column_name, type
             FROM system_schema.columns
-            WHERE keyspace_name = ?
-            AND table_name = ?
+            WHERE keyspace_name = ? 
+                AND table_name = ?
             ALLOW FILTERING"#;
 
         let result = session
@@ -143,8 +143,8 @@ impl DbSchema {
             SELECT column_name
             FROM system_schema.columns
             WHERE keyspace_name = ?
-            AND table_name = ?
-            AND kind = 'partition_key'
+                AND table_name = ?
+                AND kind = 'partition_key'
             ALLOW FILTERING"#;
 
         let result = session
@@ -174,8 +174,8 @@ impl DbSchema {
             SELECT column_name
             FROM system_schema.columns
             WHERE keyspace_name = ?
-            AND table_name = ?
-            AND kind = 'clustering'
+                AND table_name = ?
+                AND kind = 'clustering'
             ALLOW FILTERING"#;
 
         let result = session
@@ -205,7 +205,7 @@ impl DbSchema {
             SELECT index_name, options
             FROM system_schema.indexes
             WHERE keyspace_name = ?
-            AND table_name = ?
+                AND table_name = ?
             ALLOW FILTERING"#;
 
         let result = session
@@ -294,7 +294,7 @@ impl DbSchema {
             SELECT column_name, type
             FROM system_schema.columns
             WHERE keyspace_name = ?
-            AND table_name = ?
+                AND table_name = ?
             ALLOW FILTERING"#;
 
         let result = session
@@ -322,8 +322,8 @@ impl DbSchema {
             SELECT column_name
             FROM system_schema.columns
             WHERE keyspace_name = ?
-            AND table_name = ?
-            AND kind = 'partition_key'
+                AND table_name = ?
+                AND kind = 'partition_key'
             ALLOW FILTERING"#;
 
         let result = session
@@ -352,8 +352,8 @@ impl DbSchema {
             SELECT column_name
             FROM system_schema.columns
             WHERE keyspace_name = ?
-            AND table_name = ?
-            AND kind = 'clustering'
+                AND table_name = ?
+                AND kind = 'clustering'
             ALLOW FILTERING"#;
 
         let result = session

@@ -1,0 +1,409 @@
+{
+  "tables": {
+    "users": {
+      "fields": [
+        [
+          "address",
+          "address",
+          false
+        ],
+        [
+          "bio",
+          "text",
+          false
+        ],
+        [
+          "email",
+          "text",
+          false
+        ],
+        [
+          "first_name",
+          "text",
+          false
+        ],
+        [
+          "id",
+          "uuid",
+          false
+        ],
+        [
+          "is_confirmed",
+          "boolean",
+          false
+        ],
+        [
+          "last_name",
+          "text",
+          false
+        ],
+        [
+          "password",
+          "text",
+          false
+        ],
+        [
+          "token",
+          "text",
+          false
+        ],
+        [
+          "username",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "password",
+        "last_name",
+        "email",
+        "is_confirmed",
+        "address",
+        "username",
+        "bio",
+        "id",
+        "token",
+        "first_name"
+      ],
+      "types_by_name": {
+        "password": "text",
+        "token": "text",
+        "id": "uuid",
+        "address": "address",
+        "is_confirmed": "boolean",
+        "bio": "text",
+        "last_name": "text",
+        "username": "text",
+        "email": "text",
+        "first_name": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "id"
+      ],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [
+        [
+          "users_username_idx",
+          "username"
+        ]
+      ],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "posts": {
+      "fields": [
+        [
+          "author_id",
+          "uuid",
+          false
+        ],
+        [
+          "category_id",
+          "uuid",
+          false
+        ],
+        [
+          "content",
+          "text",
+          false
+        ],
+        [
+          "order_idx",
+          "int",
+          false
+        ],
+        [
+          "title",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "category_id",
+        "title",
+        "author_id",
+        "content",
+        "order_idx"
+      ],
+      "types_by_name": {
+        "author_id": "uuid",
+        "title": "text",
+        "content": "text",
+        "order_idx": "int",
+        "category_id": "uuid"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "category_id"
+      ],
+      "clustering_keys": [
+        "order_idx",
+        "title"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [
+        [
+          "posts_author_id_idx",
+          "author_id"
+        ]
+      ],
+      "local_secondary_indexes": [
+        [
+          "posts_category_id_title_idx",
+          "title"
+        ]
+      ],
+      "table_options": null
+    }
+  },
+  "udts": {
+    "address": {
+      "fields": [
+        [
+          "street",
+          "text",
+          false
+        ],
+        [
+          "city",
+          "text",
+          false
+        ],
+        [
+          "state",
+          "text",
+          false
+        ],
+        [
+          "zip",
+          "text",
+          false
+        ],
+        [
+          "country",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "country",
+        "state",
+        "street",
+        "zip",
+        "city"
+      ],
+      "types_by_name": {
+        "street": "text",
+        "state": "text",
+        "zip": "text",
+        "city": "text",
+        "country": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    }
+  },
+  "materialized_views": {
+    "posts_category_id_title_idx_index": {
+      "fields": [
+        [
+          "category_id",
+          "uuid",
+          false
+        ],
+        [
+          "order_idx",
+          "int",
+          false
+        ],
+        [
+          "title",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "title",
+        "order_idx",
+        "category_id"
+      ],
+      "types_by_name": {
+        "order_idx": "int",
+        "title": "text",
+        "category_id": "uuid"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "category_id"
+      ],
+      "clustering_keys": [
+        "order_idx",
+        "title"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "user_by_email": {
+      "fields": [
+        [
+          "email",
+          "text",
+          false
+        ],
+        [
+          "id",
+          "uuid",
+          false
+        ],
+        [
+          "username",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "email",
+        "id",
+        "username"
+      ],
+      "types_by_name": {
+        "id": "uuid",
+        "username": "text",
+        "email": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "email"
+      ],
+      "clustering_keys": [
+        "id"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "users_username_idx_index": {
+      "fields": [
+        [
+          "id",
+          "uuid",
+          false
+        ],
+        [
+          "idx_token",
+          "bigint",
+          false
+        ],
+        [
+          "username",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "username",
+        "id",
+        "idx_token"
+      ],
+      "types_by_name": {
+        "idx_token": "bigint",
+        "username": "text",
+        "id": "uuid"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "username"
+      ],
+      "clustering_keys": [
+        "id",
+        "idx_token"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "posts_author_id_idx_index": {
+      "fields": [
+        [
+          "author_id",
+          "uuid",
+          false
+        ],
+        [
+          "category_id",
+          "uuid",
+          false
+        ],
+        [
+          "idx_token",
+          "bigint",
+          false
+        ],
+        [
+          "order_idx",
+          "int",
+          false
+        ],
+        [
+          "title",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "author_id",
+        "order_idx",
+        "title",
+        "idx_token",
+        "category_id"
+      ],
+      "types_by_name": {
+        "category_id": "uuid",
+        "idx_token": "bigint",
+        "title": "text",
+        "order_idx": "int",
+        "author_id": "uuid"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "author_id"
+      ],
+      "clustering_keys": [
+        "category_id",
+        "idx_token",
+        "order_idx",
+        "title"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    }
+  },
+  "keyspace_name": "charybdis"
+}
