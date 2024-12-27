@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 
 use darling::FromAttributes;
 use syn::spanned::Spanned;
@@ -44,6 +45,9 @@ pub enum CqlType {
 pub struct FieldAttributes {
     #[darling(default)]
     pub ignore: Option<bool>,
+
+    #[darling(default)]
+    pub column_type: Option<String>,
 }
 
 pub struct Field<'a> {
@@ -52,6 +56,7 @@ pub struct Field<'a> {
     pub ty: Type,
     pub ty_path: syn::TypePath,
     pub outer_type: CqlType,
+    pub column_type_override: Option<String>,
     pub span: proc_macro2::Span,
     pub attrs: &'a Vec<syn::Attribute>,
     pub ignore: bool,
@@ -107,6 +112,11 @@ impl<'a> Field<'a> {
         FieldAttributes::from_attributes(&field.attrs)
             .map(|char_attrs| {
                 let ignore = char_attrs.ignore.unwrap_or(false);
+
+                let column_type = char_attrs.column_type.clone().map(
+                    |tname| CqlType::from_str(tname.as_str()).unwrap()
+                ).unwrap_or_else(|| Field::outer_type(&field.ty, ignore));
+
                 let ident = field.ident.clone().unwrap();
 
                 Field {
@@ -117,7 +127,8 @@ impl<'a> Field<'a> {
                         Type::Path(type_path) => type_path.clone(),
                         _ => panic!("Only type path is supported!"),
                     },
-                    outer_type: Field::outer_type(&field.ty, ignore),
+                    outer_type: column_type,
+                    column_type_override: char_attrs.column_type.clone(),
                     span: field.span(),
                     attrs: &field.attrs,
                     ignore,
