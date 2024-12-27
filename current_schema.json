@@ -43,7 +43,7 @@
           false
         ],
         [
-          "token",
+          "user_extra_data",
           "text",
           false
         ],
@@ -54,28 +54,28 @@
         ]
       ],
       "field_names": [
-        "password",
-        "last_name",
+        "id",
+        "user_extra_data",
+        "first_name",
         "email",
-        "is_confirmed",
-        "address",
         "username",
         "bio",
-        "id",
-        "token",
-        "first_name"
+        "address",
+        "is_confirmed",
+        "last_name",
+        "password"
       ],
       "types_by_name": {
-        "password": "text",
-        "token": "text",
-        "id": "uuid",
+        "last_name": "text",
+        "user_extra_data": "text",
+        "username": "text",
+        "first_name": "text",
         "address": "address",
         "is_confirmed": "boolean",
+        "password": "text",
         "bio": "text",
-        "last_name": "text",
-        "username": "text",
         "email": "text",
-        "first_name": "text"
+        "id": "uuid"
       },
       "type_name": "",
       "table_name": "",
@@ -91,6 +91,32 @@
           "username"
         ]
       ],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "extab": {
+      "fields": [
+        [
+          "a",
+          "int",
+          false
+        ]
+      ],
+      "field_names": [
+        "a"
+      ],
+      "types_by_name": {
+        "a": "int"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "a"
+      ],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
       "local_secondary_indexes": [],
       "table_options": null
     },
@@ -123,18 +149,18 @@
         ]
       ],
       "field_names": [
-        "category_id",
         "title",
-        "author_id",
         "content",
+        "author_id",
+        "category_id",
         "order_idx"
       ],
       "types_by_name": {
-        "author_id": "uuid",
-        "title": "text",
         "content": "text",
+        "category_id": "uuid",
+        "author_id": "uuid",
         "order_idx": "int",
-        "category_id": "uuid"
+        "title": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -189,21 +215,28 @@
           "country",
           "text",
           false
+        ],
+        [
+          "addr_type",
+          "tinyint",
+          false
         ]
       ],
       "field_names": [
+        "zip",
+        "street",
+        "city",
         "country",
         "state",
-        "street",
-        "zip",
-        "city"
+        "addr_type"
       ],
       "types_by_name": {
         "street": "text",
-        "state": "text",
+        "addr_type": "tinyint",
         "zip": "text",
         "city": "text",
-        "country": "text"
+        "country": "text",
+        "state": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -217,6 +250,108 @@
     }
   },
   "materialized_views": {
+    "posts_author_id_idx_index": {
+      "fields": [
+        [
+          "author_id",
+          "uuid",
+          false
+        ],
+        [
+          "category_id",
+          "uuid",
+          false
+        ],
+        [
+          "idx_token",
+          "bigint",
+          false
+        ],
+        [
+          "order_idx",
+          "int",
+          false
+        ],
+        [
+          "title",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "author_id",
+        "category_id",
+        "idx_token",
+        "title",
+        "order_idx"
+      ],
+      "types_by_name": {
+        "author_id": "uuid",
+        "idx_token": "bigint",
+        "order_idx": "int",
+        "title": "text",
+        "category_id": "uuid"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "author_id"
+      ],
+      "clustering_keys": [
+        "category_id",
+        "idx_token",
+        "order_idx",
+        "title"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "users_username_idx_index": {
+      "fields": [
+        [
+          "id",
+          "uuid",
+          false
+        ],
+        [
+          "idx_token",
+          "bigint",
+          false
+        ],
+        [
+          "username",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "id",
+        "idx_token",
+        "username"
+      ],
+      "types_by_name": {
+        "idx_token": "bigint",
+        "username": "text",
+        "id": "uuid"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "username"
+      ],
+      "clustering_keys": [
+        "id",
+        "idx_token"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
     "posts_category_id_title_idx_index": {
       "fields": [
         [
@@ -236,14 +371,14 @@
         ]
       ],
       "field_names": [
-        "title",
+        "category_id",
         "order_idx",
-        "category_id"
+        "title"
       ],
       "types_by_name": {
         "order_idx": "int",
-        "title": "text",
-        "category_id": "uuid"
+        "category_id": "uuid",
+        "title": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -284,9 +419,9 @@
         "username"
       ],
       "types_by_name": {
-        "id": "uuid",
         "username": "text",
-        "email": "text"
+        "email": "text",
+        "id": "uuid"
       },
       "type_name": "",
       "table_name": "",
@@ -296,108 +431,6 @@
       ],
       "clustering_keys": [
         "id"
-      ],
-      "static_columns": [],
-      "global_secondary_indexes": [],
-      "local_secondary_indexes": [],
-      "table_options": null
-    },
-    "users_username_idx_index": {
-      "fields": [
-        [
-          "id",
-          "uuid",
-          false
-        ],
-        [
-          "idx_token",
-          "bigint",
-          false
-        ],
-        [
-          "username",
-          "text",
-          false
-        ]
-      ],
-      "field_names": [
-        "username",
-        "id",
-        "idx_token"
-      ],
-      "types_by_name": {
-        "idx_token": "bigint",
-        "username": "text",
-        "id": "uuid"
-      },
-      "type_name": "",
-      "table_name": "",
-      "base_table": "",
-      "partition_keys": [
-        "username"
-      ],
-      "clustering_keys": [
-        "id",
-        "idx_token"
-      ],
-      "static_columns": [],
-      "global_secondary_indexes": [],
-      "local_secondary_indexes": [],
-      "table_options": null
-    },
-    "posts_author_id_idx_index": {
-      "fields": [
-        [
-          "author_id",
-          "uuid",
-          false
-        ],
-        [
-          "category_id",
-          "uuid",
-          false
-        ],
-        [
-          "idx_token",
-          "bigint",
-          false
-        ],
-        [
-          "order_idx",
-          "int",
-          false
-        ],
-        [
-          "title",
-          "text",
-          false
-        ]
-      ],
-      "field_names": [
-        "author_id",
-        "order_idx",
-        "title",
-        "idx_token",
-        "category_id"
-      ],
-      "types_by_name": {
-        "category_id": "uuid",
-        "idx_token": "bigint",
-        "title": "text",
-        "order_idx": "int",
-        "author_id": "uuid"
-      },
-      "type_name": "",
-      "table_name": "",
-      "base_table": "",
-      "partition_keys": [
-        "author_id"
-      ],
-      "clustering_keys": [
-        "category_id",
-        "idx_token",
-        "order_idx",
-        "title"
       ],
       "static_columns": [],
       "global_secondary_indexes": [],
