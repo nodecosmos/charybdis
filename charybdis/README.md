@@ -827,3 +827,29 @@ pub struct User {
 So field `organization` will be ignored in all operations and
 default value will be used when deserializing from other data sources.
 It can be used to hold data that is not persisted in database.
+
+## Custom Fields
+
+Any rust type can be used directly in table or UDT definition.
+User must choose a ScyllaDB backing type (such as "TinyInt" or "Text")
+and implement `SerializeValue` and `DeserializeValue` traits:
+
+
+```rust
+#[charybdis_model(...)]
+pub struct User {
+    id: Uuid,
+    #[charybdis(column_type = "Text")]
+    extra_data: CustomField,
+}
+
+impl<'frame, 'metadata> DeserializeValue<'frame, 'metadata> for CustomField {
+    ...
+}
+
+impl SerializeValue for CustomField {
+    ...
+}
+```
+
+See `custom_field.rs` integration test for examples using int and text encoding.
