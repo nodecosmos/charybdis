@@ -33,6 +33,47 @@ pub struct CodeSchema {
     pub materialized_views: SchemaObjects,
 }
 
+
+/// List all rust files under all /src dirs under the project dir.
+fn _list_rust_source_files(project_root: &PathBuf) -> Vec<PathBuf> {
+    // look for src/ dirs max 4 levels down, to avoid stack overflow when we hit target/
+    let mut src_dirs = vec![];
+    let mut it = WalkDir::new(project_root).max_depth(4).into_iter();
+    loop {
+        let entry = match it.next() {
+            None => break,
+            Some(Err(err)) => panic!("ERROR: {}", err),
+            Some(Ok(entry)) => entry,
+        };
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        if path.ends_with("target") {
+            it.skip_current_dir();
+            continue;
+        }
+        if path.ends_with("src") {
+            src_dirs.push(path.to_owned());
+            it.skip_current_dir();
+            continue;
+        }
+    }
+
+    let mut src_files = vec![];
+    for src in src_dirs {
+        for entry in WalkDir::new(&src).max_depth(8) {
+            let entry: DirEntry = entry.unwrap();
+            let path = entry.path();
+            if path.is_file() && path.to_str().unwrap().ends_with(".rs") {
+                src_files.push(path.to_owned());
+            }
+        }
+    }
+
+    src_files
+}
+
 impl CodeSchema {
     pub fn new(project_root: &String) -> CodeSchema {
         let mut current_code_schema = CodeSchema {
@@ -48,31 +89,21 @@ impl CodeSchema {
 
     pub fn get_models_from_code(&mut self, project_root: &String) {
         let project_root: PathBuf = PathBuf::from(project_root);
-        for entry in WalkDir::new(project_root) {
-            let entry: DirEntry = entry.unwrap();
+        for entry in _list_rust_source_files(&project_root) {
+            let file_content: String = parser::parse_file_as_string(&entry);
+            let ast: syn::File = syn::parse_file(&file_content)
+                .map_err(|e| {
+                    println!(
+                        "{}\n",
+                        format!("Error parsing file: {}", file_content).bright_red().bold()
+                    );
+                    e
+                })
+                .unwrap();
 
-            if entry.path().is_file() {
-                let path = entry.path().to_str().unwrap();
-
-                if !path.ends_with(".rs") {
-                    continue;
-                }
-
-                let file_content: String = parser::parse_file_as_string(entry.path());
-                let ast: syn::File = syn::parse_file(&file_content)
-                    .map_err(|e| {
-                        println!(
-                            "{}\n",
-                            format!("Error parsing file: {}", file_content).bright_red().bold()
-                        );
-                        e
-                    })
-                    .unwrap();
-
-                self.populate_materialized_views(&ast);
-                self.populate_udts(&ast);
-                self.populate_tables(&ast);
-            }
+            self.populate_materialized_views(&ast);
+            self.populate_udts(&ast);
+            self.populate_tables(&ast);
         }
     }
 
