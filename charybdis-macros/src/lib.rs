@@ -230,7 +230,10 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
 
 #[proc_macro_attribute]
 pub fn charybdis_udt_model(_: TokenStream, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    let mut input = parse_macro_input!(input as DeriveInput);
+
+    CharybdisFields::proxy_charybdis_attrs_to_scylla(&mut input);
+    CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let gen = quote! {
         #[derive(charybdis::macros::scylla::SerializeValue)]
