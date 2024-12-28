@@ -188,21 +188,22 @@ Resulting auto-generated migration query will be:
   Model dropping is not added. If you removed model, you need to drop table manually.
 
 * ### Running migration
-  ```bash
-  cargo install charybdis-migrate
-  
-  migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
-  ```
+    ```bash
+    cargo install charybdis-migrate
+    
+    migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
+    ```
+    * ⚠️ Always run migrations from desired directories ('src' or 'test'), to avoid scanning
+      'target' or other large directories.
 
-  ⚠️ If you are working with **existing** datasets, before running migration you need to make sure
-  that your **model
-  **
-  definitions structure matches the database in respect to table names, column names, column types,
-  partition keys,
-  clustering keys and secondary indexes so you don't alter structure accidentally.
-  If structure is matched, it will not run any migrations. As mentioned above,
-  in case there is no model definition for table, it will **not** drop it. In future,
-  we will add `modelize` command that will generate `src/models` files from existing data source.
+    * ⚠️ If you are working with **existing** datasets, before running migration you need to make
+      sure
+      that your **model** definitions structure matches the database in respect to table names,
+      column names, column types,partition keys,clustering keys and secondary indexes so you don't
+      alter structure accidentally. If structure is matched, it will not run any migrations. As
+      mentioned above, in case there is no model definition for table, it will **not** drop it. In
+      future, we will add `modelize` command that will generate `src/models` files from existing
+      data source.
 
 * ### Programmatically running migrations
   Within testing or development environment, we can trigger migrations programmatically:
