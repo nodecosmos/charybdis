@@ -20,3 +20,6 @@ walkdir = "2.5.0"
 darling = "0.20.8"
 strum = "0.26"
 strum_macros = "0.26"
+
+[lints]
+workspace = true

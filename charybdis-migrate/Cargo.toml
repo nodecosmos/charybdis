@@ -25,3 +25,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "migrate"
 path = "src/migrate.rs"
+
+[lints]
+workspace = true

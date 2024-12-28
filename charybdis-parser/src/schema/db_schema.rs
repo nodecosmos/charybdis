@@ -317,7 +317,7 @@ impl DbSchema {
         &mut self,
         view_name: &String,
         session: &Session,
-    ) -> Result<(), DbSchemaParserError> {
+    ) -> Result<(), crate::errors::DbSchemaParserError> {
         let cql = r#"
             SELECT column_name
             FROM system_schema.columns

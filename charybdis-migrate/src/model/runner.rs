@@ -343,7 +343,7 @@ impl<'a> ModelRunner<'a> {
                 return None;
             }
 
-            Some(alter_table_options.to_string())
+            Some(alter_table_options)
         } else {
             None
         }

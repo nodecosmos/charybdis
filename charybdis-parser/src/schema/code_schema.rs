@@ -80,9 +80,8 @@ impl CodeSchema {
         let schema_objects: Vec<SchemaObject> = parser::parse_charybdis_model_def(ast, ModelMacro::MaterializedView);
 
         schema_objects.into_iter().for_each(|schema_object| {
-            let table_name = schema_object.table_name.clone();
-
-            self.materialized_views.insert(table_name, schema_object);
+            self.materialized_views
+                .insert(schema_object.table_name.clone(), schema_object);
         });
     }
 
@@ -90,9 +89,7 @@ impl CodeSchema {
         let schema_objects: Vec<SchemaObject> = parser::parse_charybdis_model_def(ast, ModelMacro::Udt);
 
         schema_objects.into_iter().for_each(|schema_object| {
-            let type_name = schema_object.type_name.to_lowercase().clone();
-
-            self.udts.insert(type_name, schema_object);
+            self.udts.insert(schema_object.type_name.to_lowercase(), schema_object);
         });
     }
 
@@ -100,9 +97,7 @@ impl CodeSchema {
         let schema_object: Vec<SchemaObject> = parser::parse_charybdis_model_def(ast, ModelMacro::Table);
 
         schema_object.into_iter().for_each(|schema_object| {
-            let table_name = schema_object.table_name.clone();
-
-            self.tables.insert(table_name, schema_object);
+            self.tables.insert(schema_object.table_name.clone(), schema_object);
         });
     }
 }

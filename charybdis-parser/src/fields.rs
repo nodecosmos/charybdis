@@ -111,7 +111,7 @@ impl<'a> Field<'a> {
 
                 Field {
                     name: ident.to_string(),
-                    ident: ident.clone(),
+                    ident,
                     ty: field.ty.clone(),
                     ty_path: match &field.ty {
                         Type::Path(type_path) => type_path.clone(),

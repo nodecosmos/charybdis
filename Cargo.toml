@@ -6,3 +6,6 @@ members = [
     "charybdis-macros",
     "charybdis-parser",
 ]
+
+[workspace.lints.clippy]
+redundant_clone = "deny"

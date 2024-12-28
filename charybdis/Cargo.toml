@@ -27,3 +27,6 @@ migrate = ["charybdis-migrate"]
 
 [dev-dependencies]
 tokio = "1.42.0"
+
+[lints]
+workspace = true

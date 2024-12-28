@@ -21,3 +21,6 @@ quote = "1.0.36"
 charybdis = "0.7.2"
 scylla = "0.15.1"
 chrono = "0.4.38"
+
+[lints]
+workspace = true
