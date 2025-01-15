@@ -69,9 +69,8 @@
 
 ## Charybdis Models
 
-Before getting started, ensure that the scylla dependency is included in your Cargo.toml file. The
-version of scylla should match the one used by the charybdis crate. The latest version available is
-0.15.1.
+Before getting started, ensure that the scylla dependency is included in your `Cargo.toml` file. The
+version of scylla should match the one used by the charybdis crate.
 
 ```toml
 [dependencies]
