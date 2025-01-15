@@ -69,6 +69,10 @@
 
 ## Charybdis Models
 
+Before starting, please make sure you have `scylla` crate in your `Cargo.toml`. It should match
+the version of scylla used within `charybdis` crate. Latest one is `0.15.1`.
+
+```toml
 ### Define Tables
 
   ```rust
