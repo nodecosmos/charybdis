@@ -7,8 +7,8 @@ use log::{error, warn};
 use serde_json::json;
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum AppError {
-    // 400 | 500
     CharybdisError(CharybdisError),
     SerdeError(serde_json::Error),
     InternalServerError(String),
