@@ -21,10 +21,14 @@ jobs:
         run: |
           sudo sh -c "echo 2097152 >> /proc/sys/fs/aio-max-nr"
           docker compose -f docker/docker-compose.yml up -d --wait
-      - name: Create Keyspace
+      - name: Create Charybdis Keyspace
         run: |
           docker exec scylla1 cqlsh -e \
           "CREATE KEYSPACE charybdis WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2};"
+      - name: Create Reddit Example Keyspace
+        run: |
+          docker exec scylla1 cqlsh -e \
+          "CREATE KEYSPACE reddit_example WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2};"
       - name: Cache Dependencies
         uses: actions/cache@v4
         with:
@@ -53,6 +57,12 @@ jobs:
       - name: Install Charybdis Migration Tool
         run: cargo install --path charybdis-migrate --force
       - name: Run Charybdis Migration Tool
-        run: migrate --keyspace charybdis --host 127.0.0.1:9042 --drop-and-replace
+        run: |
+          cd charybdis
+          migrate --keyspace charybdis --host 127.0.0.1:9042 --drop-and-replace
+          cd ..
+          cd examples/actix-web/reddit-api/
+          migrate --keyspace reddit_example --host 127.0.0.1:9042 --drop-and-replace
+          cd ../../..
       - name: Run tests
         run: cargo test --verbose

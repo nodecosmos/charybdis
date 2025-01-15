@@ -34,21 +34,21 @@ pub struct CodeSchema {
 }
 
 impl CodeSchema {
-    pub fn new(project_root: &String) -> CodeSchema {
+    pub fn new(current_dir: &String) -> CodeSchema {
         let mut current_code_schema = CodeSchema {
             tables: SchemaObjects::new(),
             udts: SchemaObjects::new(),
             materialized_views: SchemaObjects::new(),
         };
 
-        current_code_schema.get_models_from_code(project_root);
+        current_code_schema.get_models_from_code(current_dir);
 
         current_code_schema
     }
 
-    pub fn get_models_from_code(&mut self, project_root: &String) {
-        let project_root: PathBuf = PathBuf::from(project_root);
-        let walker = WalkDir::new(&project_root)
+    pub fn get_models_from_code(&mut self, current_dir: &String) {
+        let current_dir: PathBuf = PathBuf::from(current_dir);
+        let walker = WalkDir::new(&current_dir)
             .into_iter()
             .filter_entry(|e| !(e.file_type().is_dir() && e.file_name() == "target"));
 

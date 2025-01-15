@@ -37,7 +37,7 @@ impl<'a> Migration<'a> {
     pub async fn write_schema_to_json(&self) {
         DbSchema::new(self.session, self.args.keyspace.clone())
             .await
-            .write_schema_to_json(&self.args.project_root);
+            .write_schema_to_json(&self.args.current_dir);
     }
 
     async fn run_udts(&self) {

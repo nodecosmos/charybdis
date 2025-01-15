@@ -43,8 +43,8 @@ pub struct Args {
     #[arg(long, default_value = None)]
     pub key: Option<String>,
 
-    #[arg(skip = get_project_root())]
-    pub project_root: String,
+    #[arg(skip = get_current_dir())]
+    pub current_dir: String,
 }
 
 impl Default for Args {
@@ -60,21 +60,13 @@ impl Default for Args {
             ca: None,
             cert: None,
             key: None,
-            project_root: get_project_root(),
+            current_dir: get_current_dir(),
         }
     }
 }
 
-pub(crate) fn get_project_root() -> String {
+pub(crate) fn get_current_dir() -> String {
     let path = env::current_dir().expect("Failed to find project root: Could not get current directory");
-    let path_ancestors = path.as_path().ancestors();
 
-    for p in path_ancestors {
-        let has_cargo = read_dir(p).unwrap().any(|p| p.unwrap().file_name() == *"Cargo.lock");
-        if has_cargo {
-            return PathBuf::from(p).to_str().unwrap().to_string();
-        }
-    }
-
-    panic!("Failed to find project root: Ran out of places to find Cargo.toml");
+    PathBuf::from(path).to_str().unwrap().to_string()
 }

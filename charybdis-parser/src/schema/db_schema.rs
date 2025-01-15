@@ -317,7 +317,7 @@ impl DbSchema {
         &mut self,
         view_name: &String,
         session: &Session,
-    ) -> Result<(), crate::errors::DbSchemaParserError> {
+    ) -> Result<(), DbSchemaParserError> {
         let cql = r#"
             SELECT column_name
             FROM system_schema.columns
@@ -379,10 +379,10 @@ impl DbSchema {
         })
     }
 
-    pub fn write_schema_to_json(&self, project_root: &str) {
+    pub fn write_schema_to_json(&self, current_dir: &str) {
         let json = self.get_current_schema_as_json();
 
-        let path = project_root.to_string() + "/current_schema.json";
+        let path = current_dir.to_string() + "/current_schema.json";
 
         std::fs::write(path, json).unwrap_or_else(|e| {
             panic!("Error writing schema to json: {}", e);

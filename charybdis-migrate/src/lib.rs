@@ -34,7 +34,7 @@ impl MigrationBuilder {
         }
 
         let current_db_schema = DbSchema::new(session, self.args.keyspace.clone()).await;
-        let current_code_schema = CodeSchema::new(&self.args.project_root);
+        let current_code_schema = CodeSchema::new(&self.args.current_dir);
 
         let migration = Migration::new(current_db_schema, current_code_schema, session, self.args);
 
@@ -46,8 +46,8 @@ impl MigrationBuilder {
         self
     }
 
-    pub fn project_root(mut self, project_root: String) -> Self {
-        self.args.project_root = project_root;
+    pub fn current_dir(mut self, current_dir: String) -> Self {
+        self.args.current_dir = current_dir;
         self
     }
 

@@ -3,7 +3,7 @@ use crate::models::udts::Profile;
 use charybdis::callbacks::Callbacks;
 use charybdis::macros::charybdis_model;
 use charybdis::scylla::CachingSession;
-use charybdis::types::{Text, Timestamp, Uuid};
+use charybdis::types::{Boolean, Text, Timestamp, Uuid};
 use serde::{Deserialize, Serialize};
 
 #[charybdis_model(
@@ -11,6 +11,9 @@ use serde::{Deserialize, Serialize};
     partition_keys = [community_id],
     clustering_keys = [created_at, id],
     global_secondary_indexes = [],
+    table_options = "
+        CLUSTERING ORDER BY (created_at DESC)
+    "
 )]
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -24,7 +27,7 @@ pub struct Post {
     pub updated_at: Timestamp,
     pub creator_id: Uuid,
     pub creator: Profile,
-    pub is_archived: bool,
+    pub is_archived: Boolean,
 }
 
 impl Callbacks for Post {
