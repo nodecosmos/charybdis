@@ -20,7 +20,7 @@ jobs:
       - name: Setup 3-node Scylla cluster
         run: |
           sudo sh -c "echo 2097152 >> /proc/sys/fs/aio-max-nr"
-          docker compose -f test/docker-compose.yml up -d --wait
+          docker compose -f docker/docker-compose.yml up -d --wait
       - name: Create Keyspace
         run: |
           docker exec scylla1 cqlsh -e \

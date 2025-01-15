@@ -48,7 +48,12 @@ impl CodeSchema {
 
     pub fn get_models_from_code(&mut self, project_root: &String) {
         let project_root: PathBuf = PathBuf::from(project_root);
-        for entry in WalkDir::new(project_root) {
+        let walker = WalkDir::new(&project_root)
+            .into_iter()
+            .filter_entry(|e| !(e.file_type().is_dir() && e.file_name() == "target"));
+
+        for entry in walker {
+            // ignore target directory
             let entry: DirEntry = entry.unwrap();
 
             if entry.path().is_file() {

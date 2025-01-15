@@ -195,6 +195,8 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let expanded = quote! {
+        use charybdis::scylla::serialize::SerializationError;
+
         #[derive(charybdis::macros::scylla::SerializeRow)]
         #[derive(charybdis::macros::scylla::DeserializeRow)]
         #input

@@ -1,0 +1,16 @@
+[package]
+name = "reddit-sample"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.42.0", features = ["rt-multi-thread"] }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
+actix-web = { version = "4.9.0", features = ["cookies"] }
+charybdis = { version = "0.7.11", features = ["migrate"] }
+log = "0.4.20"
+scylla = { version = "0.15.1" }
+chrono = "0.4.39"
+actix-http = "3.9.0"
+futures = "0.3.31"

@@ -217,6 +217,12 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         self
     }
 
+    pub fn append_insert_owned(&mut self, model: M) -> &mut Self {
+        self.append_query_to_batch(M::INSERT_QUERY);
+        self.values.push(QueryValue::ModelOwned(model));
+        self
+    }
+
     pub fn append_inserts(&mut self, iter: &'a [M]) -> &mut Self {
         for model in iter {
             self.append_insert(model);
@@ -243,6 +249,12 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
         self
     }
 
+    pub fn append_update_owned(&mut self, model: M) -> &mut Self {
+        self.append_query_to_batch(M::UPDATE_QUERY);
+        self.values.push(QueryValue::ModelOwned(model));
+        self
+    }
+
     pub fn append_updates(&mut self, iter: &'a [M]) -> &mut Self {
         for model in iter {
             self.append_update(model);
@@ -251,6 +263,12 @@ impl<'a, Val: SerializeRow, M: Model> CharybdisModelBatch<'a, Val, M> {
     }
 
     pub fn append_delete(&mut self, model: &M) -> &mut Self {
+        self.append_query_to_batch(M::DELETE_QUERY);
+        self.values.push(QueryValue::PrimaryKey(model.primary_key_values()));
+        self
+    }
+
+    pub fn append_delete_owned(&mut self, model: M) -> &mut Self {
         self.append_query_to_batch(M::DELETE_QUERY);
         self.values.push(QueryValue::PrimaryKey(model.primary_key_values()));
         self

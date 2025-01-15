@@ -1,8 +1,5 @@
 # Rust ORM for ScyllaDB and Apache Cassandra
 
-⚠️ This project is currently in an early stage of development. Feedback and contributions are
-welcomed!
-
 [![Crates.io](https://img.shields.io/crates/v/charybdis)](https://crates.io/crates/charybdis)
 [![License](https://img.shields.io/crates/l/charybdis)]()
 [![Docs.rs](https://docs.rs/charybdis/badge.svg)](https://docs.rs/charybdis)

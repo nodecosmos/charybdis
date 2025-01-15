@@ -1,7 +1,7 @@
 [package]
 name = "charybdis-migrate"
 rust-version = "1.75.0"
-version = "0.7.10"
+version = "0.7.11"
 edition = "2021"
 description = "Automatic Migration Tool for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"
@@ -9,7 +9,7 @@ license = "MIT"
 categories = ["database"]
 
 [dependencies]
-charybdis_parser = { version = "0.7.10", path = "../charybdis-parser" }
+charybdis_parser = { version = "0.7.11", path = "../charybdis-parser" }
 scylla = { version = "0.15.1", features = ["ssl"] }
 tokio = { version = "1.38.0", features = ["full"] }
 colored = "2.1.0"

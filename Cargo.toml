@@ -5,6 +5,7 @@ members = [
     "charybdis",
     "charybdis-macros",
     "charybdis-parser",
+    "examples/actix-web/reddit-api",
 ]
 
 [workspace.lints.clippy]

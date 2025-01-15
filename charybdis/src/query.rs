@@ -193,6 +193,7 @@ pub enum QueryValue<'a, Val: SerializeRow, M: BaseModel> {
     PrimaryKey(M::PrimaryKey),
     PartitionKey(M::PartitionKey),
     Model(&'a M),
+    ModelOwned(M),
     #[default]
     Empty,
 }
@@ -205,6 +206,7 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
             QueryValue::PrimaryKey(val) => val.serialize(ctx, writer),
             QueryValue::PartitionKey(val) => val.serialize(ctx, writer),
             QueryValue::Model(val) => val.serialize(ctx, writer),
+            QueryValue::ModelOwned(val) => val.serialize(ctx, writer),
             QueryValue::Empty => Ok(()),
         }
     }
@@ -216,6 +218,7 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
             QueryValue::PrimaryKey(val) => val.is_empty(),
             QueryValue::PartitionKey(val) => val.is_empty(),
             QueryValue::Model(val) => val.is_empty(),
+            QueryValue::ModelOwned(val) => val.is_empty(),
             QueryValue::Empty => true,
         }
     }
