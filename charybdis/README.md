@@ -69,13 +69,19 @@
 
 ## Charybdis Models
 
-Before starting, please make sure you have `scylla` crate in your `Cargo.toml`. It should match
-the version of scylla used within `charybdis` crate. Latest one is `0.15.1`.
+Before getting started, ensure that the scylla dependency is included in your Cargo.toml file. The
+version of scylla should match the one used by the charybdis crate. The latest version available is
+0.15.1.
 
 ```toml
+[dependencies]
+scylla = "0.15.1"
+charybdis = "0.7.11"
+```
+
 ### Define Tables
 
-  ```rust
+```rust
   use charybdis::macros::charybdis_model;
   use charybdis::types::{Text, Timestamp, Uuid};
   
@@ -95,7 +101,7 @@ the version of scylla used within `charybdis` crate. Latest one is `0.15.1`.
       pub updated_at: Timestamp,
       pub address: Address,
   }
-  ```
+```
 
 ### Define UDT
 
