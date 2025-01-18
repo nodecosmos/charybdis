@@ -337,7 +337,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
     c.bench_function("ORM Update", |b| {
         b.iter(|| {
             rt.block_on(async {
-                updated_user.clone().update().execute(&session).await.unwrap();
+                updated_user.update().execute(&session).await.unwrap();
             });
         });
     });
