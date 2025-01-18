@@ -291,7 +291,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
 
                 let res = res.into_rows_result().unwrap();
 
-                res.first_row::<BenchUser>().unwrap();
+                res.first_row::<(Uuid, &str, &str, Timestamp)>().unwrap();
             });
         });
     });
