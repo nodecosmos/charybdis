@@ -309,6 +309,14 @@ impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor<M>> CharybdisQuery<'
         self
     }
 
+    pub fn query_string(&self) -> &'static str {
+        self.query_string
+    }
+
+    pub fn get_values(&self) -> &QueryValue<'a, Val, M> {
+        &self.values
+    }
+
     pub async fn execute(self, session: &CachingSession) -> Result<Qe::Output, CharybdisError> {
         Qe::execute(self, session).await
     }
