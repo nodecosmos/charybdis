@@ -209,7 +209,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
     c.bench_function("ORM Insert", |b| {
         b.iter(|| {
             rt.block_on(async {
-                test_user.clone().insert().execute(&session).await.unwrap();
+                test_user.insert().execute(&session).await.unwrap();
             });
         });
     });
@@ -360,7 +360,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
     c.bench_function("ORM Delete", |b| {
         b.iter(|| {
             rt.block_on(async {
-                test_user.clone().delete().execute(&session).await.unwrap();
+                test_user.delete().execute(&session).await.unwrap();
             });
         });
     });
