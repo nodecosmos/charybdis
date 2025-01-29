@@ -1,5 +1,5 @@
 use crate::common::db_session;
-use crate::custom_fields::{AddressTypeCustomField,UserExtraDataCustomField};
+use crate::custom_fields::{AddressTypeCustomField, UserExtraDataCustomField};
 
 use charybdis::batch::ModelBatch;
 use charybdis::errors::CharybdisError;
@@ -81,7 +81,7 @@ impl User {
                 addr_type: AddressTypeCustomField::WorkAddress,
             }),
             is_confirmed: true,
-            user_extra_data: UserExtraDataCustomField::default()
+            user_extra_data: UserExtraDataCustomField::default(),
         }
     }
 }

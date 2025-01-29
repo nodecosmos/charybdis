@@ -112,11 +112,14 @@ impl<'a> Field<'a> {
         FieldAttributes::from_attributes(&field.attrs)
             .map(|char_attrs| {
                 let ignore = char_attrs.ignore.unwrap_or(false);
-
-                let column_type = char_attrs.column_type.clone().map(
-                    |tname| CqlType::from_str(tname.as_str()).unwrap()
-                ).unwrap_or_else(|| Field::outer_type(&field.ty, ignore));
-
+                let column_type =
+                    char_attrs
+                        .column_type
+                        .as_ref()
+                        .map_or(Field::outer_type(&field.ty, ignore), |tname| {
+                            let error = format!("Unknown column type: {}", tname);
+                            CqlType::from_str(tname.as_str()).expect(&error)
+                        });
                 let ident = field.ident.clone().unwrap();
 
                 Field {
@@ -128,7 +131,7 @@ impl<'a> Field<'a> {
                         _ => panic!("Only type path is supported!"),
                     },
                     outer_type: column_type,
-                    column_type_override: char_attrs.column_type.clone(),
+                    column_type_override: char_attrs.column_type,
                     span: field.span(),
                     attrs: &field.attrs,
                     ignore,
