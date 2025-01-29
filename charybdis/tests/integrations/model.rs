@@ -8,6 +8,8 @@ use charybdis::stream::CharybdisModelStream;
 use charybdis::types::{Boolean, Int, Text, Uuid};
 use charybdis_macros::{charybdis_model, charybdis_udt_model, charybdis_view_model};
 
+pub const SAMPLE_MODEL_COUNT: usize = 32;
+
 #[derive(Debug, Default, Clone, PartialEq)]
 #[charybdis_udt_model(type_name = address)]
 pub struct Address {
@@ -46,7 +48,7 @@ partial_user!(UpdateUsernameUser, id, username);
 impl User {
     pub async fn populate_sample_users() {
         let db_session = db_session().await;
-        let users = (0..32)
+        let users = (0..SAMPLE_MODEL_COUNT)
             .map(|i| {
                 let id = Uuid::new_v4();
                 let mut new_user = User::homer(id);
@@ -157,15 +159,15 @@ pub struct Post {
 }
 
 impl Post {
-    pub async fn populate_sample_posts_per_partition(category_id: Uuid) {
+    pub async fn populate_sample_posts_per_partition(category_id: Uuid, author_id: Option<Uuid>) {
         let db_session = db_session().await;
-        let posts = (0..32)
+        let posts = (0..SAMPLE_MODEL_COUNT)
             .map(|i| Post {
                 category_id,
-                order_idx: i,
+                order_idx: i as Int,
                 title: format!("Post {}", i),
                 content: "Lorem ipsum dolor sit amet".to_string(),
-                author_id: Uuid::new_v4(),
+                author_id: author_id.unwrap_or_else(Uuid::new_v4),
             })
             .collect::<Vec<Post>>();
 
@@ -227,10 +229,10 @@ async fn find_various() -> Result<(), CharybdisError> {
     let category_id = Uuid::new_v4();
     let db_session = &db_session().await;
 
-    Post::populate_sample_posts_per_partition(category_id).await;
+    Post::populate_sample_posts_per_partition(category_id, None).await;
 
     let posts: CharybdisModelStream<Post> = Post::find_by_category_id(category_id).execute(db_session).await?;
-    assert_eq!(posts.try_collect().await?.len(), 32);
+    assert_eq!(posts.try_collect().await?.len(), SAMPLE_MODEL_COUNT);
 
     let posts: CharybdisModelStream<Post> = Post::find_by_category_id_and_order_idx(category_id, 1)
         .execute(db_session)
@@ -296,6 +298,48 @@ async fn find_various() -> Result<(), CharybdisError> {
         .execute(db_session)
         .await?;
     assert!(post.is_none());
+
+    Ok(())
+}
+
+#[charybdis_view_model(
+    table_name=posts_by_author,
+    base_table = posts,
+    partition_keys = [author_id],
+    clustering_keys = [category_id, order_idx, title],
+)]
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct PostByAuthor {
+    pub category_id: Uuid,
+    pub order_idx: Int,
+    pub title: Text,
+    pub content: Text,
+    pub author_id: Uuid,
+}
+
+#[tokio::test]
+async fn post_by_author_find() -> Result<(), CharybdisError> {
+    let category_id = Uuid::new_v4();
+    let author_id = Uuid::new_v4();
+    let db_session = &db_session().await;
+
+    Post::populate_sample_posts_per_partition(category_id, Some(author_id)).await;
+
+    let posts_by_author = PostByAuthor::find_by_author_id(author_id)
+        .execute(db_session)
+        .await?
+        .try_collect()
+        .await?;
+
+    assert_eq!(posts_by_author.len(), SAMPLE_MODEL_COUNT);
+
+    let posts_by_author_with_limit = find_post_by_author!("author_id = ? LIMIT 10", (author_id,))
+        .execute(db_session)
+        .await?
+        .try_collect()
+        .await?;
+
+    assert_eq!(posts_by_author_with_limit.len(), 10);
 
     Ok(())
 }

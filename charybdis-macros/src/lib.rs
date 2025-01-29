@@ -187,6 +187,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
 
     // Current model rules
     let find_model_query_rule = find_model_query_rule(struct_name, &args, fields);
+    let find_model_rule = find_model_rule(struct_name, &args, fields);
 
     // Associated functions
     let find_by_primary_keys_functions = find_by_primary_keys_functions(struct_name, &args, fields);
@@ -195,8 +196,6 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
     CharybdisFields::strip_charybdis_attributes(&mut input);
 
     let expanded = quote! {
-        use charybdis::scylla::serialize::SerializationError;
-
         #[derive(charybdis::macros::scylla::SerializeRow)]
         #[derive(charybdis::macros::scylla::DeserializeRow)]
         #input
@@ -225,6 +224,7 @@ pub fn charybdis_view_model(args: TokenStream, input: TokenStream) -> TokenStrea
         impl charybdis::model::MaterializedView for #struct_name {}
 
         #find_model_query_rule
+        #find_model_rule
     };
 
     TokenStream::from(expanded)
