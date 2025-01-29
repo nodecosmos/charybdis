@@ -1,6 +1,5 @@
 use clap::Parser;
 use std::env;
-use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -67,5 +66,7 @@ impl Default for Args {
 pub(crate) fn get_current_dir() -> String {
     let path = env::current_dir().expect("Failed to find project root: Could not get current directory");
 
-    PathBuf::from(path).to_str().unwrap().to_string()
+    path.to_str()
+        .expect("Failed to find project root: Could not convert path to string")
+        .to_string()
 }

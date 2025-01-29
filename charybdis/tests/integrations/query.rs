@@ -28,9 +28,7 @@ async fn model_mutation() {
     assert_eq!(user, new_user);
 
     user.bio = Some("I like beer".to_string());
-    if let Some(ref mut address) = user.address {
-        address.addr_type = AddressTypeCustomField::HomeAddress;
-    } else {panic!("homer should have address")};
+    user.address.as_mut().expect("homer should have address").addr_type = AddressTypeCustomField::HomeAddress;
     let tag = ("Second Key".to_string(), "Second Value".to_string());
     user.user_extra_data.user_tags.push(tag.clone());
 
@@ -42,9 +40,10 @@ async fn model_mutation() {
         .expect("Failed to find user");
 
     assert_eq!(user.bio, Some("I like beer".to_string()));
-    if let Some(ref address) = user.address {
-        assert_eq!(address.addr_type, AddressTypeCustomField::HomeAddress);
-    } else {panic!("homer should have address")};
+    assert_eq!(
+        user.address.as_ref().expect("homer should have address").addr_type,
+        AddressTypeCustomField::HomeAddress
+    );
     assert_eq!(user.user_extra_data.user_tags.last().cloned(), Some(tag));
 
     user.delete().execute(&db_session).await.expect("Failed to delete user");
