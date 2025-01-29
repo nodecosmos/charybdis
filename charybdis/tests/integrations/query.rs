@@ -1,6 +1,6 @@
 use crate::common::db_session;
 use crate::custom_fields::AddressTypeCustomField;
-use crate::model::{Post, User};
+use crate::model::{Post, User, SAMPLE_MODEL_COUNT};
 use charybdis::batch::ModelBatch;
 use charybdis::errors::CharybdisError;
 use charybdis::operations::{Delete, Find, Insert, Update};
@@ -97,7 +97,7 @@ async fn model_stream() {
         .expect("Failed to find users");
     let users_vec = users.try_collect().await.expect("Failed to collect users");
 
-    assert_eq!(users_vec.len(), 32);
+    assert_eq!(users_vec.len(), SAMPLE_MODEL_COUNT);
 
     User::delete_batch()
         .chunked_delete(&db_session, &users_vec, 100)
@@ -110,7 +110,7 @@ async fn model_paged() {
     let db_session = db_session().await;
     let category_id = uuid::Uuid::new_v4();
 
-    Post::populate_sample_posts_per_partition(category_id).await;
+    Post::populate_sample_posts_per_partition(category_id, None).await;
 
     let (posts, paging_state_response) = Post::find_by_partition_key_value_paged((category_id,))
         .page_size(3)
