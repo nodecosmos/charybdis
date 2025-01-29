@@ -1,4 +1,5 @@
 use crate::common::db_session;
+use crate::custom_fields::AddressTypeCustomField;
 use crate::model::{Post, User};
 use charybdis::batch::ModelBatch;
 use charybdis::errors::CharybdisError;
@@ -27,6 +28,9 @@ async fn model_mutation() {
     assert_eq!(user, new_user);
 
     user.bio = Some("I like beer".to_string());
+    user.address.as_mut().expect("homer should have address").addr_type = AddressTypeCustomField::HomeAddress;
+    let tag = ("Second Key".to_string(), "Second Value".to_string());
+    user.user_extra_data.user_tags.push(tag.clone());
 
     user.update().execute(&db_session).await.expect("Failed to update user");
 
@@ -36,6 +40,11 @@ async fn model_mutation() {
         .expect("Failed to find user");
 
     assert_eq!(user.bio, Some("I like beer".to_string()));
+    assert_eq!(
+        user.address.as_ref().expect("homer should have address").addr_type,
+        AddressTypeCustomField::HomeAddress
+    );
+    assert_eq!(user.user_extra_data.user_tags.last().cloned(), Some(tag));
 
     user.delete().execute(&db_session).await.expect("Failed to delete user");
 }

@@ -1,4 +1,6 @@
 use crate::common::db_session;
+use crate::custom_fields::{AddressTypeCustomField, UserExtraDataCustomField};
+
 use charybdis::batch::ModelBatch;
 use charybdis::errors::CharybdisError;
 use charybdis::model::{BaseModel, Model};
@@ -14,6 +16,8 @@ pub struct Address {
     pub state: Text,
     pub zip: Text,
     pub country: Text,
+    #[charybdis(column_type = "TinyInt")]
+    pub addr_type: AddressTypeCustomField,
 }
 
 #[charybdis_model(
@@ -33,6 +37,8 @@ pub struct User {
     pub bio: Option<Text>,
     pub address: Option<Address>,
     pub is_confirmed: Boolean,
+    #[charybdis(column_type = "Text")]
+    pub user_extra_data: UserExtraDataCustomField,
 }
 
 partial_user!(UpdateUsernameUser, id, username);
@@ -72,8 +78,10 @@ impl User {
                 state: "Illinois".to_string(),
                 zip: "62701".to_string(),
                 country: "USA".to_string(),
+                addr_type: AddressTypeCustomField::WorkAddress,
             }),
             is_confirmed: true,
+            user_extra_data: UserExtraDataCustomField::default(),
         }
     }
 }
@@ -83,38 +91,38 @@ async fn user_model_queries() {
     assert_eq!(User::DB_MODEL_NAME, "users");
     assert_eq!(
         User::FIND_ALL_QUERY,
-        "SELECT id, username, password, email, first_name, last_name, bio, address, is_confirmed FROM users"
+        "SELECT id, username, password, email, first_name, last_name, bio, address, is_confirmed, user_extra_data FROM users"
     );
     assert_eq!(
         User::FIND_BY_PRIMARY_KEY_QUERY,
         "SELECT id, username, password, email, \
-         first_name, last_name, bio, address, is_confirmed FROM users WHERE id = ?"
+         first_name, last_name, bio, address, is_confirmed, user_extra_data FROM users WHERE id = ?"
     );
     assert_eq!(
         User::FIND_BY_PARTITION_KEY_QUERY,
         "SELECT id, username, password, email, \
-         first_name, last_name, bio, address, is_confirmed FROM users WHERE id = ?"
+         first_name, last_name, bio, address, is_confirmed, user_extra_data FROM users WHERE id = ?"
     );
     assert_eq!(
         User::FIND_FIRST_BY_PARTITION_KEY_QUERY,
         "SELECT id, username, password, email, \
-         first_name, last_name, bio, address, is_confirmed FROM users WHERE id = ? LIMIT 1"
+         first_name, last_name, bio, address, is_confirmed, user_extra_data FROM users WHERE id = ? LIMIT 1"
     );
     assert_eq!(
         User::INSERT_QUERY,
-        "INSERT INTO users (id, username, password, email, first_name, last_name, bio, address, is_confirmed) \
-         VALUES (:id, :username, :password, :email, :first_name, :last_name, :bio, :address, :is_confirmed)"
+        "INSERT INTO users (id, username, password, email, first_name, last_name, bio, address, is_confirmed, user_extra_data) \
+         VALUES (:id, :username, :password, :email, :first_name, :last_name, :bio, :address, :is_confirmed, :user_extra_data)"
     );
     assert_eq!(
         User::INSERT_IF_NOT_EXIST_QUERY,
-        "INSERT INTO users (id, username, password, email, first_name, last_name, bio, address, is_confirmed) \
-         VALUES (:id, :username, :password, :email, :first_name, :last_name, :bio, :address, :is_confirmed) \
+        "INSERT INTO users (id, username, password, email, first_name, last_name, bio, address, is_confirmed, user_extra_data) \
+         VALUES (:id, :username, :password, :email, :first_name, :last_name, :bio, :address, :is_confirmed, :user_extra_data) \
          IF NOT EXISTS"
     );
     assert_eq!(
         User::UPDATE_QUERY,
         "UPDATE users SET username = :username, password = :password, email = :email, first_name = :first_name, \
-        last_name = :last_name, bio = :bio, address = :address, is_confirmed = :is_confirmed WHERE id = :id"
+        last_name = :last_name, bio = :bio, address = :address, is_confirmed = :is_confirmed, user_extra_data = :user_extra_data WHERE id = :id"
     );
     assert_eq!(User::DELETE_QUERY, "DELETE FROM users WHERE id = ?");
     assert_eq!(User::DELETE_BY_PARTITION_KEY_QUERY, "DELETE FROM users WHERE id = ?");

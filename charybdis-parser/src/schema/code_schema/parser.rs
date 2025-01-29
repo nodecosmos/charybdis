@@ -101,7 +101,9 @@ fn extract_schema_object(item_struct: &ItemStruct, model_macro: &ModelMacro) -> 
 
         for field in db_fields {
             let field_name = field.ident.to_string();
-            let field_type = type_with_arguments(&field.ty_path);
+            let field_type = field
+                .column_type_override
+                .unwrap_or_else(|| type_with_arguments(&field.ty_path));
             let is_static = schema_object.static_columns.contains(&field_name);
 
             schema_object.push_field(field_name, field_type, is_static);
