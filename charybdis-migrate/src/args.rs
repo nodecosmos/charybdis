@@ -43,6 +43,10 @@ pub struct Args {
 
     #[arg(skip = get_current_dir())]
     pub current_dir: String,
+
+    /// If set, use the given JSON-serialized CodeSchema instead of scanning the current directory
+    #[arg(default_value = None)]
+    pub code_schema_override_json: Option<String>
 }
 
 impl Default for Args {
@@ -59,6 +63,7 @@ impl Default for Args {
             cert: None,
             key: None,
             current_dir: get_current_dir(),
+            code_schema_override_json: None,
         }
     }
 }
