@@ -40,6 +40,14 @@ impl<'a> Migration<'a> {
             .write_schema_to_json(&self.args.current_dir);
     }
 
+    pub fn get_code_schema(&self) -> &CodeSchema {
+        &self.current_code_schema
+    }
+
+    pub fn get_db_schema(&self) -> &DbSchema {
+        &self.current_db_schema
+    }
+
     async fn run_udts(&self) {
         let empty_udt = SchemaObject::default();
 
