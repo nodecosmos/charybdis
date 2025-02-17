@@ -46,7 +46,7 @@ pub struct Args {
 
     /// If set, use the given JSON-serialized CodeSchema instead of scanning the current directory
     #[arg(default_value = None)]
-    pub code_schema_override_json: Option<String>
+    pub code_schema_override_json: Option<String>,
 }
 
 impl Default for Args {

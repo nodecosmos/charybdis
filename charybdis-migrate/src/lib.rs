@@ -34,7 +34,10 @@ impl MigrationBuilder {
         }
 
         let current_db_schema = DbSchema::new(session, self.args.keyspace.clone()).await;
-        let current_code_schema: CodeSchema = self.args.code_schema_override_json.as_ref()
+        let current_code_schema: CodeSchema = self
+            .args
+            .code_schema_override_json
+            .as_ref()
             .map(|json| serde_json::from_str(json).unwrap())
             .unwrap_or_else(|| CodeSchema::new(&self.args.current_dir));
 
