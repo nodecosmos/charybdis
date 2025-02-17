@@ -476,10 +476,27 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "charybdis"
 version = "0.7.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "218e5df24a1126d32f77664244aa589ea5bca70ed32e51528a3cc45148ec6fd6"
 dependencies = [
  "bigdecimal",
- "charybdis-migrate 0.7.12",
  "charybdis_macros 0.7.11",
+ "chrono",
+ "colored",
+ "futures",
+ "scylla",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
+name = "charybdis"
+version = "0.7.13"
+dependencies = [
+ "bigdecimal",
+ "charybdis-migrate",
+ "charybdis_macros 0.7.13",
  "chrono",
  "colored",
  "futures",
@@ -492,49 +509,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "charybdis"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "218e5df24a1126d32f77664244aa589ea5bca70ed32e51528a3cc45148ec6fd6"
+name = "charybdis-migrate"
+version = "0.7.13"
 dependencies = [
- "bigdecimal",
- "charybdis-migrate 0.7.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "charybdis_macros 0.7.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "chrono",
+ "charybdis_parser 0.7.13",
+ "clap",
  "colored",
- "futures",
+ "openssl",
+ "regex",
  "scylla",
- "serde",
  "serde_json",
- "uuid",
-]
-
-[[package]]
-name = "charybdis-migrate"
-version = "0.7.12"
-dependencies = [
- "charybdis_parser 0.7.11",
- "clap",
- "colored",
- "openssl",
- "regex",
- "scylla",
- "strip-ansi-escapes",
- "tokio",
-]
-
-[[package]]
-name = "charybdis-migrate"
-version = "0.7.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f75b3e2a5ce926a260846a3bb1ae907d1c1e2b6072185ac3c52b525cecd4d619"
-dependencies = [
- "charybdis_parser 0.7.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "clap",
- "colored",
- "openssl",
- "regex",
- "scylla",
  "strip-ansi-escapes",
  "tokio",
 ]
@@ -543,7 +527,7 @@ dependencies = [
 name = "charybdis_bench"
 version = "0.1.0"
 dependencies = [
- "charybdis 0.7.11",
+ "charybdis 0.7.13",
  "chrono",
  "criterion",
  "futures",
@@ -554,9 +538,21 @@ dependencies = [
 [[package]]
 name = "charybdis_macros"
 version = "0.7.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7abd13447db45278280156465860123ba5fbc964f7ac88cf352c1fc9b04e93e"
 dependencies = [
- "charybdis 0.7.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "charybdis_parser 0.7.11",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "charybdis_macros"
+version = "0.7.13"
+dependencies = [
+ "charybdis 0.7.11",
+ "charybdis_parser 0.7.13",
  "chrono",
  "proc-macro2",
  "quote",
@@ -565,20 +561,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "charybdis_macros"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7abd13447db45278280156465860123ba5fbc964f7ac88cf352c1fc9b04e93e"
-dependencies = [
- "charybdis_parser 0.7.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "charybdis_parser"
 version = "0.7.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d609ee959cfbca76ac5467d174797388e1e8b38f124fa6cd6130391564d8c13"
 dependencies = [
  "colored",
  "darling",
@@ -595,9 +581,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d609ee959cfbca76ac5467d174797388e1e8b38f124fa6cd6130391564d8c13"
+version = "0.7.13"
 dependencies = [
  "colored",
  "darling",
@@ -1814,7 +1798,7 @@ version = "0.1.0"
 dependencies = [
  "actix-http",
  "actix-web",
- "charybdis 0.7.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "charybdis 0.7.13",
  "chrono",
  "futures",
  "log",
