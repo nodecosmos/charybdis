@@ -34,7 +34,9 @@ impl MigrationBuilder {
         }
 
         let current_db_schema = DbSchema::new(session, self.args.keyspace.clone()).await;
-        let current_code_schema = CodeSchema::new(&self.args.current_dir);
+        let current_code_schema: CodeSchema = self.args.code_schema_override_json.as_ref()
+            .map(|json| serde_json::from_str(json).unwrap())
+            .unwrap_or_else(|| CodeSchema::new(&self.args.current_dir));
 
         let migration = Migration::new(current_db_schema, current_code_schema, session, self.args);
 
@@ -58,6 +60,11 @@ impl MigrationBuilder {
 
     pub fn verbose(mut self, verbose: bool) -> Self {
         self.args.verbose = verbose;
+        self
+    }
+
+    pub fn code_schema_override_json(mut self, code_schema_override_json: String) -> Self {
+        self.args.code_schema_override_json = Some(code_schema_override_json);
         self
     }
 }
