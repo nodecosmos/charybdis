@@ -1,7 +1,7 @@
 [package]
 name = "charybdis"
 rust-version = "1.75.0"
-version = "0.7.13"
+version = "0.7.14"
 edition = "2021"
 description = "High-Performance ORM for ScyllaDB"
 repository = "https://github.com/nodecosmos/charybdis"
@@ -11,8 +11,8 @@ categories = ["database"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-charybdis-migrate = { version = "0.7.13", path = "../charybdis-migrate", optional = true }
-charybdis_macros = { version = "0.7.13", path = "../charybdis-macros" }
+charybdis-migrate = { version = "0.7.14", path = "../charybdis-migrate", optional = true }
+charybdis_macros = { version = "0.7.14", path = "../charybdis-macros" }
 chrono = { version = "0.4.38", features = ["serde"] }
 futures = "0.3.30"
 scylla = { version = "0.15.1", features = ["full-serialization"] }

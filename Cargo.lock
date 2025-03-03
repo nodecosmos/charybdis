@@ -475,28 +475,11 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "218e5df24a1126d32f77664244aa589ea5bca70ed32e51528a3cc45148ec6fd6"
-dependencies = [
- "bigdecimal",
- "charybdis_macros 0.7.11",
- "chrono",
- "colored",
- "futures",
- "scylla",
- "serde",
- "serde_json",
- "uuid",
-]
-
-[[package]]
-name = "charybdis"
-version = "0.7.13"
+version = "0.7.14"
 dependencies = [
  "bigdecimal",
  "charybdis-migrate",
- "charybdis_macros 0.7.13",
+ "charybdis_macros",
  "chrono",
  "colored",
  "futures",
@@ -510,9 +493,9 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "0.7.13"
+version = "0.7.14"
 dependencies = [
- "charybdis_parser 0.7.13",
+ "charybdis_parser",
  "clap",
  "colored",
  "openssl",
@@ -527,7 +510,7 @@ dependencies = [
 name = "charybdis_bench"
 version = "0.1.0"
 dependencies = [
- "charybdis 0.7.13",
+ "charybdis",
  "chrono",
  "criterion",
  "futures",
@@ -537,22 +520,9 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7abd13447db45278280156465860123ba5fbc964f7ac88cf352c1fc9b04e93e"
+version = "0.7.14"
 dependencies = [
- "charybdis_parser 0.7.11",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "charybdis_macros"
-version = "0.7.13"
-dependencies = [
- "charybdis 0.7.11",
- "charybdis_parser 0.7.13",
+ "charybdis_parser",
  "chrono",
  "proc-macro2",
  "quote",
@@ -562,26 +532,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d609ee959cfbca76ac5467d174797388e1e8b38f124fa6cd6130391564d8c13"
-dependencies = [
- "colored",
- "darling",
- "proc-macro2",
- "quote",
- "scylla",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "syn",
- "walkdir",
-]
-
-[[package]]
-name = "charybdis_parser"
-version = "0.7.13"
+version = "0.7.14"
 dependencies = [
  "colored",
  "darling",
@@ -871,9 +822,9 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.18"
+version = "0.99.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce"
+checksum = "3da29a38df43d6f156149c9b43ded5e018ddff2a855cf2cfd62e8cd7d079c69f"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -920,9 +871,9 @@ dependencies = [
 
 [[package]]
 name = "equivalent"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
+checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "flate2"
@@ -1436,9 +1387,9 @@ checksum = "8355be11b20d696c8f18f6cc018c4e372165b1fa8126cef092399c9951984ffa"
 
 [[package]]
 name = "litemap"
-version = "0.7.4"
+version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ee93343901ab17bd981295f2cf0026d4ad018c7c31ba84549a4ddbb47a45104"
+checksum = "23fb14cb19457329c82206317a5663005a4d404783dc74f4252769b0d5f42856"
 
 [[package]]
 name = "local-channel"
@@ -1798,7 +1749,7 @@ version = "0.1.0"
 dependencies = [
  "actix-http",
  "actix-web",
- "charybdis 0.7.13",
+ "charybdis",
  "chrono",
  "futures",
  "log",
@@ -2319,9 +2270,9 @@ dependencies = [
 
 [[package]]
 name = "typenum"
-version = "1.17.0"
+version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
+checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "unicode-ident"
@@ -2682,27 +2633,27 @@ dependencies = [
 
 [[package]]
 name = "zstd"
-version = "0.13.2"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcf2b778a664581e31e389454a7072dab1647606d44f7feea22cd5abb9c9f3f9"
+checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
 dependencies = [
  "zstd-safe",
 ]
 
 [[package]]
 name = "zstd-safe"
-version = "7.2.1"
+version = "7.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54a3ab4db68cea366acc5c897c7b4d4d1b8994a9cd6e6f841f8964566a419059"
+checksum = "f3051792fbdc2e1e143244dc28c60f73d8470e93f3f9cbd0ead44da5ed802722"
 dependencies = [
  "zstd-sys",
 ]
 
 [[package]]
 name = "zstd-sys"
-version = "2.0.13+zstd.1.5.6"
+version = "2.0.14+zstd.1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38ff0f21cfee8f97d94cef41359e0c89aa6113028ab0291aa8ca0038995a95aa"
+checksum = "8fb060d4926e4ac3a3ad15d864e99ceb5f343c6b34f5bd6d81ae6ed417311be5"
 dependencies = [
  "cc",
  "pkg-config",
