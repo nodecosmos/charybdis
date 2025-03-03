@@ -522,6 +522,7 @@ dependencies = [
 name = "charybdis_macros"
 version = "0.7.14"
 dependencies = [
+ "charybdis",
  "charybdis_parser",
  "chrono",
  "proc-macro2",
