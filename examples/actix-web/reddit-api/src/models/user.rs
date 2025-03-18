@@ -20,9 +20,7 @@ pub struct User {
 
     pub username: Text,
     pub email: Text,
-
     pub password: Text,
-
     pub first_name: Text,
     pub last_name: Text,
     pub bio: Option<Text>,
