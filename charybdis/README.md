@@ -210,6 +210,8 @@ Resulting auto-generated migration query will be:
       mentioned above, in case there is no model definition for table, it will **not** drop it. In
       future, we will add `modelize` command that will generate `src/models` files from existing
       data source.
+    * ⚠️ Make sure that nested collections are 'Frozen' as per ScyllaDB requirement, so when using `--drop-and-replace`
+      flag, it will drop and recreate columns.
 
 * ### Programmatically running migrations
   Within testing or development environment, we can trigger migrations programmatically:
@@ -840,7 +842,6 @@ It can be used to hold data that is not persisted in database.
 Any rust type can be used directly in table or UDT definition.
 User must choose a ScyllaDB backing type (such as "TinyInt" or "Text")
 and implement `SerializeValue` and `DeserializeValue` traits:
-
 
 ```rust
 #[charybdis_model(...)]
