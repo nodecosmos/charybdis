@@ -2,7 +2,8 @@ use std::time::Duration;
 
 use crate::args::Args;
 use openssl::ssl::{SslContextBuilder, SslMethod, SslVerifyMode};
-use scylla::{Session, SessionBuilder};
+use scylla::client::session::Session;
+use scylla::client::session_builder::SessionBuilder;
 
 pub async fn initialize_session(args: &Args) -> Session {
     let mut builder = SessionBuilder::new()
@@ -54,7 +55,7 @@ pub async fn initialize_session(args: &Args) -> Session {
                 .unwrap();
         }
 
-        builder = builder.ssl_context(Some(context_builder.build()));
+        builder = builder.tls_context(Some(context_builder.build()));
     }
 
     builder

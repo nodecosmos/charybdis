@@ -3,10 +3,14 @@ use std::net::IpAddr;
 
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, Utc};
-use scylla::_macro_internal::{CellWriter, ColumnType, SerializationError, WrittenCellProof};
-use scylla::deserialize::{DeserializationError, DeserializeValue, FrameSlice, TypeCheckError};
-use scylla::frame::value::{Counter as CqlCounter, CqlDuration, CqlTimeuuid};
+use scylla::cluster::metadata::NativeType;
+use scylla::deserialize::value::DeserializeValue;
+use scylla::deserialize::{DeserializationError, FrameSlice, TypeCheckError};
+use scylla::errors::SerializationError;
+use scylla::frame::response::result::ColumnType;
 use scylla::serialize::value::{BuiltinTypeCheckError, SerializeValue};
+use scylla::serialize::writers::{CellWriter, WrittenCellProof};
+use scylla::value::{Counter as CqlCounter, CqlDuration, CqlTimeuuid};
 use serde::{Deserialize, Serialize};
 
 pub type Ascii = String;
@@ -59,12 +63,12 @@ impl SerializeValue for Counter {
         typ: &ColumnType,
         writer: CellWriter<'b>,
     ) -> Result<WrittenCellProof<'b>, SerializationError> {
-        if typ != &ColumnType::Counter {
+        if typ != &ColumnType::Native(NativeType::Counter) {
             return Err(SerializationError::new(BuiltinTypeCheckError {
                 rust_name: std::any::type_name::<Counter>(),
                 got: typ.clone().into_owned(),
                 kind: scylla::serialize::value::BuiltinTypeCheckErrorKind::MismatchedType {
-                    expected: &[ColumnType::Counter],
+                    expected: &[ColumnType::Native(NativeType::Counter)],
                 },
             }));
         }
@@ -367,12 +371,12 @@ impl SerializeValue for Timeuuid {
         typ: &ColumnType,
         writer: CellWriter<'b>,
     ) -> Result<WrittenCellProof<'b>, SerializationError> {
-        if typ != &ColumnType::Timeuuid {
+        if typ != &ColumnType::Native(NativeType::Timeuuid) {
             return Err(SerializationError::new(BuiltinTypeCheckError {
                 rust_name: std::any::type_name::<Timeuuid>(),
                 got: typ.clone().into_owned(),
                 kind: scylla::serialize::value::BuiltinTypeCheckErrorKind::MismatchedType {
-                    expected: &[ColumnType::Timeuuid],
+                    expected: &[ColumnType::Native(NativeType::Timeuuid)],
                 },
             }));
         }

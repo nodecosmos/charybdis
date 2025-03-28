@@ -20,23 +20,21 @@ pub mod macros {
     };
 
     pub mod scylla {
-        pub use scylla::macros::{
-            DeserializeRow, DeserializeValue, FromRow, FromUserType, IntoUserType, SerializeRow, SerializeValue,
-        };
+        pub use scylla::{DeserializeRow, DeserializeValue, SerializeRow, SerializeValue};
     }
 }
 
 pub mod scylla {
-    pub use scylla::frame::response::result::{CqlValue, Row};
+    pub use scylla::client::pager::TypedRowStream;
+    pub use scylla::response::{PagingState, PagingStateResponse};
     pub use scylla::serialize::value::SerializeValue;
-    pub use scylla::statement::PagingState;
-    pub use scylla::transport::iterator::TypedRowStream;
+    pub use scylla::value::{CqlValue, Row};
     pub use scylla::*;
 }
 
 pub mod options {
-    pub use scylla::execution_profile::ExecutionProfileHandle;
-    pub use scylla::history::HistoryListener;
-    pub use scylla::retry_policy::RetryPolicy;
+    pub use scylla::client::execution_profile::ExecutionProfileHandle;
+    pub use scylla::observability::history::HistoryListener;
+    pub use scylla::policies::retry::RetryPolicy;
     pub use scylla::statement::{Consistency, SerialConsistency};
 }

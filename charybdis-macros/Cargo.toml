@@ -19,7 +19,7 @@ quote = "1.0.36"
 
 [dev-dependencies]
 charybdis = { version = "0.7.14", path = "../charybdis" }
-scylla = "0.15.1"
+scylla = "1.0.0"
 chrono = "0.4.38"
 
 [lints]

@@ -4,8 +4,8 @@ use crate::model::{Post, User, SAMPLE_MODEL_COUNT};
 use charybdis::batch::ModelBatch;
 use charybdis::errors::CharybdisError;
 use charybdis::operations::{Delete, Find, Insert, Update};
+use charybdis::scylla::PagingStateResponse;
 use charybdis::stream::CharybdisModelStream;
-use scylla::statement::PagingStateResponse;
 
 #[tokio::test]
 async fn model_mutation() {

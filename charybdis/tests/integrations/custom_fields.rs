@@ -1,7 +1,10 @@
+use charybdis::scylla::serialize::writers::CellWriter;
 use charybdis::scylla::SerializeValue;
 use charybdis::types::Text;
-use scylla::_macro_internal::{CellWriter, ColumnType, WrittenCellProof};
-use scylla::deserialize::{DeserializationError, DeserializeValue, FrameSlice, TypeCheckError};
+use scylla::deserialize::value::DeserializeValue;
+use scylla::deserialize::{DeserializationError, FrameSlice, TypeCheckError};
+use scylla::frame::response::result::ColumnType;
+use scylla::serialize::writers::WrittenCellProof;
 use scylla::serialize::SerializationError;
 
 #[derive(Debug, Default, Clone, PartialEq, strum::FromRepr)]

@@ -15,7 +15,7 @@ charybdis-migrate = { version = "0.7.14", path = "../charybdis-migrate", optiona
 charybdis_macros = { version = "0.7.14", path = "../charybdis-macros" }
 chrono = { version = "0.4.38", features = ["serde"] }
 futures = "0.3.30"
-scylla = { version = "0.15.1", features = ["full-serialization"] }
+scylla = { version = "1.0.0", features = ["full-serialization"] }
 uuid = { version = "1.8.0", features = ["v1", "v4", "serde"] }
 serde_json = "1.0.116"
 serde = { version = "1.0.200", features = ["derive"] }

@@ -2,7 +2,7 @@ use clap::Parser;
 use migrate::args::Args;
 use migrate::session::initialize_session;
 use migrate::MigrationBuilder;
-use scylla::Session;
+use scylla::client::session::Session;
 use std::env;
 
 /// Automatic Migration Tool

@@ -1,11 +1,10 @@
 use std::fmt::Display;
 
 use crate::args::Args;
-use colored::Colorize;
-use scylla::Session;
-
 use crate::model::data::ModelData;
 use crate::model::runner::ModelRunner;
+use colored::Colorize;
+use scylla::client::session::Session;
 
 pub(crate) mod data;
 mod runner;

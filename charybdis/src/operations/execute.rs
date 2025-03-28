@@ -1,9 +1,10 @@
 use crate::errors::CharybdisError;
 use crate::scylla::PagingState;
+use scylla::client::caching_session::CachingSession;
+use scylla::client::pager::QueryPager;
+use scylla::response::query_result::QueryResult;
+use scylla::response::PagingStateResponse;
 use scylla::serialize::row::SerializeRow;
-use scylla::statement::PagingStateResponse;
-use scylla::transport::iterator::QueryPager;
-use scylla::{CachingSession, QueryResult};
 
 pub async fn execute_unpaged(
     session: &CachingSession,
@@ -13,7 +14,7 @@ pub async fn execute_unpaged(
     let res = session
         .execute_unpaged(query, values)
         .await
-        .map_err(|e| CharybdisError::QueryError(query, e))?;
+        .map_err(|e| CharybdisError::ExecutionError(query, e))?;
 
     Ok(res)
 }
@@ -26,7 +27,7 @@ pub async fn execute_iter(
     let res = session
         .execute_iter(query, values)
         .await
-        .map_err(|e| CharybdisError::QueryError(query, e))?;
+        .map_err(|e| CharybdisError::PagerExecutionError(query, e))?;
 
     Ok(res)
 }
@@ -40,7 +41,7 @@ pub async fn execute_single_page(
     let res = session
         .execute_single_page(query, values, paging_state)
         .await
-        .map_err(|e| CharybdisError::QueryError(query, e))?;
+        .map_err(|e| CharybdisError::ExecutionError(query, e))?;
 
     Ok(res)
 }

@@ -1,9 +1,8 @@
-use colored::Colorize;
-use scylla::Session;
-
 use crate::args::Args;
 use crate::model::data::ModelData;
 use crate::model::{ModelMigration, ModelType};
+use colored::Colorize;
+use scylla::client::session::Session;
 
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;

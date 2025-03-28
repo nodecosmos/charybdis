@@ -2,7 +2,7 @@ use crate::args::Args;
 use crate::model::{ModelData, ModelType};
 use colored::*;
 use regex::Regex;
-use scylla::Session;
+use scylla::client::session::Session;
 
 pub(crate) const INDEX_SUFFIX: &str = "idx";
 

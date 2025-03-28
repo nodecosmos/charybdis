@@ -2,8 +2,8 @@ use crate::errors::AppError;
 use crate::models::user::{ShowUser, User};
 use actix_web::{get, post, web, HttpResponse};
 use charybdis::operations::InsertWithCallbacks;
-use charybdis::scylla::CachingSession;
 use charybdis::types::Uuid;
+use scylla::client::caching_session::CachingSession;
 
 #[get("/{id}")]
 pub async fn get_user(db_session: web::Data<CachingSession>, id: web::Path<Uuid>) -> Result<HttpResponse, AppError> {

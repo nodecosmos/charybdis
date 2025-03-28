@@ -5,7 +5,7 @@ use charybdis::types::{Boolean, Text, Timestamp, Uuid};
 use chrono::Utc;
 use criterion::{criterion_group, criterion_main, Criterion};
 use scylla::batch::{Batch, BatchStatement, BatchType};
-use scylla::transport::errors::QueryError;
+use scylla::transport::errors::ExecutionError;
 use scylla::{CachingSession, SessionBuilder};
 use tokio::runtime::Runtime;
 
@@ -253,7 +253,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
             rt.block_on(async {
                 let native_insert_statements = (0..1000)
                     .map(|_| {
-                        BatchStatement::Query(scylla::query::Query::new(
+                        BatchStatement::Statement(scylla::query::Statement::new(
                             "INSERT INTO bench_users (id, username, email, created_at) VALUES (?, ?, ?, ?)",
                         ))
                     })
@@ -322,7 +322,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
                     .rows_stream::<Post>()
                     .unwrap();
 
-                let results: Result<Vec<Post>, QueryError> = res.try_collect().await;
+                let results: Result<Vec<Post>, ExecutionError> = res.try_collect().await;
                 results.unwrap();
             });
         });

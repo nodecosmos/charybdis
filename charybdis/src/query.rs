@@ -2,14 +2,18 @@ use crate::callbacks::{CallbackAction, Callbacks};
 use crate::errors::CharybdisError;
 use crate::iterator::CharybdisModelIterator;
 use crate::model::BaseModel;
-use crate::options::{Consistency, ExecutionProfileHandle, HistoryListener, RetryPolicy, SerialConsistency};
+use crate::options::{Consistency, SerialConsistency};
 use crate::stream::CharybdisModelStream;
-use scylla::query::Query;
+use scylla::client::caching_session::CachingSession;
+use scylla::client::execution_profile::ExecutionProfileHandle;
+use scylla::errors::FirstRowError;
+use scylla::observability::history::HistoryListener;
+use scylla::policies::retry::RetryPolicy;
+use scylla::response::query_result::QueryResult;
+use scylla::response::{PagingState, PagingStateResponse};
 use scylla::serialize::row::{RowSerializationContext, SerializeRow};
 use scylla::serialize::{writers::RowWriter, SerializationError};
-use scylla::statement::{PagingState, PagingStateResponse};
-use scylla::transport::query_result::FirstRowError;
-use scylla::{CachingSession, QueryResult};
+use scylla::statement::Statement;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -67,7 +71,7 @@ impl<M: BaseModel> QueryExecutor<M> for ModelRow {
         let res = session
             .execute_unpaged(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
+            .map_err(|e| CharybdisError::ExecutionError(query.query_string, e))?;
 
         let res = res
             .into_rows_result()
@@ -95,7 +99,7 @@ impl<M: BaseModel> QueryExecutor<M> for OptionalModelRow {
         let res = session
             .execute_unpaged(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?
+            .map_err(|e| CharybdisError::ExecutionError(query.query_string, e))?
             .into_rows_result()
             .map_err(|e| CharybdisError::IntoRowsResultError(query.query_string, e))?
             .maybe_first_row::<M>()
@@ -118,7 +122,7 @@ impl<M: BaseModel + 'static> QueryExecutor<M> for ModelStream {
         let res = session
             .execute_iter(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?
+            .map_err(|e| CharybdisError::PagerExecutionError(query.query_string, e))?
             .rows_stream::<M>()
             .map_err(|e| CharybdisError::TypeCheckError(query.query_string, e))?;
 
@@ -142,7 +146,7 @@ impl<M: BaseModel> QueryExecutor<M> for ModelPaged {
         let res = session
             .execute_single_page(query.inner, query.values, query.paging_state)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
+            .map_err(|e| CharybdisError::ExecutionError(query.query_string, e))?;
         let psr = res.1;
 
         let rows_res = res
@@ -180,7 +184,7 @@ impl<M: BaseModel> QueryExecutor<M> for ModelMutation {
         let res = session
             .execute_unpaged(query.inner, query.values)
             .await
-            .map_err(|e| CharybdisError::QueryError(query.query_string, e))?;
+            .map_err(|e| CharybdisError::ExecutionError(query.query_string, e))?;
 
         Ok(res)
     }
@@ -225,7 +229,7 @@ impl<Val: SerializeRow, M: BaseModel> SerializeRow for QueryValue<'_, Val, M> {
 }
 
 pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor<M>> {
-    inner: Query,
+    inner: Statement,
     paging_state: PagingState,
     pub(crate) query_string: &'static str,
     pub(crate) values: QueryValue<'a, Val, M>,
@@ -235,7 +239,7 @@ pub struct CharybdisQuery<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor
 impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor<M>> CharybdisQuery<'a, Val, M, Qe> {
     pub fn new(query: &'static str, values: QueryValue<'a, Val, M>) -> Self {
         Self {
-            inner: Query::new(query),
+            inner: Statement::new(query),
             query_string: query,
             values,
             paging_state: PagingState::start(),
