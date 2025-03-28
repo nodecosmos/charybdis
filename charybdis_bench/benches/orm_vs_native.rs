@@ -4,9 +4,10 @@ use charybdis::operations::{Delete, Insert, Update};
 use charybdis::types::{Boolean, Text, Timestamp, Uuid};
 use chrono::Utc;
 use criterion::{criterion_group, criterion_main, Criterion};
-use scylla::batch::{Batch, BatchStatement, BatchType};
-use scylla::transport::errors::ExecutionError;
-use scylla::{CachingSession, SessionBuilder};
+use scylla::client::caching_session::CachingSession;
+use scylla::client::session_builder::SessionBuilder;
+use scylla::errors::NextRowError;
+use scylla::statement::batch::{Batch, BatchStatement, BatchType};
 use tokio::runtime::Runtime;
 
 const NODES: [&str; 3] = ["127.0.0.1:9042", "127.0.0.1:9043", "127.0.0.1:9044"];
@@ -253,7 +254,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
             rt.block_on(async {
                 let native_insert_statements = (0..1000)
                     .map(|_| {
-                        BatchStatement::Statement(scylla::query::Statement::new(
+                        BatchStatement::Query(scylla::statement::unprepared::Statement::new(
                             "INSERT INTO bench_users (id, username, email, created_at) VALUES (?, ?, ?, ?)",
                         ))
                     })
@@ -322,7 +323,7 @@ fn bench_orm_vs_native(c: &mut Criterion) {
                     .rows_stream::<Post>()
                     .unwrap();
 
-                let results: Result<Vec<Post>, ExecutionError> = res.try_collect().await;
+                let results: Result<Vec<Post>, NextRowError> = res.try_collect().await;
                 results.unwrap();
             });
         });

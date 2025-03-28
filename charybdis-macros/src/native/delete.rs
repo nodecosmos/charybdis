@@ -15,7 +15,7 @@ const MAX_DELETE_BY_FUNCTIONS: usize = 3;
 /// use charybdis::macros::charybdis_model;
 /// use charybdis::errors::CharybdisError;
 /// use charybdis::types::{Timestamp, Uuid};
-/// use scylla::CachingSession;
+/// use scylla::client::caching_session::CachingSession;
 ///
 /// #[charybdis_model(
 ///     table_name = users,

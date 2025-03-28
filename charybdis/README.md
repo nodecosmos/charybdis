@@ -307,7 +307,7 @@ in `charybdis::operations` module.
   ```
 - ### Available find functions
   ```rust
-  use scylla::CachingSession;
+  use scylla::client::caching_session::CachingSession;
   use charybdis::errors::CharybdisError;
   use charybdis::macros::charybdis_model;
   use charybdis::stream::CharybdisModelStream;

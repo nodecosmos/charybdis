@@ -20,7 +20,7 @@ use crate::traits::fields::{FieldHashMapString, ToIdents};
 /// ```rust
 /// use charybdis::macros::charybdis_model;
 /// use charybdis::types::{Text, Timestamp, Uuid};
-/// use scylla::CachingSession;
+/// use scylla::client::caching_session::CachingSession;
 ///
 /// #[charybdis_model(
 ///     table_name = users,
@@ -45,7 +45,7 @@ use crate::traits::fields::{FieldHashMapString, ToIdents};
 /// ```
 /// use charybdis::macros::charybdis_model;
 /// use charybdis::types::{Text, Timestamp, Uuid};
-/// use scylla::CachingSession;
+/// use scylla::client::caching_session::CachingSession;
 /// #[charybdis_model(
 ///     table_name = users,
 ///     partition_keys = [id],

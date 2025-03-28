@@ -10,7 +10,7 @@ const MAX_FIND_BY_FIELDS: usize = 3;
 
 /// for up to 3 primary keys, generate find_by_primary_key functions e.g.
 /// ```rust
-/// use scylla::CachingSession;
+/// use scylla::client::caching_session::CachingSession;
 /// use charybdis::errors::CharybdisError;
 /// use charybdis::macros::charybdis_model;
 /// use charybdis::stream::CharybdisModelStream;
