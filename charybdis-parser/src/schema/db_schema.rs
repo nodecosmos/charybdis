@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use colored::Colorize;
-use scylla::Session;
+use scylla::client::session::Session;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 

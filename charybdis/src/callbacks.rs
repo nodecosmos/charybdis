@@ -1,5 +1,5 @@
+use scylla::client::caching_session::CachingSession;
 use scylla::serialize::row::SerializeRow;
-use scylla::CachingSession;
 
 use crate::errors::CharybdisError;
 use crate::model::Model;

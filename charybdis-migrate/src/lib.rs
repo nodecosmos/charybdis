@@ -2,7 +2,7 @@ use crate::args::Args;
 use crate::migration::Migration;
 use charybdis_parser::schema::code_schema::CodeSchema;
 use charybdis_parser::schema::db_schema::DbSchema;
-use scylla::Session;
+use scylla::client::session::Session;
 
 pub mod args;
 pub mod migration;

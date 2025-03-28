@@ -1,12 +1,11 @@
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use futures::{Stream, StreamExt, TryStreamExt};
-use scylla::transport::errors::QueryError;
-use scylla::transport::iterator::TypedRowStream;
-
 use crate::errors::CharybdisError;
 use crate::model::BaseModel;
+use futures::{Stream, StreamExt, TryStreamExt};
+use scylla::client::pager::TypedRowStream;
+use scylla::errors::NextRowError;
 
 pub struct CharybdisModelStream<T: BaseModel + 'static> {
     inner: TypedRowStream<T>,
@@ -34,14 +33,14 @@ impl<T: BaseModel> Stream for CharybdisModelStream<T> {
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.inner
             .poll_next_unpin(cx)
-            .map_err(|e| CharybdisError::QueryError(self.query_string, e))
+            .map_err(|e| CharybdisError::NextRowError(self.query_string, e))
     }
 }
 
 impl<T: BaseModel> CharybdisModelStream<T> {
     pub async fn try_collect(self) -> Result<Vec<T>, CharybdisError> {
-        let results: Result<Vec<T>, QueryError> = self.inner.try_collect().await;
+        let results: Result<Vec<T>, NextRowError> = self.inner.try_collect().await;
 
-        results.map_err(|e| CharybdisError::QueryError(self.query_string, e))
+        results.map_err(|e| CharybdisError::NextRowError(self.query_string, e))
     }
 }

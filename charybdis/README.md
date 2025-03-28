@@ -14,7 +14,7 @@
 
 ## Usage considerations:
 
-- Provide and expressive API for CRUD & Complex Query operations on model as a whole
+- Provide and expressive API for CRUD & Complex Statement operations on model as a whole
 - Provide easy way to work with subset of model fields by using automatically
   generated `partial_<model>!` macro
 - Provide easy way to run complex queries by using automatically generated `find_<model>!` macro
@@ -307,7 +307,7 @@ in `charybdis::operations` module.
   ```
 - ### Available find functions
   ```rust
-  use scylla::CachingSession;
+  use scylla::client::caching_session::CachingSession;
   use charybdis::errors::CharybdisError;
   use charybdis::macros::charybdis_model;
   use charybdis::stream::CharybdisModelStream;
@@ -389,7 +389,7 @@ in `charybdis::operations` module.
         .await?;
     ```
 
-  If we just need the `Query` and not the result, we can use `find_post_query!` macro:
+  If we just need the `Statement` and not the result, we can use `find_post_query!` macro:
     ```rust
     let query = find_post_query!("date = ? AND category_id in ?", (date, categor_vec));
     ```

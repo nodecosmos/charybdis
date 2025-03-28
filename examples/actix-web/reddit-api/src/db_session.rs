@@ -1,4 +1,6 @@
-use scylla::{CachingSession, Session, SessionBuilder};
+use scylla::client::caching_session::CachingSession;
+use scylla::client::session::Session;
+use scylla::client::session_builder::SessionBuilder;
 
 const NODES: [&str; 3] = ["127.0.0.1:9042", "127.0.0.1:9043", "127.0.0.1:9044"];
 const KEYSPACE: &str = "reddit_example";

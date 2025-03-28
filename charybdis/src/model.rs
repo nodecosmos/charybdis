@@ -1,4 +1,4 @@
-use scylla::deserialize::{DeserializeRow, DeserializeValue};
+use scylla::deserialize::row::DeserializeRow;
 use scylla::serialize::row::SerializeRow;
 
 pub trait BaseModel: Sized + SerializeRow + for<'frame, 'metadata> DeserializeRow<'frame, 'metadata> {
@@ -108,7 +108,7 @@ pub trait MaterializedView: BaseModel {}
 ///     pub country: Text,
 /// }
 /// ```
-pub trait Udt: Sized + for<'frame, 'metadata> DeserializeValue<'frame, 'metadata> {
+pub trait Udt: Sized + for<'frame, 'metadata> scylla::deserialize::value::DeserializeValue<'frame, 'metadata> {
     const DB_MODEL_NAME: &'static str;
 }
 

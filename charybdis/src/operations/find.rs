@@ -1,7 +1,7 @@
 use crate::model::BaseModel;
 use crate::query::{CharybdisQuery, ModelPaged, ModelRow, ModelStream, OptionalModelRow, QueryValue};
+use scylla::response::PagingState;
 use scylla::serialize::row::SerializeRow;
-use scylla::statement::PagingState;
 
 /// Configurable Find Queries
 pub trait Find: BaseModel

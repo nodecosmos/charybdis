@@ -2,8 +2,8 @@ use crate::errors::AppError;
 use crate::models::udts::Profile;
 use charybdis::callbacks::Callbacks;
 use charybdis::macros::charybdis_model;
-use charybdis::scylla::CachingSession;
 use charybdis::types::{Boolean, Text, Timestamp, Uuid};
+use scylla::client::caching_session::CachingSession;
 use serde::{Deserialize, Serialize};
 
 #[charybdis_model(

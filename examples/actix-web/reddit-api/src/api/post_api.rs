@@ -4,9 +4,9 @@ use crate::models::post::{Post, UpdateArchivedPost, UpdateDescriptionPost};
 use actix_web::{get, post, put, web, HttpResponse};
 use charybdis::batch::ModelBatch;
 use charybdis::operations::{Find, InsertWithCallbacks, UpdateWithCallbacks};
-use charybdis::scylla::CachingSession;
 use charybdis::types::{Timestamp, Uuid};
 use futures::StreamExt;
+use scylla::client::caching_session::CachingSession;
 
 // In this sample params from path will be mapped to struct fields, which makes lookup by primary key easier.
 // Note that we use camelCase for field names, as we have #[serde(rename_all = "camelCase")] in Post struct.

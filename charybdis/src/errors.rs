@@ -4,18 +4,18 @@ use std::fmt;
 use colored::Colorize;
 use scylla::_macro_internal::TypeCheckError;
 use scylla::deserialize::DeserializationError;
-use scylla::transport::errors::QueryError;
-use scylla::transport::iterator::NextRowError;
-use scylla::transport::query_result::{
-    FirstRowError, IntoRowsResultError, MaybeFirstRowError, RowsError, SingleRowError,
+use scylla::errors::{
+    ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError, NextRowError, PagerExecutionError,
+    RowsError, SingleRowError,
 };
 
 #[derive(Debug)]
 pub enum CharybdisError {
     // scylla
-    QueryError(&'static str, QueryError),
+    ExecutionError(&'static str, ExecutionError),
+    PagerExecutionError(&'static str, PagerExecutionError),
     IntoRowsResultError(&'static str, IntoRowsResultError),
-    BatchError(&'static str, QueryError),
+    BatchError(&'static str, ExecutionError),
     SingleRowError(&'static str, SingleRowError),
     RowsError(&'static str, RowsError),
     FirstRowError(&'static str, FirstRowError),
@@ -31,37 +31,42 @@ impl fmt::Display for CharybdisError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             // scylla errors
-            CharybdisError::QueryError(query, e) => write!(f, "Query: {}\nQueryError: {}", query.bright_purple(), e),
+            CharybdisError::ExecutionError(query, e) => {
+                write!(f, "Statement: {}\nExecutionError: {}", query.bright_purple(), e)
+            }
+            CharybdisError::PagerExecutionError(query, e) => {
+                write!(f, "Statement: {}\nPagerExecutionError: {}", query.bright_purple(), e)
+            }
             CharybdisError::IntoRowsResultError(query, e) => {
-                write!(f, "Query: {}\nIntoRowsResultError: {}", query.bright_purple(), e)
+                write!(f, "Statement: {}\nIntoRowsResultError: {}", query.bright_purple(), e)
             }
             CharybdisError::BatchError(query, e) => write!(f, "Model: {}\nBatchError: {}", query.bright_purple(), e),
             CharybdisError::SingleRowError(query, e) => write!(
                 f,
-                "Query: {}\nSingleRowError: {:?}. Did you forget to provide complete primary key?",
+                "Statement: {}\nSingleRowError: {:?}. Did you forget to provide complete primary key?",
                 query.bright_purple(),
                 e
             ),
             CharybdisError::RowsError(query, e) => {
-                write!(f, "Query: {}\nRowsError: {:?}", query.bright_purple(), e)
+                write!(f, "Statement: {}\nRowsError: {:?}", query.bright_purple(), e)
             }
             CharybdisError::FirstRowError(query, e) => {
-                write!(f, "Query: {}\nFirstRowError: {:?}", query.bright_purple(), e)
+                write!(f, "Statement: {}\nFirstRowError: {:?}", query.bright_purple(), e)
             }
             CharybdisError::MaybeFirstRowError(query, e) => {
-                write!(f, "Query: {}\nMaybeFirstRowError: {:?}", query.bright_purple(), e)
+                write!(f, "Statement: {}\nMaybeFirstRowError: {:?}", query.bright_purple(), e)
             }
             CharybdisError::DeserializationError(query, e) => {
-                write!(f, "Query: {}\nDeserializationError: {:?}", query.bright_purple(), e)
+                write!(f, "Statement: {}\nDeserializationError: {:?}", query.bright_purple(), e)
             }
             CharybdisError::NotFoundError(query) => {
                 write!(f, "Records not found for query: {}", query.bright_purple())
             }
             CharybdisError::NextRowError(query, e) => {
-                write!(f, "Query: {}\nNextRowError: {:?}", query.bright_purple(), e)
+                write!(f, "Statement: {}\nNextRowError: {:?}", query.bright_purple(), e)
             }
             CharybdisError::TypeCheckError(query, e) => {
-                write!(f, "Query: {}\nTypeCheckError: {:?}", query.bright_purple(), e)
+                write!(f, "Statement: {}\nTypeCheckError: {:?}", query.bright_purple(), e)
             }
             CharybdisError::JsonError(e) => write!(f, "JsonError: {:?}", e),
         }
@@ -71,7 +76,8 @@ impl fmt::Display for CharybdisError {
 impl Error for CharybdisError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            CharybdisError::QueryError(_, e) => Some(e),
+            CharybdisError::ExecutionError(_, e) => Some(e),
+            CharybdisError::PagerExecutionError(_, e) => Some(e),
             CharybdisError::IntoRowsResultError(_, e) => Some(e),
             CharybdisError::SingleRowError(_, e) => Some(e),
             CharybdisError::RowsError(_, e) => Some(e),
