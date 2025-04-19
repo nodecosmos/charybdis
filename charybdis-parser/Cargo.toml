@@ -1,7 +1,7 @@
 [package]
 name = "charybdis_parser"
 rust-version = "1.75.0"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "Parser crate for Charybdis ORM"
 repository = "https://github.com/nodecosmos/charybdis"
@@ -13,13 +13,13 @@ proc-macro2 = "1.0.81"
 syn = { version = "2.0.60", features = ["full"] }
 quote = "1.0.36"
 serde = { version = "1.0.200", features = ["derive"] }
-scylla = "1.0.0"
+scylla = "1.1.0"
 serde_json = "1.0.116"
-colored = { version = "2.1.0", features = [] }
+colored = { version = "3.0.0", features = [] }
 walkdir = "2.5.0"
 darling = "0.20.8"
-strum = "0.26"
-strum_macros = "0.26"
+strum = "0.27.1"
+strum_macros = "0.27.1"
 
 [lints]
 workspace = true

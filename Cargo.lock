@@ -475,7 +475,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "charybdis"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "bigdecimal",
  "charybdis-migrate",
@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis-migrate"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "charybdis_parser",
  "clap",
@@ -520,7 +520,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_macros"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "charybdis",
  "charybdis_parser",
@@ -533,7 +533,7 @@ dependencies = [
 
 [[package]]
 name = "charybdis_parser"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "colored",
  "darling",
@@ -638,11 +638,10 @@ checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 
 [[package]]
 name = "colored"
-version = "2.2.0"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
+checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
 dependencies = [
- "lazy_static",
  "windows-sys 0.59.0",
 ]
 
@@ -1890,9 +1889,9 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scylla"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6f7075a5b5be59fd767b83567bf0c02e9c29626f47d8c4493946b2d6076eb17"
+checksum = "bd81aa1c6de67ed43f78a64aa233c547c569979922ab2e6c6d58730f0d53b651"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -1921,9 +1920,9 @@ dependencies = [
 
 [[package]]
 name = "scylla-cql"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85f1decfbb5ff3eb8da7883937c9bca318ccfa220d50bd5a2cdb573fb29bc19b"
+checksum = "ae84054fed47b0a7e757d66aeb4574a4ca9696bf68c25ed6325b0f198c15795b"
 dependencies = [
  "async-trait",
  "bigdecimal",
@@ -1947,9 +1946,9 @@ dependencies = [
 
 [[package]]
 name = "scylla-macros"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c72a4a475ecca0ab180b995f63e079763baaa453ec1a84f6811ebd8d8fe18e8"
+checksum = "e67d343ebea5cc079bfa89ca4b231b432207c3748baaa3b00e5c238e7644e838"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2102,18 +2101,18 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"
-version = "0.26.3"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
+checksum = "f64def088c51c9510a8579e3c5d67c65349dcf755e5479ad3d010aa6454e2c32"
 dependencies = [
  "strum_macros",
 ]
 
 [[package]]
 name = "strum_macros"
-version = "0.26.4"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c6bee85a5a24955dc440386795aa378cd9cf82acd5f764469152d2270e581be"
+checksum = "c77a8c5abcaf0f9ce05d62342b7d298c346515365c36b673df4ebe3ced01fde8"
 dependencies = [
  "heck",
  "proc-macro2",
