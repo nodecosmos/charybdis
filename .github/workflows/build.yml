@@ -24,11 +24,11 @@ jobs:
       - name: Create Charybdis Keyspace
         run: |
           docker exec scylla1 cqlsh -e \
-          "CREATE KEYSPACE charybdis WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2};"
+          "CREATE KEYSPACE charybdis WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2} AND tablets = { 'enabled': false };"
       - name: Create Reddit Example Keyspace
         run: |
           docker exec scylla1 cqlsh -e \
-          "CREATE KEYSPACE reddit_example WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2};"
+          "CREATE KEYSPACE reddit_example WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 2} AND tablets = { 'enabled': false };"
       - name: Cache Dependencies
         uses: actions/cache@v4
         with:
