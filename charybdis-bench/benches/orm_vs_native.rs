@@ -3,6 +3,7 @@ use charybdis::macros::{charybdis_model, charybdis_udt_model};
 use charybdis::operations::{Delete, Insert, Update};
 use charybdis::types::{Boolean, Text, Timestamp, Uuid};
 use chrono::Utc;
+use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
 use scylla::client::caching_session::CachingSession;
 use scylla::client::session_builder::SessionBuilder;
@@ -207,68 +208,70 @@ fn bench_orm_vs_native(c: &mut Criterion) {
     rt.block_on(async { Post::populate_sample_posts_per_partition(category_id, &session).await });
 
     // Benchmark Insert
-    c.bench_function("ORM Insert", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                test_user.insert().execute(&session).await.unwrap();
+    c.benchmark_group("Insert Benchmarks")
+        .throughput(Throughput::Elements(1))
+        .bench_function("ORM Insert", |b| {
+            b.iter(|| {
+                rt.block_on(async {
+                    test_user.insert().execute(&session).await.unwrap();
+                });
             });
-        });
-    });
-
-    c.bench_function("Native Insert", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                session
-                    .execute_unpaged(
-                        "INSERT INTO bench_users (id, username, email, created_at) VALUES (?, ?, ?, ?)",
-                        (test_user.id, "charybdis", "charybdis@orm.com", test_user.created_at),
-                    )
-                    .await
-                    .unwrap();
-            });
-        });
-    });
-
-    c.bench_function("ORM Batch Insert", |b| {
-        b.iter(|| {
-            let orm_users = (0..1000)
-                .map(|_| BenchUser {
-                    id: Uuid::new_v4(),
-                    username: "charybdis".to_string(),
-                    email: "charybdis@email.com".to_string(),
-                    created_at: Utc::now(),
-                })
-                .collect::<Vec<BenchUser>>();
-
-            rt.block_on(async {
-                BenchUser::batch()
-                    .chunked_insert(&session, &orm_users, 1000)
-                    .await
-                    .unwrap();
-            });
-        });
-    });
-
-    c.bench_function("Native Batch Insert", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let native_insert_statements = (0..1000)
-                    .map(|_| {
-                        BatchStatement::Query(scylla::statement::unprepared::Statement::new(
+        })
+        .bench_function("Native Insert", |b| {
+            b.iter(|| {
+                rt.block_on(async {
+                    session
+                        .execute_unpaged(
                             "INSERT INTO bench_users (id, username, email, created_at) VALUES (?, ?, ?, ?)",
-                        ))
-                    })
-                    .collect::<Vec<BatchStatement>>();
-
-                let native_values = (0..1000)
-                    .map(|_| (Uuid::new_v4(), "charybdis", "test@mail.com", Utc::now()))
-                    .collect::<Vec<(Uuid, &str, &str, Timestamp)>>();
-
-                let batch = Batch::new_with_statements(BatchType::Logged, native_insert_statements);
-                session.batch(&batch, native_values).await.unwrap();
+                            (test_user.id, "charybdis", "charybdis@orm.com", test_user.created_at),
+                        )
+                        .await
+                        .unwrap();
+                });
             });
         });
-    });
+
+    c.benchmark_group("ORM Batch Insert")
+        .throughput(Throughput::Elements(1000))
+        .bench_function("ORM Batch Insert", |b| {
+            b.iter(|| {
+                let orm_users = (0..1000)
+                    .map(|_| BenchUser {
+                        id: Uuid::new_v4(),
+                        username: "charybdis".to_string(),
+                        email: "charybdis@email.com".to_string(),
+                        created_at: Utc::now(),
+                    })
+                    .collect::<Vec<BenchUser>>();
+
+                rt.block_on(async {
+                    BenchUser::batch()
+                        .chunked_insert(&session, &orm_users, 1000)
+                        .await
+                        .unwrap();
+                });
+            });
+        })
+        .bench_function("Native Batch Insert", |b| {
+            b.iter(|| {
+                rt.block_on(async {
+                    let native_insert_statements = (0..1000)
+                        .map(|_| {
+                            BatchStatement::Query(scylla::statement::unprepared::Statement::new(
+                                "INSERT INTO bench_users (id, username, email, created_at) VALUES (?, ?, ?, ?)",
+                            ))
+                        })
+                        .collect::<Vec<BatchStatement>>();
+
+                    let native_values = (0..1000)
+                        .map(|_| (Uuid::new_v4(), "charybdis", "test@mail.com", Utc::now()))
+                        .collect::<Vec<(Uuid, &str, &str, Timestamp)>>();
+
+                    let batch = Batch::new_with_statements(BatchType::Logged, native_insert_statements);
+                    session.batch(&batch, native_values).await.unwrap();
+                });
+            });
+        });
 
     // Benchmark Find
     c.bench_function("ORM Find", |b| {
