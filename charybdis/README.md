@@ -81,7 +81,7 @@ charybdis = "1.0.2"
 
 ### Define Tables
 
-```rust
+```rust,ignore
   use charybdis::macros::charybdis_model;
   use charybdis::types::{Text, Timestamp, Uuid};
   
@@ -105,7 +105,7 @@ charybdis = "1.0.2"
 
 ### Define UDT
 
- ```rust
+ ```rust,ignore
   use charybdis::macros::charybdis_udt_model;
   use charybdis::types::Text;
   
@@ -127,7 +127,7 @@ match struct name. So if we have `struct ReorderData` we have to use
 
 ### Define Materialized Views
 
-  ```rust
+  ```rust,ignore
   use charybdis::macros::charybdis_view_model;
   use charybdis::types::{Text, Timestamp, Uuid};
   
@@ -174,7 +174,7 @@ Resulting auto-generated migration query will be:
     - Create UDTs
     - Create materialized views
     - Table options
-      ```rust
+      ```rust,ignore
         #[charybdis_model(
             table_name = commits,
             partition_keys = [object_id],
@@ -216,7 +216,7 @@ Resulting auto-generated migration query will be:
 
 * ### Programmatically running migrations
   Within testing or development environment, we can trigger migrations programmatically:
-    ```rust
+    ```rust,ignore
     use charybdis::migrate::MigrationBuilder;
     
     let migration = MigrationBuilder::new()
@@ -230,7 +230,7 @@ Resulting auto-generated migration query will be:
 
 * ### Global secondary indexes
   If we have model:
-  ```rust
+  ```rust,ignore
   #[charybdis_model(
       table_name = users,
       partition_keys = [id],
@@ -242,7 +242,7 @@ Resulting auto-generated migration query will be:
 * ### Local secondary Indexes
 
   Indexes that are scoped to the partition key
-    ```rust
+    ```rust,ignore
     #[charybdis_model(
         table_name = menus,
         partition_keys = [location],
@@ -260,7 +260,7 @@ in `charybdis::operations` module.
 
 ### Insert
 
-- ```rust
+- ```rust,ignore
   use charybdis::{CachingSession, Insert};
   
   #[tokio::main]
@@ -293,21 +293,21 @@ in `charybdis::operations` module.
 ## Find
 
 - ### Find by primary key
-  ```rust
+  ```rust,ignore
     let user = User {id, ..Default::default()};
     let user = user.find_by_primary_key().execute(&session).await?;
   ```
 - ### Find by partition key
 
-  ```rust
+  ```rust,ignore
     let users =  User {id, ..Default::default()}.find_by_partition_key().execute(&session).await;
   ```
 - ### Find by primary key associated
-  ```rust
+  ```rust,ignore
   let users = User::find_by_primary_key_value(val: User::PrimaryKey).execute(&session).await;
   ```
 - ### Available find functions
-  ```rust
+  ```rust,ignore
   use scylla::client::caching_session::CachingSession;
   use charybdis::errors::CharybdisError;
   use charybdis::macros::charybdis_model;
@@ -361,7 +361,7 @@ in `charybdis::operations` module.
 
 - ### Custom filtering:
   Lets use our `Post` model as an example:
-    ```rust 
+    ```rust,ignore 
     #[charybdis_model(
         table_name = posts, 
         partition_keys = [category_id], 
@@ -376,7 +376,7 @@ in `charybdis::operations` module.
   Following will return stream of `Post` models, and query will be constructed at compile time
   as `&'static str`.
 
-    ```rust
+    ```rust,ignore
     // automatically generated macro rule
     let posts = find_post!("category_id in ? AND date > ?", (categor_vec, date))
         .execute(session)
@@ -384,20 +384,20 @@ in `charybdis::operations` module.
     ```
 
   We can also use `find_first_post!` macro to get single result:
-    ```rust
+    ```rust,ignore
     let post = find_first_post!("category_id in ? AND date > ? LIMIT 1", (date, categor_vec))
         .execute(session)
         .await?;
     ```
 
   If we just need the `Statement` and not the result, we can use `find_post_query!` macro:
-    ```rust
+    ```rust,ignore
     let query = find_post_query!("date = ? AND category_id in ?", (date, categor_vec));
     ```
 
 ## Update
 
-- ```rust
+- ```rust,ignore
   let user = User::from_json(json);
   
   user.username = "scylla".to_string();
@@ -407,7 +407,7 @@ in `charybdis::operations` module.
   ```
 - ### Collection:
     - Let's use our `User` model as an example:
-      ```rust
+      ```rust,ignore
       #[charybdis_model(
           table_name = users,
           partition_keys = [id],
@@ -421,7 +421,7 @@ in `charybdis::operations` module.
       ```
     - `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection
       field.
-       ```rust
+       ```rust,ignore
        let user: User;
    
        user.push_tags(vec![tag]).execute(&session).await;
@@ -432,7 +432,7 @@ in `charybdis::operations` module.
        ```
 - ### Counter
     - Let's define post_counter model:
-      ```rust
+      ```rust,ignore
       #[charybdis_model(
           table_name = post_counters,
           partition_keys = [id],
@@ -446,7 +446,7 @@ in `charybdis::operations` module.
       ```
     - We can use `increment_<field_name>` and `decrement_<field_name>` methods to update counter
       fields.
-      ```rust
+      ```rust,ignore
       let post_counter: PostCounter;
       post_counter.increment_likes(1).execute(&session).await;
       post_counter.decrement_likes(1).execute(&session).await;
@@ -457,7 +457,7 @@ in `charybdis::operations` module.
 
 ## Delete
 
-- ```rust 
+- ```rust,ignore 
   let user = User::from_json(json);
 
   user.delete().execute(&session).await;
@@ -465,7 +465,7 @@ in `charybdis::operations` module.
 
 - ### Macro generated delete helpers
   Lets use our `Post` model as an example:
-  ```rust
+  ```rust,ignore
   #[charybdis_model(
       table_name = posts,
       partition_keys = [date],
@@ -482,7 +482,7 @@ in `charybdis::operations` module.
   ```
   We have macro generated functions for up to 3 fields from primary key.
 
-  ```rust
+  ```rust,ignore
   Post::delete_by_date(date: Date).execute(&session).await?;
   Post::delete_by_date_and_category_id(date: Date, category_id: Uuid).execute(&session).await?;
   Post::delete_by_date_and_category_id_and_title(date: Date, category_id: Uuid, title: Text).execute(&session).await?;
@@ -490,7 +490,7 @@ in `charybdis::operations` module.
 
 - ### Custom delete queries
   We can use `delete_post!` macro to create custom delete queries.
-    ```rust
+    ```rust,ignore
     delete_post!("date = ? AND category_id in ?", (date, category_vec)).execute(&session).await?
     ```
 
@@ -499,7 +499,7 @@ in `charybdis::operations` module.
 Every operation returns `CharybdisQuery` that can be configured before execution with method
 chaining.
 
-```rust
+```rust,ignore
 let user: User = User::find_by_id(id)
     .consistency(Consistency::One)
     .timeout(Some(Duration::from_secs(5)))
@@ -524,7 +524,7 @@ Supported configuration options:
 
 - ### Batch Operations
 
-  ```rust
+  ```rust,ignore
   let users: Vec<User>;
   let batch = User::batch();
   
@@ -544,7 +544,7 @@ Supported configuration options:
 - ### Chunked Batch Operations
 
   Chunked batch operations are used to operate on large amount of data in chunks.
-  ```rust
+  ```rust,ignore
     let users: Vec<User>;
     let chunk_size = 100;
   
@@ -555,7 +555,7 @@ Supported configuration options:
 
 - ### Batch Configuration
   Batch operations can be configured before execution with method chaining.
-  ```rust
+  ```rust,ignore
   let batch = User::batch()
       .consistency(Consistency::One)
       .retry_policy(Some(Arc::new(DefaultRetryPolicy::new())))
@@ -563,7 +563,7 @@ Supported configuration options:
       .await?;
   ```
   We could also use method chaining to append operations to batch:
-  ```rust
+  ```rust,ignore
   let batch = User::batch()
       .consistency(Consistency::One)
       .retry_policy(Some(Arc::new(DefaultRetryPolicy::new())))
@@ -575,7 +575,7 @@ Supported configuration options:
 
 - ### Statements Batch
   We can use batch statements to perform collection operations in batch:
-    ```rust
+    ```rust,ignore
     let batch = User::batch();
     let users: Vec<User>;
     
@@ -599,7 +599,7 @@ specify.
 Use the auto-generated `partial_<model>!` macro to create a struct with the same structure as the original model, but
 only with the fields you need:
 
-```rust
+```rust,ignore
 // auto-generated macro - available in crate::models::<original_model>
 partial_user!(UpdateUsernameUser, id, username);
 ```
@@ -607,7 +607,7 @@ partial_user!(UpdateUsernameUser, id, username);
 This creates a new `UpdateUsernameUser` struct that is equivalent to the `User` model, but only with `id` and
 `username` fields.
 
-```rust
+```rust,ignore
 let mut update_user_username = UpdateUsernameUser {
     id,
     username: "updated_username".to_string(),
@@ -643,7 +643,7 @@ Partial models inherit:
 
 In case we need to run operations on native model, we can use `as_native` method:
 
-  ```rust 
+  ```rust,ignore 
   let native_user: User = update_user_username.as_native().find_by_primary_key().execute(&session).await?;
   // action that requires native model
   authorize_user(&native_user);
@@ -670,13 +670,13 @@ E.g.
 
 1) Let's say we define custom extension that will be used to
    update elastic document on every post update:
-    ```rust
+    ```rust,ignore
     pub struct AppExtensions {
         pub elastic_client: ElasticClient,
     }
     ```
 2) Now we can implement Callback that will utilize this extension:
-    ```rust
+    ```rust,ignore
     #[charybdis_model(...)]
     pub struct Post {}
     
@@ -744,7 +744,7 @@ E.g.
   This enables us to have clear distinction between `insert` and insert with
   callbacks (`insert_cb`).
   Just as on main operation, we can configure callback operation query before execution.
-  ```rust
+  ```rust,ignore
    use charybdis::operations::{DeleteWithCallbacks, InsertWithCallbacks, UpdateWithCallbacks};
   
    post.insert_cb(app_extensions).execute(&session).await;
@@ -766,7 +766,7 @@ For each collection field, we get following:
 - `pull_<field_name>_if_exists` method
 
 1) ### Model:
-    ```rust
+    ```rust,ignore
     #[charybdis_model(
         table_name = users,
         partition_keys = [id],
@@ -783,7 +783,7 @@ For each collection field, we get following:
 
    Generated query will expect value as first bind value and primary key fields as next bind values.
 
-    ```rust
+    ```rust,ignore
     impl User {
         const PUSH_TAGS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ?";
         const PUSH_TAGS_IF_EXISTS_QUERY: &'static str = "UPDATE users SET tags = tags + ? WHERE id = ? IF EXISTS";
@@ -807,7 +807,7 @@ For each collection field, we get following:
 
    Now we could use this constant within Batch operations.
 
-    ```rust
+    ```rust,ignore
     let batch = User::batch();
     let users: Vec<User>;
     
@@ -822,7 +822,7 @@ For each collection field, we get following:
    `push_to_<field_name>` and `pull_from_<field_name>` methods are generated for each collection
    field.
 
-    ```rust
+    ```rust,ignore
     let user: User::new();
     
     user.push_tags(tags: HashSet<T>).execute(&session).await;
@@ -849,7 +849,7 @@ For each collection field, we get following:
 
 We can ignore fields by using `#[charybdis(ignore)]` attribute:
 
-```rust
+```rust,ignore
 #[charybdis_model(...)]
 pub struct User {
     id: Uuid,
@@ -868,7 +868,7 @@ Any rust type can be used directly in table or UDT definition.
 User must choose a ScyllaDB backing type (such as "TinyInt" or "Text")
 and implement `SerializeValue` and `DeserializeValue` traits:
 
-```rust
+```rust,ignore
 #[charybdis_model(...)]
 pub struct User {
     id: Uuid,

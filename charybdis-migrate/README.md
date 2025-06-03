@@ -46,7 +46,7 @@ migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
     - Create UDTs
     - Create materialized views
     - Table options
-      ```rust
+      ```rust,ignore
         #[charybdis_model(
             table_name = commits,
             partition_keys = [object_id],
@@ -79,7 +79,7 @@ migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
 
 * ### Global secondary indexes
   If we have model:
-  ```rust
+  ```rust,ignore
   #[charybdis_model(
       table_name = users,
       partition_keys = [id],
@@ -92,7 +92,7 @@ migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
 * ### Local secondary Indexes
 
   Indexes that are scoped to the partition key
-    ```rust
+    ```rust,ignore
     #[charybdis_model(
         table_name = menus,
         partition_keys = [location],
@@ -105,7 +105,7 @@ migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
 
 ### Define Tables
 
- ```rust
+ ```rust,ignore
   use charybdis::macros::charybdis_model;
   use charybdis::types::{Text, Timestamp, Uuid};
   
@@ -128,7 +128,7 @@ migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
 
 ### Define UDT
 
- ```rust
+ ```rust,ignore
   use charybdis::macros::charybdis_udt_model;
   use charybdis::types::Text;
   
@@ -144,7 +144,7 @@ migrate --hosts <host> --keyspace <your_keyspace> --drop-and-replace (optional)
 
 ### Define Materialized Views
 
-  ```rust
+  ```rust,ignore
   use charybdis::macros::charybdis_view_model;
   use charybdis::types::{Text, Timestamp, Uuid};
   
