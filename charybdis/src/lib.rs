@@ -1,5 +1,5 @@
+#![doc = include_str!("../README.md")]
 #![allow(async_fn_in_trait)]
-
 pub mod batch;
 pub mod callbacks;
 pub mod errors;

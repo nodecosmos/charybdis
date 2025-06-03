@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use crate::args::Args;
 use crate::migration::Migration;
 use charybdis_parser::schema::code_schema::CodeSchema;
