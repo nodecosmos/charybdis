@@ -8,6 +8,7 @@ use scylla::client::caching_session::CachingSession;
 use scylla::client::execution_profile::ExecutionProfileHandle;
 use scylla::errors::FirstRowError;
 use scylla::observability::history::HistoryListener;
+use scylla::policies::load_balancing::LoadBalancingPolicy;
 use scylla::policies::retry::RetryPolicy;
 use scylla::response::query_result::QueryResult;
 use scylla::response::{PagingState, PagingStateResponse};
@@ -313,6 +314,11 @@ impl<'a, Val: SerializeRow, M: BaseModel, Qe: QueryExecutor<M>> CharybdisQuery<'
         self
     }
 
+    pub fn load_balancing_policy(mut self, load_balancing_policy: Option<Arc<dyn LoadBalancingPolicy>>) -> Self {
+        self.inner.set_load_balancing_policy(load_balancing_policy);
+        self
+    }
+
     pub fn query_string(&self) -> &'static str {
         self.query_string
     }
@@ -366,7 +372,8 @@ impl<'a, M: Callbacks, CbA: CallbackAction<M>, Val: SerializeRow> CharybdisCbQue
         retry_policy(retry_policy: Option<Arc<dyn RetryPolicy>>),
         history_listener(history_listener: Arc<dyn HistoryListener>),
         remove_history_listener(),
-        profile_handle(profile_handle: Option<ExecutionProfileHandle>)
+        profile_handle(profile_handle: Option<ExecutionProfileHandle>),
+        load_balancing_policy(load_balancing_policy: Option<Arc<dyn LoadBalancingPolicy>>)
     }
 
     pub async fn execute(self, session: &CachingSession) -> Result<QueryResult, M::Error> {
